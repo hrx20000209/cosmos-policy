@@ -34,6 +34,7 @@ from cosmos_policy._src.imaginaire.serialization import to_yaml
 from cosmos_policy._src.imaginaire.utils import distributed
 from cosmos_policy._src.imaginaire.utils.context_managers import data_loader_init, distributed_init, model_init
 from cosmos_policy._src.imaginaire.utils.launch import log_reproducible_setup
+from cosmos_policy._src.predict2.utils.model_loader import create_model_from_consolidated_checkpoint_with_fsdp
 
 
 @logging.catch(reraise=True)
@@ -53,7 +54,15 @@ def launch(config: Config, args: argparse.Namespace) -> None:
     log_reproducible_setup(config, args)
 
     with model_init():
-        model = instantiate(config.model)
+        if str(config.checkpoint.load_path).endswith(".pt"):
+            # DistributedCheckpointer intentionally handles DCP directories only
+            # and skips consolidated .pt files. Instantiate without FSDP, load
+            # the official Predict2 weights, then apply FSDP; loading after FSDP
+            # would mix regular checkpoint tensors with DTensor parameters.
+            logging.info(f"Loading consolidated base checkpoint: {config.checkpoint.load_path}")
+            model = create_model_from_consolidated_checkpoint_with_fsdp(config)
+        else:
+            model = instantiate(config.model)
 
     # Create the dataloaders.
     with data_loader_init():
@@ -134,6 +143,8 @@ For python-based LazyConfig, use "path.key=value".
     )
     args = parser.parse_args()
 
+    if args.dryrun:
+        os.environ["COSMOS_POLICY_DRYRUN"] = "1"
     config = load_config(args.config, args.opts, enable_one_logger=True)
 
     if args.dryrun:

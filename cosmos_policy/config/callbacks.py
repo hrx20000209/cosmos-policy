@@ -12,6 +12,8 @@
 # dir@exchange.nvidia.com.
 # -----------------------------------------------------------------------------
 
+import json
+import os
 from dataclasses import dataclass
 from typing import Tuple
 
@@ -27,6 +29,16 @@ from cosmos_policy._src.imaginaire.utils import distributed, log
 from cosmos_policy._src.imaginaire.utils.callback import WandBCallback as WandBCallbackImage
 from cosmos_policy._src.imaginaire.utils.easy_io import easy_io
 from cosmos_policy._src.predict2.callbacks.wandb_log import _LossRecord
+
+
+def _append_local_metrics(config, info: dict, split: str) -> None:
+    """Keep a run-local, tool-independent loss history in addition to W&B."""
+    os.makedirs(config.job.path_local, exist_ok=True)
+    serializable = {"split": split}
+    for key, value in info.items():
+        serializable[key] = value.item() if hasattr(value, "item") else value
+    with open(os.path.join(config.job.path_local, "metrics.jsonl"), "a") as file:
+        file.write(json.dumps(serializable) + "\n")
 
 
 @dataclass
@@ -357,6 +369,7 @@ class WandbCallback(WandBCallbackImage):
                             f"s3://rundir/{self.name}/Train_Iter{iteration:09d}.json",
                         )
 
+                _append_local_metrics(self.config, info, "train")
                 if wandb:
                     wandb.log(info, step=iteration)
             if self.logging_iter_multipler == 1:
@@ -564,6 +577,7 @@ class WandbCallback(WandBCallbackImage):
                 info = {}
                 info.update(
                     {
+                        "iteration": iteration,
                         f"val{self.wandb_extra_tag}/image_loss": avg_image_loss,
                         f"val{self.wandb_extra_tag}/image_edm_loss": avg_image_edm_loss,
                         f"val{self.wandb_extra_tag}/video_loss": avg_video_loss,
@@ -609,6 +623,7 @@ class WandbCallback(WandBCallbackImage):
                             f"s3://rundir/{self.name}/Val_Iter{iteration:09d}.json",
                         )
 
+                _append_local_metrics(self.config, info, "val")
                 if wandb:
                     wandb.log(info, step=iteration)
 

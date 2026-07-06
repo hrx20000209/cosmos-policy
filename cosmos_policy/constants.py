@@ -43,12 +43,20 @@ ALOHA_CONSTANTS = {
     "PROPRIO_DIM": 14,
 }
 
+SO101_CONSTANTS = {
+    "NUM_ACTIONS_CHUNK": 50,
+    "ACTION_DIM": 6,
+    "PROPRIO_DIM": 6,
+}
+
 
 # Function to detect robot platform from command line arguments
 def detect_robot_platform():
     cmd_args = " ".join(sys.argv).lower()
 
-    if "libero" in cmd_args:
+    if "so101" in cmd_args or "three_cubes" in cmd_args:
+        return "SO101"
+    elif "libero" in cmd_args:
         return "LIBERO"
     elif "robocasa" in cmd_args:
         return "ROBOCASA"
@@ -69,6 +77,8 @@ elif ROBOT_PLATFORM == "ROBOCASA":
     constants = ROBOCASA_CONSTANTS
 elif ROBOT_PLATFORM == "ALOHA":
     constants = ALOHA_CONSTANTS
+elif ROBOT_PLATFORM == "SO101":
+    constants = SO101_CONSTANTS
 
 # Assign constants to global variables
 NUM_ACTIONS_CHUNK = constants["NUM_ACTIONS_CHUNK"]

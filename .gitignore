@@ -1,2 +1,13 @@
 /.cuda-name
 /build
+
+# Python cache / bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Common local caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/

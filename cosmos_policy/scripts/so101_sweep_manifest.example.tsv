@@ -1,0 +1,6 @@
+# EXPERIMENT_NAME<TAB>RUN_DIRECTORY<TAB>GPU_ID
+experiment_1	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/REPLACE_RUN_1	0
+experiment_2	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/REPLACE_RUN_2	1
+experiment_3	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/REPLACE_RUN_3	2
+experiment_4	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/REPLACE_RUN_4	3
+experiment_5	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/REPLACE_RUN_5	5

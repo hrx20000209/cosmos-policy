@@ -229,6 +229,21 @@ class DiffusionModel(ImaginaireModel):
                 net.to_empty(device="cuda")
                 # IMPORTANT: (qsh) model init should not depends on current tensor shape, or it can handle Dtensor shape.
                 net.init_weights()
+                # PEFT initializes adapters while the network is on the meta
+                # device. to_empty() discards those values, and the backbone's
+                # init_weights() initializes unknown LoRA parameters to zero.
+                # Reapply PEFT's intended initialization (A random, B zero), or
+                # both factors remain zero and receive zero gradients forever.
+                if config.use_lora:
+                    initialized_lora_layers = 0
+                    for module in net.modules():
+                        reset_lora_parameters = getattr(module, "reset_lora_parameters", None)
+                        if callable(reset_lora_parameters):
+                            reset_lora_parameters("default", config.init_lora_weights)
+                            initialized_lora_layers += 1
+                    if initialized_lora_layers == 0:
+                        raise RuntimeError("LoRA is enabled but no PEFT LoRA layers were initialized")
+                    log.info(f"Reinitialized {initialized_lora_layers} LoRA layers after meta-device materialization")
 
             if self.fsdp_device_mesh:
                 broadcast_dtensor_model_states(net, self.fsdp_device_mesh)

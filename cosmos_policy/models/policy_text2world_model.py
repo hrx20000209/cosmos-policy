@@ -31,6 +31,7 @@ from cosmos_policy._src.imaginaire.lazy_config import instantiate as lazy_instan
 from cosmos_policy._src.imaginaire.modules.res_sampler import COMMON_SOLVER_OPTIONS
 from cosmos_policy._src.imaginaire.utils import misc
 from cosmos_policy._src.imaginaire.utils.context_parallel import broadcast_split_tensor, cat_outputs_cp
+from cosmos_policy._src.imaginaire.utils.optim_instantiate import get_base_scheduler
 from cosmos_policy._src.predict2.models.text2world_model import (
     DiffusionModel as BaseDiffusionModel,
 )
@@ -38,8 +39,53 @@ from cosmos_policy._src.predict2.models.text2world_model import (
     Text2WorldModelConfig as BaseText2WorldModelConfig,
 )
 from cosmos_policy.conditioner import Text2WorldCondition
+from cosmos_policy.models.finetune import apply_finetune_mode
 from cosmos_policy.modules.cosmos_sampler import CosmosPolicySampler
 from cosmos_policy.modules.hybrid_edm_sde import HybridEDMSDE
+
+
+def build_so101_loss_mask(
+    batch_size: int,
+    num_latent_frames: int,
+    mode: str,
+    include_value: bool,
+    *,
+    action_indices: torch.Tensor,
+    future_proprio_indices: torch.Tensor,
+    future_wrist_image_indices: torch.Tensor,
+    future_wrist_image2_indices: Optional[torch.Tensor],
+    future_image_indices: torch.Tensor,
+    future_image2_indices: Optional[torch.Tensor],
+    value_indices: Optional[torch.Tensor],
+) -> torch.Tensor:
+    """构造 SO101 latent-slot loss mask；负索引代表该样本没有对应 slot。"""
+    valid_modes = {"action_only", "future_state_only", "joint_action_future_state"}
+    if mode not in valid_modes:
+        raise ValueError(f"build_so101_loss_mask 不支持 mode={mode}，可选值为 {sorted(valid_modes)}")
+    device = action_indices.device
+    mask = torch.zeros((batch_size, num_latent_frames), dtype=torch.long, device=device)
+    batch_indices = torch.arange(batch_size, device=device)
+
+    def enable(indices: Optional[torch.Tensor]) -> None:
+        if indices is None:
+            return
+        valid = indices >= 0
+        if torch.any(valid):
+            mask[batch_indices[valid], indices[valid]] = 1
+
+    if mode in {"action_only", "joint_action_future_state"}:
+        enable(action_indices)
+    if mode in {"future_state_only", "joint_action_future_state"}:
+        enable(future_proprio_indices)
+        enable(future_wrist_image_indices)
+        enable(future_wrist_image2_indices)
+        enable(future_image_indices)
+        enable(future_image2_indices)
+    if include_value:
+        enable(value_indices)
+    if not torch.any(mask):
+        raise RuntimeError(f"so101_loss_mode={mode} 生成了空 loss mask")
+    return mask
 
 
 def replace_latent_with_action_chunk(
@@ -208,8 +254,21 @@ class CosmosPolicyModelConfig(BaseText2WorldModelConfig):
     # (Must be an integer - or will be cast to an integer later!)
     action_loss_multiplier: int = 1
 
+    # SO101 默认不使用 LoRA，直接控制主 DiT 的可训练范围。
+    finetune_mode: str = "all"
+    train_last_n_dit_blocks: int = 8
+    so101_loss_mode: str = "all"
+    so101_include_value_loss: bool = False
+
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
+        assert self.finetune_mode in {
+            "full_dit",
+            "partial_dit_last_n",
+            "all",
+            "action_only_head_if_exists",
+        }
+        assert self.so101_loss_mode in {"joint_action_future_state", "action_only", "future_state_only", "all"}
         assert not (
             self.mask_loss_for_action_future_state_prediction and self.mask_value_prediction_loss_for_policy_prediction
         ), (
@@ -236,6 +295,26 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         # Cosmos Policy SDE and Sampler
         self.sde = lazy_instantiate(config.sde)
         self.sampler = CosmosPolicySampler()
+
+    def init_optimizer_scheduler(
+        self, optimizer_config: LazyDict, scheduler_config: LazyDict
+    ) -> tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LRScheduler]:
+        """应用 fine-tuning 冻结策略，并确保 optimizer 只接收可训练参数。"""
+        self.finetune_report = apply_finetune_mode(
+            self,
+            self.config.finetune_mode,
+            self.config.train_last_n_dit_blocks,
+        )
+        optimizer = lazy_instantiate(optimizer_config, model=self.finetune_report.optimizer_module)
+        optimizer_ids = {id(parameter) for group in optimizer.param_groups for parameter in group["params"]}
+        expected_ids = {id(parameter) for parameter in self.parameters() if parameter.requires_grad}
+        if optimizer_ids != expected_ids:
+            raise RuntimeError(
+                "optimizer 参数集合与 requires_grad=True 参数不一致："
+                f"optimizer={len(optimizer_ids)}, expected={len(expected_ids)}"
+            )
+        scheduler = get_base_scheduler(optimizer, self, scheduler_config)
+        return optimizer, scheduler
 
     def training_step(
         self, data_batch: dict[str, torch.Tensor], iteration: int
@@ -538,6 +617,24 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
                     mask_B_T[world_batch_indices, future_proprio_indices[world_batch_indices]] = 1
             final_mask_B_T = final_mask_B_T * mask_B_T
 
+        # SO101 的显式 loss mode。该 mask 直接描述哪些 latent slot 参与 EDM loss，
+        # 避免复用 rollout policy/world/value 三类样本语义时发生隐式混淆。
+        if self.config.so101_loss_mode != "all":
+            so101_mask_B_T = build_so101_loss_mask(
+                B,
+                T,
+                self.config.so101_loss_mode,
+                self.config.so101_include_value_loss,
+                action_indices=action_indices,
+                future_proprio_indices=future_proprio_indices,
+                future_wrist_image_indices=future_wrist_image_indices,
+                future_wrist_image2_indices=future_wrist_image2_indices,
+                future_image_indices=future_image_indices,
+                future_image2_indices=future_image2_indices,
+                value_indices=value_indices,
+            )
+            final_mask_B_T = final_mask_B_T * so101_mask_B_T
+
         # If applicable, upweight the loss on the action predictions by a factor of `action_loss_multiplier`
         if self.config.action_loss_multiplier != 1:
             # Only upweight the loss on the action indices
@@ -554,9 +651,11 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         # Apply the loss mask to the loss
         if (
             self.config.mask_loss_for_action_future_state_prediction
+            or self.config.mask_value_prediction_loss_for_policy_prediction
             or self.config.mask_current_state_action_for_value_prediction
             or self.config.mask_future_state_for_qvalue_prediction
             or self.config.action_loss_multiplier != 1
+            or self.config.so101_loss_mode != "all"
         ):
             kendall_loss = kendall_loss * rearrange(final_mask_B_T, "b t -> b 1 t 1 1")
 
@@ -673,6 +772,7 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
             "mse_loss": pred_mse_B_C_T_H_W.mean(),
             "edm_loss": edm_loss_B_C_T_H_W.mean(),
             "edm_loss_per_frame": torch.mean(edm_loss_B_C_T_H_W, dim=[1, 3, 4]),
+            "so101_loss_mode": self.config.so101_loss_mode,
             # Demo sample losses
             "demo_sample_action_mse_loss": demo_sample_action_mse_loss,  # Main action loss for policy
             "demo_sample_action_l1_loss": demo_sample_action_l1_loss,  # Main action loss for policy

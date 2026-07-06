@@ -13,6 +13,7 @@
 # -----------------------------------------------------------------------------
 
 import os
+import sys
 
 from hydra.core.config_store import ConfigStore
 from megatron.core import parallel_state
@@ -21,10 +22,12 @@ from torch.utils.data import DataLoader, DistributedSampler
 from cosmos_policy._src.imaginaire.lazy_config import LazyCall as L
 from cosmos_policy._src.imaginaire.lazy_config import LazyDict
 from cosmos_policy._src.imaginaire.utils import log
-from cosmos_policy._src.imaginaire.utils.checkpoint_db import get_checkpoint_path  # noqa: F401
+from cosmos_policy._src.imaginaire.utils.checkpoint_db import get_checkpoint_path as _get_checkpoint_path
 from cosmos_policy.datasets.aloha_dataset import ALOHADataset
+from cosmos_policy.datasets.lerobot_so101_dataset import LeRobotSO101Dataset
 from cosmos_policy.datasets.libero_dataset import LIBERODataset
 from cosmos_policy.datasets.robocasa_dataset import RoboCasaDataset
+from cosmos_policy.datasets.so101_lerobot_dataset import SO101LeRobotCosmosDataset
 from cosmos_policy.models.policy_video2world_model import CosmosPolicyVideo2WorldModel
 from cosmos_policy.modules.hybrid_edm_sde import HybridEDMSDE
 
@@ -35,6 +38,16 @@ val_sampling_size_override = dict(
     video_width=1280,
 )
 BASE_DATASETS_DIR = os.environ.get("BASE_DATASETS_DIR", ".")
+
+
+def get_checkpoint_path(path: str) -> str:
+    """Avoid eager downloads for dry-runs and unrelated planning experiments."""
+    if os.environ.get("COSMOS_POLICY_DRYRUN") == "1":
+        return path
+    command = " ".join(sys.argv)
+    if "Cosmos-Policy-ALOHA-Predict2-2B" in path and "resumeFrom50K" not in command:
+        return path
+    return _get_checkpoint_path(path)
 
 
 # *** Main checkpoint ***
@@ -462,6 +475,193 @@ cosmos_predict2_2b_480p_aloha_185_demos_4_tasks_mixture_foldshirt15_candiesinbow
 )
 
 
+# SO101 Three Cubes: LeRobot v3, absolute 5-joint degree targets + 0..100 gripper target.
+THREE_CUBES_DATA_DIR = os.environ.get("THREE_CUBES_DATA_DIR", "/data/rxhuang/three_cubes_1")
+three_cubes_so101_train_dataset = L(LeRobotSO101Dataset)(
+    data_dir=THREE_CUBES_DATA_DIR,
+    is_train=True,
+    val_episodes=10,
+    overfit_num_episodes=0,
+    chunk_size=30,
+    final_image_size=224,
+    t5_text_embeddings_path=os.path.join(THREE_CUBES_DATA_DIR, "t5_embeddings.pkl"),
+    normalize_actions=True,
+    normalize_proprio=True,
+    use_image_aug=True,
+    use_stronger_image_aug=True,
+)
+three_cubes_so101_val_dataset = L(LeRobotSO101Dataset)(
+    data_dir=THREE_CUBES_DATA_DIR,
+    is_train=False,
+    val_episodes=10,
+    overfit_num_episodes=0,
+    chunk_size=30,
+    final_image_size=224,
+    t5_text_embeddings_path=os.path.join(THREE_CUBES_DATA_DIR, "t5_embeddings.pkl"),
+    normalize_actions=True,
+    normalize_proprio=True,
+    use_image_aug=False,
+    use_stronger_image_aug=False,
+)
+cosmos_predict2_2b_480p_three_cubes_so101_posttrain = LazyDict(
+    dict(
+        defaults=[
+            "/experiment/cosmos_predict2_2b_480p_aloha_185_demos_4_tasks_mixture_foldshirt15_candiesinbowl45_candyinbag45_eggplantchickenonplate80",
+            "_self_",
+        ],
+        trainer=dict(
+            run_validation=True,
+            run_validation_on_start=False,
+            logging_iter=5,
+            validation_iter=250,
+            max_val_iter=50,
+            max_iter=10000,
+        ),
+        checkpoint=dict(save_iter=500),
+        model=L(CosmosPolicyVideo2WorldModel)(
+            config=dict(
+                use_lora=True,
+                lora_rank=32,
+                lora_alpha=32,
+            )
+        ),
+        dataloader_train=L(DataLoader)(
+            num_workers=4,
+            persistent_workers=True,
+            pin_memory=True,
+            dataset=three_cubes_so101_train_dataset,
+            batch_size=1,
+            drop_last=True,
+        ),
+        dataloader_val=L(DataLoader)(
+            num_workers=2,
+            persistent_workers=True,
+            pin_memory=True,
+            dataset=three_cubes_so101_val_dataset,
+            batch_size=1,
+            drop_last=False,
+        ),
+        job=dict(
+            group="three_cubes_so101",
+            name="cosmos_predict2_2b_480p_three_cubes_so101_posttrain",
+        ),
+    )
+)
+cosmos_predict2_2b_480p_three_cubes_so101_posttrain__inference_only = LazyDict(
+    dict(
+        defaults=[
+            "/experiment/cosmos_predict2_2b_480p_three_cubes_so101_posttrain",
+            "_self_",
+        ],
+        model=L(CosmosPolicyVideo2WorldModel)(config=dict(sde=L(HybridEDMSDE)(sigma_max=80, sigma_min=4))),
+        trainer=dict(run_validation=False),
+        job=dict(
+            group="three_cubes_so101",
+            name="cosmos_predict2_2b_480p_three_cubes_so101_posttrain__inference_only",
+        ),
+    )
+)
+
+
+# 通用 LeRobot SO101：维度从 metadata 读取，默认使用 full/partial DiT，而非 LoRA。
+SO101_LEROBOT_ROOT = os.environ.get("SO101_LEROBOT_ROOT", "/data/rxhuang/three_cubes_1")
+SO101_LEROBOT_REPO_ID = os.environ.get("SO101_LEROBOT_REPO_ID", "local/three_cubes_1")
+SO101_LEROBOT_T5 = os.environ.get(
+    "SO101_LEROBOT_T5", os.path.join(SO101_LEROBOT_ROOT, "so101_t5_embeddings.pkl")
+)
+SO101_LEROBOT_STATS = os.environ.get(
+    "SO101_LEROBOT_STATS", os.path.join(SO101_LEROBOT_ROOT, "so101_dataset_statistics.json")
+)
+so101_lerobot_dataset = L(SO101LeRobotCosmosDataset)(
+    repo_id=SO101_LEROBOT_REPO_ID,
+    root=SO101_LEROBOT_ROOT,
+    episodes=None,
+    chunk_size=50,
+    final_image_size=224,
+    t5_text_embeddings_path=SO101_LEROBOT_T5,
+    dataset_stats_path=SO101_LEROBOT_STATS,
+    camera_map={
+        "primary": "observation.images.front",
+        "wrist_left": "observation.images.right",
+        "wrist_right": "observation.images.wrist",
+    },
+    state_key="observation.state",
+    action_key="action",
+    normalize_actions=True,
+    normalize_proprio=True,
+    action_mode="absolute",
+    use_proprio=True,
+    use_image_aug=True,
+    use_stronger_image_aug=True,
+    num_duplicates_per_image=4,
+    return_value_function_returns=False,
+)
+cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
+    dict(
+        defaults=[
+            "/experiment/cosmos_predict2_2b_480p_libero",
+            "_self_",
+        ],
+        trainer=dict(
+            run_validation=False,
+            logging_iter=5,
+            max_iter=20000,
+            straggler_detection=dict(enabled=False),
+        ),
+        model=L(CosmosPolicyVideo2WorldModel)(
+            config=dict(
+                state_t=11,
+                min_num_conditional_frames=5,
+                max_num_conditional_frames=5,
+                sigma_conditional=0.0,
+                conditioning_strategy="frame_replace",
+                denoise_replace_gt_frames=True,
+                tokenizer=dict(chunk_duration=41),
+                input_data_key="video",
+                use_lora=False,
+                finetune_mode="partial_dit_last_n",
+                train_last_n_dit_blocks=8,
+                so101_loss_mode="joint_action_future_state",
+                so101_include_value_loss=False,
+                mask_loss_for_action_future_state_prediction=False,
+                mask_value_prediction_loss_for_policy_prediction=False,
+                ema=dict(enabled=False),
+            )
+        ),
+        model_parallel=dict(context_parallel_size=1),
+        checkpoint=dict(
+            load_path=get_checkpoint_path("hf://nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt"),
+            load_training_state=False,
+            strict_resume=False,
+            save_iter=1000,
+            load_ema_to_reg=True,
+            load_from_object_store=dict(enabled=False),
+            save_to_object_store=dict(enabled=False),
+        ),
+        optimizer=dict(lr=1e-5),
+        scheduler=dict(
+            cycle_lengths=[20000, 100000000000000],
+            warm_up_steps=[1000, 0],
+            f_start=[1e-6, 0.06],
+            f_max=[1.0, 0.06],
+            f_min=[0.3, 0.06],
+        ),
+        dataloader_train=L(DataLoader)(
+            num_workers=4,
+            persistent_workers=True,
+            pin_memory=True,
+            dataset=so101_lerobot_dataset,
+            batch_size=1,
+            drop_last=True,
+        ),
+        job=dict(
+            group="so101_lerobot",
+            name="cosmos_predict2_2b_480p_so101_lerobot",
+        ),
+    )
+)
+
+
 def register_configs():
     cs = ConfigStore.instance()
     # Register the experiments
@@ -477,6 +677,10 @@ def register_configs():
         cosmos_predict2_2b_480p_aloha_185_demos_4_tasks_mixture_foldshirt15_candiesinbowl45_candyinbag45_eggplantchickenonplate80__inference_only,
         cosmos_predict2_2b_480p_aloha_185_demos_4_tasks_mixture_foldshirt15_candiesinbowl45_candyinbag45_eggplantchickenonplate80__resumeFrom50K_648_rollouts_Vsprime_value_func,  # ALOHA planning model
         cosmos_predict2_2b_480p_aloha_185_demos_4_tasks_mixture_foldshirt15_candiesinbowl45_candyinbag45_eggplantchickenonplate80__resumeFrom50K_648_rollouts_Vsprime_value_func__inference_only,
+        # SO101
+        cosmos_predict2_2b_480p_three_cubes_so101_posttrain,
+        cosmos_predict2_2b_480p_three_cubes_so101_posttrain__inference_only,
+        cosmos_predict2_2b_480p_so101_lerobot,
     ]:
         experiment_name = _item["job"]["name"]
         log.info(f"Registering experiment: {experiment_name}")

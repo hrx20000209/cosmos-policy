@@ -203,10 +203,8 @@ def load_model_state_dict_from_checkpoint(
     if s3_checkpoint_dir is not None:
         s3_checkpoint_dir = str(s3_checkpoint_dir)
     checkpoint_format = "pt" if s3_checkpoint_dir.endswith(".pt") else "dcp"
-    if s3_checkpoint_dir.startswith("s3:"):
-        if checkpoint_format == "pt":
-            cur_key_ckpt_full_path = s3_checkpoint_dir
-        elif s3_checkpoint_dir.rstrip("/").endswith("/model"):
+    if checkpoint_format == "dcp":
+        if s3_checkpoint_dir.rstrip("/").endswith("/model"):
             cur_key_ckpt_full_path = s3_checkpoint_dir
         else:
             cur_key_ckpt_full_path = os.path.join(s3_checkpoint_dir, "model")
@@ -215,7 +213,10 @@ def load_model_state_dict_from_checkpoint(
 
     from cosmos_policy._src.imaginaire.utils.checkpoint_db import get_checkpoint_path
 
-    load_from_local = True
+    # Consolidated .pt checkpoints can be loaded as a single local object.
+    # DCP checkpoints are directories (model/.metadata + *.distcp) and must go
+    # through a StorageReader even when that directory is on the local disk.
+    load_from_local = checkpoint_format == "pt"
     local_s3_ckpt_fp = get_checkpoint_path(cur_key_ckpt_full_path)
 
     if SMOKE:
@@ -227,47 +228,33 @@ def load_model_state_dict_from_checkpoint(
             log.info(f"Loading model cached locally from {local_s3_ckpt_fp}")
             local_state_dict = easy_io.load(local_s3_ckpt_fp, weights_only=INTERNAL)
 
-            # Handle LoRA key mapping if the model uses LoRA and checkpoint is in .pt format
-            if (
-                hasattr(model, "config")
-                and hasattr(model.config, "use_lora")
-                and model.config.use_lora
-                and checkpoint_format == "pt"
-            ):
-                log.info("Model uses LoRA, mapping checkpoint keys to model keys with base_layer...")
-                mapped_state_dict = {}
-                mapped_keys = []
-                missing_keys = []
-
-                # Get current model state dict to understand what keys are expected
-                model_state_dict = model.state_dict()
-
-                for model_key in model_state_dict.keys():
-                    if "base_layer." in model_key or "base_model.model." in model_key:
-                        # This is a LoRA layer - map from checkpoint key (without base_layer)
-                        checkpoint_key = model_key.replace("base_layer.", "").replace("base_model.model.", "")
-                        if checkpoint_key in local_state_dict:
-                            mapped_state_dict[model_key] = local_state_dict[checkpoint_key]
-                            mapped_keys.append(f"{checkpoint_key} -> {model_key}")
-                        else:
-                            missing_keys.append(model_key)
-                    elif model_key in local_state_dict:
-                        # Direct mapping for non-LoRA keys
-                        mapped_state_dict[model_key] = local_state_dict[model_key]
-                    else:
-                        missing_keys.append(model_key)
-
-                if mapped_keys:
-                    log.info(f"Mapped {len(mapped_keys)} LoRA keys from checkpoint to model (showing first 5):")
-                    for mapped_key in mapped_keys[:5]:
-                        log.info(f"  {mapped_key}")
+            if checkpoint_format == "pt":
+                # get/set_model_state_dict understands DTensor parameters.  A
+                # regular model.load_state_dict() fails once tensor parallelism
+                # has wrapped the network, even for a one-GPU training job.
+                # ModelWrapper also exposes LoRA base_layer parameters under
+                # their original checkpoint keys while retaining freshly
+                # initialized adapter weights for keys absent from the base ckpt.
+                model_wrapper = ModelWrapper(model, load_ema_to_reg=False)
+                target_state_dict = model_wrapper.state_dict()
+                matched_keys = set(target_state_dict).intersection(local_state_dict)
+                for key in matched_keys:
+                    target_state_dict[key] = local_state_dict[key]
+                missing_keys = sorted(set(target_state_dict).difference(local_state_dict))
+                unexpected_keys = sorted(set(local_state_dict).difference(target_state_dict))
+                log.info(
+                    f"Matched {len(matched_keys)}/{len(local_state_dict)} consolidated checkpoint keys "
+                    f"({len(missing_keys)} model-only keys, {len(unexpected_keys)} checkpoint-only keys)"
+                )
                 if missing_keys:
                     log.warning(f"Missing keys in checkpoint: {missing_keys[:10]}... (showing first 10)")
-
-                local_state_dict = mapped_state_dict
-
-            # `strict=False` is needed to avoid errors: `Skipping key ... introduced by TransformerEngine for FP8 in the checkpoint.`
-            model.load_state_dict(local_state_dict, strict=False)
+                if unexpected_keys:
+                    log.warning(f"Unexpected keys in checkpoint: {unexpected_keys[:10]}... (showing first 10)")
+                model_wrapper.load_state_dict(target_state_dict)
+            else:
+                # `strict=False` is needed to avoid errors for TransformerEngine
+                # FP8 metadata found in some locally consolidated DCP caches.
+                model.load_state_dict(local_state_dict, strict=False)
 
         # Synchronize model states from rank 0 to all other ranks
         # Skip EMA parameters and buffers to avoid OOM - they are on CPU now, and will be moved to CUDA and synced via copy from main model after FSDP

@@ -158,7 +158,6 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from cosmos_policy.experiments.robot.cosmos_utils import (
-    ACTION_DIM,
     WorkerPoolManager,
     extract_action_chunk_from_latent_sequence,
     get_action,
@@ -222,6 +221,7 @@ class DeployConfig:
     t5_text_embeddings_path: str = ""                                    # Path to precomputed T5 text embeddings dictionary (key: instruction, val: embedding)
     trained_with_image_aug: bool = True                                  # Whether the model was trained with image augmentations (needed for test-time image transformations)
     chunk_size: int = 50                                                 # Number of actions to predict in chunk
+    action_dim: int = 14                                                 # Runtime action dimension; SO101 uses 6
     num_open_loop_steps: int = 50                                        # Number of actions in predicted chunk to execute open-loop before requerying policy
 
     deterministic: bool = True                                           # Whether to run in deterministic mode
@@ -333,6 +333,14 @@ class PolicyServer:
             observation["left_wrist_image"] = np.array(observation["left_wrist_image"], dtype=np.uint8)
             observation["right_wrist_image"] = np.array(observation["right_wrist_image"], dtype=np.uint8)
             observation["proprio"] = np.array(observation["proprio"], dtype=np.float32)
+            print(f"Observation keys: {sorted(observation.keys())}")
+            print(
+                "Observation shapes: "
+                f"primary={observation['primary_image'].shape}, "
+                f"left_wrist={observation['left_wrist_image'].shape}, "
+                f"right_wrist={observation['right_wrist_image'].shape}, "
+                f"proprio={observation['proprio'].shape}"
+            )
 
             # Record metadata
             return_all_query_results = False
@@ -524,7 +532,7 @@ class PolicyServer:
                                 next_actions = (
                                     extract_action_chunk_from_latent_sequence(
                                         next_generated_latent_with_action,
-                                        (self.cfg.chunk_size, ACTION_DIM),
+                                        (self.cfg.chunk_size, self.cfg.action_dim),
                                         action_indices=action_indices,
                                     )
                                     .to(torch.float32)
@@ -690,6 +698,13 @@ class PolicyServer:
                     future_image_predictions=best_future_predictions,
                     value_prediction=best_value_predictions,
                 )
+
+            action_array = np.asarray(best_actions, dtype=np.float32)
+            print(
+                f"Action shape={action_array.shape} min={action_array.min():.6f} "
+                f"max={action_array.max():.6f} mean={action_array.mean():.6f} "
+                f"std={action_array.std():.6f} inference_time={query_time:.3f}s"
+            )
 
             if double_encode:
                 return JSONResponse(json_numpy.dumps(response))

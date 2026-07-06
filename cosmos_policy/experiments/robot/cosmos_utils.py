@@ -1126,7 +1126,9 @@ def get_action(
         )
         actions = (
             extract_action_chunk_from_latent_sequence(
-                generated_latent_with_action, action_shape=(cfg.chunk_size, ACTION_DIM), action_indices=action_indices
+                generated_latent_with_action,
+                action_shape=(cfg.chunk_size, getattr(cfg, "action_dim", ACTION_DIM)),
+                action_indices=action_indices,
             )
             .to(torch.float32)
             .cpu()
@@ -2066,7 +2068,7 @@ def persistent_parallel_worker(gpu_id, cfg, dataset_stats, task_queue, result_qu
                             next_actions = (
                                 extract_action_chunk_from_latent_sequence(
                                     next_generated_latent_with_action,
-                                    (cfg.chunk_size, ACTION_DIM),
+                                    (cfg.chunk_size, getattr(cfg, "action_dim", ACTION_DIM)),
                                     action_indices=action_indices,
                                 )
                                 .to(torch.float32)

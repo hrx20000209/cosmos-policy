@@ -1,0 +1,3 @@
+# EXPERIMENT_NAME<TAB>RUN_DIRECTORY<TAB>GPU_ID
+partial8_joint_lr1e5	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/so101_partial8_joint_2k_20260706_165059	5
+partial8_action_lr1e5	/data/rxhuang/cosmos_three_cubes_runs/cosmos_policy/so101_lerobot/so101_partial8_action_only_2k_20260706_200645	7
