@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import torch
 
-from cosmos_policy.models.policy_text2world_model import build_so101_loss_mask
+from cosmos_policy.models.policy_text2world_model import (
+    build_so101_loss_mask,
+    normalize_so101_masked_edm_loss,
+)
 
 
 def main() -> None:
@@ -31,6 +34,13 @@ def main() -> None:
     with_value = build_so101_loss_mask(2, 11, "action_only", True, **indices)
     assert torch.equal(torch.nonzero(with_value[0]).flatten(), torch.tensor([2, 8]))
     print("include_value=True: value slot 8 验证通过")
+
+    loss = torch.arange(1, 1 + 2 * 3 * 11 * 2 * 2, dtype=torch.float32).reshape(2, 3, 11, 2, 2)
+    mask = build_so101_loss_mask(2, 11, "action_only", False, **indices)
+    normalized = normalize_so101_masked_edm_loss(loss, mask)
+    selected = torch.cat([loss[0, :, 2].flatten(), loss[1, :, 2].flatten()]).mean()
+    assert torch.allclose(normalized, selected), (normalized, selected)
+    print(f"normalize_so101_masked_loss=True: selected-slot mean={normalized.item():.6f} 验证通过")
 
 
 if __name__ == "__main__":

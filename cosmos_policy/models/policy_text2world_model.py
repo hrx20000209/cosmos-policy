@@ -29,7 +29,7 @@ from cosmos_policy._src.imaginaire.lazy_config import LazyCall as L
 from cosmos_policy._src.imaginaire.lazy_config import LazyDict
 from cosmos_policy._src.imaginaire.lazy_config import instantiate as lazy_instantiate
 from cosmos_policy._src.imaginaire.modules.res_sampler import COMMON_SOLVER_OPTIONS
-from cosmos_policy._src.imaginaire.utils import misc
+from cosmos_policy._src.imaginaire.utils import log, misc
 from cosmos_policy._src.imaginaire.utils.context_parallel import broadcast_split_tensor, cat_outputs_cp
 from cosmos_policy._src.imaginaire.utils.optim_instantiate import get_base_scheduler
 from cosmos_policy._src.predict2.models.text2world_model import (
@@ -86,6 +86,21 @@ def build_so101_loss_mask(
     if not torch.any(mask):
         raise RuntimeError(f"so101_loss_mode={mode} 生成了空 loss mask")
     return mask
+
+
+def normalize_so101_masked_edm_loss(
+    edm_loss: torch.Tensor,
+    final_mask: torch.Tensor,
+) -> torch.Tensor:
+    """只对 final_mask 选中的 latent slots 求平均；mask 可包含 action 权重。"""
+    if edm_loss.ndim != 5 or final_mask.shape != (edm_loss.shape[0], edm_loss.shape[2]):
+        raise ValueError(f"masked loss shape 不匹配：loss={edm_loss.shape}, mask={final_mask.shape}")
+    weighted = edm_loss * rearrange(final_mask, "b t -> b 1 t 1 1")
+    channels, height, width = edm_loss.shape[1], edm_loss.shape[3], edm_loss.shape[4]
+    denom = final_mask.sum() * channels * height * width
+    if denom <= 0:
+        raise RuntimeError("SO101 masked loss 分母为 0")
+    return weighted.sum() / denom
 
 
 def replace_latent_with_action_chunk(
@@ -257,17 +272,21 @@ class CosmosPolicyModelConfig(BaseText2WorldModelConfig):
     # SO101 默认不使用 LoRA，直接控制主 DiT 的可训练范围。
     finetune_mode: str = "all"
     train_last_n_dit_blocks: int = 8
+    action_head_fallback: str | None = None
     so101_loss_mode: str = "all"
     so101_include_value_loss: bool = False
+    normalize_so101_masked_loss: bool = False
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
         assert self.finetune_mode in {
             "full_dit",
             "partial_dit_last_n",
+            "final_layer_only",
             "all",
             "action_only_head_if_exists",
         }
+        assert self.action_head_fallback in {None, "final_layer_only"}
         assert self.so101_loss_mode in {"joint_action_future_state", "action_only", "future_state_only", "all"}
         assert not (
             self.mask_loss_for_action_future_state_prediction and self.mask_value_prediction_loss_for_policy_prediction
@@ -295,6 +314,10 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         # Cosmos Policy SDE and Sampler
         self.sde = lazy_instantiate(config.sde)
         self.sampler = CosmosPolicySampler()
+        if config.normalize_so101_masked_loss:
+            log.critical(
+                "SO101 masked loss normalization 已启用：只对被选 latent slots 求平均，loss scale 将不同于原版。"
+            )
 
     def init_optimizer_scheduler(
         self, optimizer_config: LazyDict, scheduler_config: LazyDict
@@ -304,6 +327,7 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
             self,
             self.config.finetune_mode,
             self.config.train_last_n_dit_blocks,
+            self.config.action_head_fallback,
         )
         optimizer = lazy_instantiate(optimizer_config, model=self.finetune_report.optimizer_module)
         optimizer_ids = {id(parameter) for group in optimizer.param_groups for parameter in group["params"]}
@@ -377,7 +401,11 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
             value_indices=data_batch["value_latent_idx"],
         )
 
-        if self.loss_reduce == "mean":
+        if self.config.normalize_so101_masked_loss and self.config.so101_loss_mode != "all":
+            if kendall_loss.ndim != 0:
+                raise RuntimeError("normalize_so101_masked_loss 期望 compute_loss 返回标量")
+            kendall_loss = kendall_loss * self.loss_scale
+        elif self.loss_reduce == "mean":
             kendall_loss = kendall_loss.mean() * self.loss_scale
         elif self.loss_reduce == "sum":
             kendall_loss = kendall_loss.sum(dim=1).mean() * self.loss_scale
@@ -659,6 +687,9 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         ):
             kendall_loss = kendall_loss * rearrange(final_mask_B_T, "b t -> b 1 t 1 1")
 
+        if self.config.normalize_so101_masked_loss and self.config.so101_loss_mode != "all":
+            kendall_loss = normalize_so101_masked_edm_loss(edm_loss_B_C_T_H_W, final_mask_B_T)
+
         # Get losses for future third-person image prediction
         if torch.all(future_image_indices != -1):  # -1 indicates future third-person image is not used
             batch_indices = torch.arange(x0_B_C_T_H_W.shape[0], device=x0_B_C_T_H_W.device)
@@ -773,6 +804,7 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
             "edm_loss": edm_loss_B_C_T_H_W.mean(),
             "edm_loss_per_frame": torch.mean(edm_loss_B_C_T_H_W, dim=[1, 3, 4]),
             "so101_loss_mode": self.config.so101_loss_mode,
+            "normalize_so101_masked_loss": self.config.normalize_so101_masked_loss,
             # Demo sample losses
             "demo_sample_action_mse_loss": demo_sample_action_mse_loss,  # Main action loss for policy
             "demo_sample_action_l1_loss": demo_sample_action_l1_loss,  # Main action loss for policy

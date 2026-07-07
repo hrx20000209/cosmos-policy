@@ -27,9 +27,16 @@ def apply_finetune_mode(
     model: nn.Module,
     finetune_mode: str,
     train_last_n_dit_blocks: int,
+    action_head_fallback: str | None = None,
 ) -> FinetuneReport:
     """冻结全部参数后，按模式只解冻所需 DiT 模块。"""
-    valid_modes = {"full_dit", "partial_dit_last_n", "all", "action_only_head_if_exists"}
+    valid_modes = {
+        "full_dit",
+        "partial_dit_last_n",
+        "final_layer_only",
+        "all",
+        "action_only_head_if_exists",
+    }
     if finetune_mode not in valid_modes:
         raise ValueError(f"未知 finetune_mode={finetune_mode}，可选值为 {sorted(valid_modes)}")
     if not hasattr(model, "net") or not isinstance(model.net, nn.Module):
@@ -40,15 +47,36 @@ def apply_finetune_mode(
     optimizer_module: nn.Module = model.net
 
     if finetune_mode == "action_only_head_if_exists":
-        # Cosmos Policy 的 action 是 joint latent frame，没有专用 action head。
-        log.warning(
-            "Cosmos Policy 没有独立 action head，action 是 joint latent sequence 中的 action latent frame，"
-            "因此回退到 partial_dit_last_n。"
-        )
-        finetune_mode = "partial_dit_last_n"
+        explicit_head_names = ("action_head", "action_decoder", "policy_head")
+        explicit_heads = [
+            (name, module)
+            for name, module in model.named_modules()
+            if name.rsplit(".", 1)[-1] in explicit_head_names
+        ]
+        if explicit_heads:
+            trainable_modules.extend(explicit_heads)
+        else:
+            message = (
+                "Cosmos Policy 没有独立 action head；action 是通过共享 DiT 的 action latent frame 生成。"
+            )
+            log.warning(message)
+            if action_head_fallback != "final_layer_only":
+                raise RuntimeError(
+                    message + " 如需近似 action-head baseline，请显式设置 "
+                    "model.config.action_head_fallback=final_layer_only。"
+                )
+            log.warning("已按显式配置回退到共享 final_layer_only；不会解冻 DiT blocks。")
+            finetune_mode = "final_layer_only"
 
-    if finetune_mode == "full_dit":
+    if trainable_modules:
+        pass
+    elif finetune_mode == "full_dit":
         trainable_modules.append(("net (完整 DiT)", model.net))
+    elif finetune_mode == "final_layer_only":
+        final_layer = getattr(model.net, "final_layer", None)
+        if not isinstance(final_layer, nn.Module):
+            raise RuntimeError("final_layer_only 找不到 model.net.final_layer")
+        trainable_modules.append(("net.final_layer", final_layer))
     elif finetune_mode == "partial_dit_last_n":
         blocks = getattr(model.net, "blocks", None)
         if blocks is None or not hasattr(blocks, "__len__"):
@@ -78,6 +106,9 @@ def apply_finetune_mode(
     tokenizer = getattr(model, "tokenizer", None)
     if isinstance(tokenizer, nn.Module):
         _set_module_trainable(tokenizer, False)
+    text_encoder = getattr(model, "text_encoder", None)
+    if isinstance(text_encoder, nn.Module):
+        _set_module_trainable(text_encoder, False)
 
     total_params = sum(parameter.numel() for parameter in model.parameters())
     trainable_params = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)

@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from PIL import Image
 
 from cosmos_policy.datasets.so101_lerobot_dataset import SO101LeRobotCosmosDataset
 from cosmos_policy.experiments.robot.aloha.deploy import DeployConfig
@@ -58,8 +59,39 @@ def parse_args() -> argparse.Namespace:
 
 
 def _to_uint8(video: torch.Tensor, temporal_index: int) -> np.ndarray:
-    image = video[:, temporal_index].permute(1, 2, 0).cpu().numpy()
-    return np.clip((image + 1.0) * 127.5, 0, 255).astype(np.uint8)
+    image = video[:, temporal_index].detach().cpu().permute(1, 2, 0)
+    if image.dtype == torch.uint8:
+        return image.numpy()
+
+    image = image.float()
+    vmin = float(image.min())
+    vmax = float(image.max())
+    if vmin >= -1.5 and vmax <= 1.5 and vmin < 0:
+        image = (image + 1.0) * 127.5
+    elif vmin >= 0.0 and vmax <= 1.5:
+        image = image * 255.0
+    return image.round().clamp(0, 255).to(torch.uint8).numpy()
+
+
+def _save_input_images(sample_dir: Path, observation: dict[str, np.ndarray]) -> dict[str, dict[str, float]]:
+    sample_dir.mkdir(parents=True, exist_ok=True)
+    records: dict[str, dict[str, float]] = {}
+    for key, filename in (
+        ("primary_image", "input_primary.png"),
+        ("left_wrist_image", "input_left_wrist.png"),
+        ("right_wrist_image", "input_right_wrist.png"),
+    ):
+        image = observation[key]
+        Image.fromarray(image).save(sample_dir / filename)
+        records[key] = {
+            "min": float(image.min()),
+            "max": float(image.max()),
+            "mean": float(image.mean()),
+            "std": float(image.std()),
+        }
+        if image.max() == image.min() or image.std() < 1.0:
+            raise RuntimeError(f"{key} 输入图疑似全黑/全白/常量，停止评估：{records[key]}")
+    return records
 
 
 def _select_indices(dataset: SO101LeRobotCosmosDataset, count: int) -> list[int]:
@@ -186,6 +218,10 @@ def main() -> None:
             "right_wrist_image": _to_uint8(sample["video"], 9),
             "proprio": sample["physical_proprio"].numpy(),
         }
+        episode = int(sample["episode_index"])
+        frame = int(sample["frame_index"])
+        stem = f"sample_{ordinal:02d}_episode_{episode}_frame_{frame}"
+        input_image_stats = _save_input_images(args.output_dir / stem, observation)
         result = get_action(
             cfg,
             model,
@@ -203,9 +239,6 @@ def main() -> None:
             raise RuntimeError(f"prediction/GT shape 不一致：{predicted.shape} vs {target.shape}")
         predictions.append(predicted)
         targets.append(target)
-        episode = int(sample["episode_index"])
-        frame = int(sample["frame_index"])
-        stem = f"sample_{ordinal:02d}_episode_{episode}_frame_{frame}"
         _save_plot(args.output_dir / f"{stem}.png", predicted, target, names, episode, frame)
         np.savez_compressed(
             args.output_dir / f"{stem}.npz",
@@ -221,6 +254,7 @@ def main() -> None:
                 "frame": frame,
                 "mae": float(np.mean(np.abs(predicted - target))),
                 "first_5_step_mae": float(np.mean(np.abs(predicted[:5] - target[:5]))),
+                "input_image_stats": input_image_stats,
             }
         )
         print(
