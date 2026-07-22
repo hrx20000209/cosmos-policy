@@ -21,6 +21,7 @@ import torch
 import torch.distributed as dist
 import torch.utils.data
 import wandb
+from torch.utils.tensorboard import SummaryWriter
 from hydra.core.config_store import ConfigStore
 
 from cosmos_policy._src.imaginaire.lazy_config import LazyCall as L
@@ -31,6 +32,9 @@ from cosmos_policy._src.imaginaire.utils.easy_io import easy_io
 from cosmos_policy._src.predict2.callbacks.wandb_log import _LossRecord
 
 
+_TB_WRITERS: dict[str, SummaryWriter] = {}
+
+
 def _append_local_metrics(config, info: dict, split: str) -> None:
     """Keep a run-local, tool-independent loss history in addition to W&B."""
     os.makedirs(config.job.path_local, exist_ok=True)
@@ -39,6 +43,15 @@ def _append_local_metrics(config, info: dict, split: str) -> None:
         serializable[key] = value.item() if hasattr(value, "item") else value
     with open(os.path.join(config.job.path_local, "metrics.jsonl"), "a") as file:
         file.write(json.dumps(serializable) + "\n")
+    writer = _TB_WRITERS.setdefault(
+        config.job.path_local,
+        SummaryWriter(log_dir=os.path.join(config.job.path_local, "tensorboard")),
+    )
+    step = int(serializable.get("iteration", 0))
+    for key, value in serializable.items():
+        if key != "iteration" and isinstance(value, (int, float)):
+            writer.add_scalar(f"{split}/{key}", value, step)
+    writer.flush()
 
 
 @dataclass
@@ -72,6 +85,8 @@ class WandbCallback(WandBCallbackImage):
         self.train_image_log = _LossRecord()
         self.train_video_log = _LossRecord()
         self.train_final_loss_log = _LossRecord()
+        self.train_action_branch_loss_log = _LossRecordNoEDM()
+        self.train_video_branch_loss_log = _LossRecordNoEDM()
         self.train_demo_sample_action_mse_loss_log = _LossRecordNoEDM()
         self.train_demo_sample_action_l1_loss_log = _LossRecordNoEDM()
         self.train_demo_sample_future_proprio_mse_loss_log = _LossRecordNoEDM()
@@ -128,6 +143,13 @@ class WandbCallback(WandBCallbackImage):
         self.wandb_extra_tag = f"@{logging_iter_multipler}" if logging_iter_multipler > 1 else ""
         self.name = "wandb_loss_log" + self.wandb_extra_tag
 
+    def on_train_start(self, model: ImaginaireModel, iteration: int = 0) -> None:
+        """Keep W&B opt-in while local JSONL/TensorBoard stay always enabled."""
+        if os.environ.get("COSMOS_ENABLE_WANDB", "0") == "1":
+            super().on_train_start(model, iteration)
+        elif distributed.is_rank0() and wandb.run is None:
+            wandb.init(mode="disabled")
+
     def on_training_step_end(
         self,
         model: ImaginaireModel,
@@ -157,6 +179,10 @@ class WandbCallback(WandBCallbackImage):
             self.train_final_loss_log.loss += loss.detach().float()
             self.train_final_loss_log.iter_count += 1
             self.train_final_loss_log.edm_loss += output_batch["edm_loss"].detach().float()
+            self.train_action_branch_loss_log.loss += output_batch["action_loss"].detach().float()
+            self.train_action_branch_loss_log.iter_count += 1
+            self.train_video_branch_loss_log.loss += output_batch["video_loss"].detach().float()
+            self.train_video_branch_loss_log.iter_count += 1
 
             demo_sample_action_mse_loss = output_batch["demo_sample_action_mse_loss"].detach().float()
             if not torch.isnan(demo_sample_action_mse_loss):
@@ -279,6 +305,8 @@ class WandbCallback(WandBCallbackImage):
             avg_image_loss, avg_image_edm_loss = self.train_image_log.get_stat()
             avg_video_loss, avg_video_edm_loss = self.train_video_log.get_stat()
             avg_final_loss, avg_final_edm_loss = self.train_final_loss_log.get_stat()
+            avg_action_branch_loss = self.train_action_branch_loss_log.get_stat()
+            avg_video_branch_loss = self.train_video_branch_loss_log.get_stat()
 
             avg_demo_sample_action_mse_loss = self.train_demo_sample_action_mse_loss_log.get_stat()
             avg_demo_sample_action_l1_loss = self.train_demo_sample_action_l1_loss_log.get_stat()
@@ -328,6 +356,8 @@ class WandbCallback(WandBCallbackImage):
                         f"train{self.wandb_extra_tag}/video_edm_loss": avg_video_edm_loss,
                         f"train{self.wandb_extra_tag}/loss": avg_final_loss,
                         f"train{self.wandb_extra_tag}/edm_loss": avg_final_edm_loss,
+                        f"train{self.wandb_extra_tag}/action_loss": avg_action_branch_loss,
+                        f"train{self.wandb_extra_tag}/video_branch_loss": avg_video_branch_loss,
                         f"train{self.wandb_extra_tag}/demo_sample_action_mse_loss": avg_demo_sample_action_mse_loss,
                         f"train{self.wandb_extra_tag}/demo_sample_action_l1_loss": avg_demo_sample_action_l1_loss,
                         f"train{self.wandb_extra_tag}/demo_sample_future_proprio_mse_loss": avg_future_proprio_mse_loss,

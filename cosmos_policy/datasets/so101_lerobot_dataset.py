@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import inspect
 import pickle
 from pathlib import Path
 from typing import Any
@@ -192,11 +193,17 @@ class SO101LeRobotCosmosDataset(Dataset):
         self.num_duplicates_per_image = num_duplicates_per_image
         self.return_value_function_returns = return_value_function_returns
         self.gamma = float(gamma)
-        self.camera_map = camera_map or {
-            "primary": "observation.images.front",
-            "wrist_left": "observation.images.right",
-            "wrist_right": "observation.images.wrist",
-        }
+        if camera_map is None:
+            # Discover media keys from metadata instead of assuming camera names.
+            info_path = self.root / "meta" / "info.json" if self.root is not None else None
+            if info_path is None or not info_path.is_file():
+                raise ValueError("camera_map=None requires a local LeRobot root with meta/info.json")
+            meta_features = json.loads(info_path.read_text())["features"]
+            media_keys = sorted(k for k, v in meta_features.items() if v.get("dtype") in {"video", "image"})
+            if len(media_keys) != 3:
+                raise ValueError(f"11-slot Cosmos layout requires exactly three cameras; discovered {media_keys}")
+            camera_map = dict(zip(CAMERA_ROLES, media_keys, strict=True))
+        self.camera_map = camera_map
         if set(self.camera_map) != set(CAMERA_ROLES):
             raise ValueError(f"第一版只支持三个角色 {CAMERA_ROLES}，实际 camera_map={self.camera_map}")
 
@@ -207,14 +214,18 @@ class SO101LeRobotCosmosDataset(Dataset):
         delta_timestamps = {key: [0.0, self.chunk_size / fps_hint] for key in self.camera_map.values()}
         delta_timestamps[action_key] = offsets
         delta_timestamps[state_key] = offsets
-        self.dataset = LeRobotDataset(
+        dataset_kwargs = dict(
             repo_id=repo_id,
             root=self.root,
             episodes=episodes,
             delta_timestamps=delta_timestamps,
-            return_uint8=True,
             video_backend=video_backend,
         )
+        # Older in-house LeRobot forks expose return_uint8; official 0.4.x
+        # already returns decoded tensors and does not accept this argument.
+        if "return_uint8" in inspect.signature(LeRobotDataset).parameters:
+            dataset_kwargs["return_uint8"] = True
+        self.dataset = LeRobotDataset(**dataset_kwargs)
         self.fps = int(self.dataset.fps)
         if self.fps != fps_hint:
             raise ValueError(f"metadata fps 在初始化期间发生变化: {fps_hint} -> {self.fps}")
@@ -389,12 +400,18 @@ class SO101LeRobotCosmosDataset(Dataset):
         episode = int(torch.as_tensor(item["episode_index"]).item())
         frame = int(torch.as_tensor(item["frame_index"]).item())
         future_frame = min(frame + self.chunk_size, self.episode_lengths[episode] - 1)
+        valid_steps = min(self.chunk_size, self.episode_lengths[episode] - frame)
+        action_valid_mask = torch.cat(
+            (torch.ones(valid_steps, dtype=torch.bool), torch.zeros(self.chunk_size - valid_steps, dtype=torch.bool))
+        )
         command = str(item["task"])
         sample = {
             "video": video,
             "command": command,
             "actions": torch.from_numpy(actions),
             "physical_actions": torch.from_numpy(physical_actions[: self.chunk_size].copy()),
+            "action_valid_mask": action_valid_mask,
+            "future_frame_valid": torch.tensor(frame + self.chunk_size < self.episode_lengths[episode]),
             "t5_text_embeddings": torch.squeeze(self.t5_text_embeddings[command]),
             "t5_text_mask": torch.ones(512, dtype=torch.int64),
             "fps": 16,

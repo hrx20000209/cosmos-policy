@@ -42,6 +42,12 @@ BASE_DATASETS_DIR = os.environ.get("BASE_DATASETS_DIR", ".")
 
 def get_checkpoint_path(path: str) -> str:
     """Avoid eager downloads for dry-runs and unrelated planning experiments."""
+    # This module registers every experiment eagerly.  Materializing each
+    # unrelated hf:// checkpoint while merely selecting the local SO101 run can
+    # download many gigabytes before Hydra composition.  The selected SO101
+    # experiment supplies an existing local path through COSMOS_BASE_CHECKPOINT.
+    if path.startswith("hf://"):
+        return path
     if os.environ.get("COSMOS_POLICY_DRYRUN") == "1":
         return path
     command = " ".join(sys.argv)
@@ -576,15 +582,11 @@ so101_lerobot_dataset = L(SO101LeRobotCosmosDataset)(
     repo_id=SO101_LEROBOT_REPO_ID,
     root=SO101_LEROBOT_ROOT,
     episodes=None,
-    chunk_size=50,
+    chunk_size=30,
     final_image_size=224,
     t5_text_embeddings_path=SO101_LEROBOT_T5,
     dataset_stats_path=SO101_LEROBOT_STATS,
-    camera_map={
-        "primary": "observation.images.front",
-        "wrist_left": "observation.images.right",
-        "wrist_right": "observation.images.wrist",
-    },
+    camera_map=None,
     state_key="observation.state",
     action_key="action",
     normalize_actions=True,
@@ -604,13 +606,16 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
         ],
         trainer=dict(
             run_validation=False,
-            logging_iter=5,
-            max_iter=20000,
+            seed=12345,
+            logging_iter=10,
+            max_iter=10000,
+            grad_accum_iter=16,
             straggler_detection=dict(enabled=False),
         ),
         model=L(CosmosPolicyVideo2WorldModel)(
             config=dict(
                 state_t=11,
+                fsdp_shard_size=int(os.environ.get("WORLD_SIZE", "1")),
                 min_num_conditional_frames=5,
                 max_num_conditional_frames=5,
                 sigma_conditional=0.0,
@@ -619,9 +624,11 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
                 tokenizer=dict(chunk_duration=41),
                 input_data_key="video",
                 use_lora=False,
-                finetune_mode="partial_dit_last_n",
+                finetune_mode="all",
                 train_last_n_dit_blocks=8,
                 action_head_fallback=None,
+                lambda_video=1.0,
+                lambda_action=1.0,
                 so101_loss_mode="joint_action_future_state",
                 so101_include_value_loss=False,
                 normalize_so101_masked_loss=False,
@@ -632,10 +639,15 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
         ),
         model_parallel=dict(context_parallel_size=1),
         checkpoint=dict(
-            load_path=get_checkpoint_path("hf://nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt"),
+            load_path=get_checkpoint_path(
+                os.environ.get(
+                    "COSMOS_BASE_CHECKPOINT",
+                    "hf://nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt",
+                )
+            ),
             load_training_state=False,
             strict_resume=False,
-            save_iter=1000,
+            save_iter=500,
             load_ema_to_reg=True,
             load_from_object_store=dict(enabled=False),
             save_to_object_store=dict(enabled=False),

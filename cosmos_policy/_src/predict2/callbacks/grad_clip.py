@@ -14,6 +14,8 @@
 # limitations under the License.
 
 from dataclasses import dataclass
+import json
+import os
 from typing import List, Tuple
 
 import torch
@@ -83,7 +85,6 @@ class GradClip(Callback):
         grad_scaler: torch.amp.GradScaler,
         iteration: int = 0,
     ) -> None:
-        del optimizer, scheduler
         if isinstance(model_ddp, distributed.DistributedDataParallel):
             model = model_ddp.module
         else:
@@ -97,10 +98,27 @@ class GradClip(Callback):
             _fused_nan_to_num(params)
 
         total_norm = model.clip_grad_norm_(self.clip_norm)
+        if not torch.isfinite(total_norm):
+            raise FloatingPointError(f"non-finite gradient norm at iteration {iteration}: {total_norm}")
 
         self._cur_state.update(total_norm)
         if iteration % self.config.trainer.logging_iter == 0:
             avg_img_mag, avg_video_mag = self.img_mag_log.get_stat(), self.video_mag_log.get_stat()
+            if distributed.is_rank0():
+                os.makedirs(self.config.job.path_local, exist_ok=True)
+                record = {
+                    "split": "train_system",
+                    "iteration": iteration,
+                    "gradient_norm": float(total_norm.item()),
+                    "clip_grad_norm_image": avg_img_mag,
+                    "clip_grad_norm_video": avg_video_mag,
+                    "learning_rate": float(optimizer.param_groups[0]["lr"]),
+                    "gpu_memory_allocated_gb": torch.cuda.memory_allocated() / 2**30,
+                    "gpu_memory_reserved_gb": torch.cuda.memory_reserved() / 2**30,
+                    "gpu_memory_max_allocated_gb": torch.cuda.max_memory_allocated() / 2**30,
+                }
+                with open(os.path.join(self.config.job.path_local, "metrics.jsonl"), "a") as file:
+                    file.write(json.dumps(record) + "\n")
             if wandb.run:
                 wandb.log(
                     {

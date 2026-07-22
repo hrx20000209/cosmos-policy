@@ -11,3 +11,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+
+# Local training run outputs: checkpoints (DCP shards, GBs each), downloaded
+# datasets, pretrained base weights, logs, diagnostics/plots. All regenerable
+# or too large for git; never commit these.
+/outputs/

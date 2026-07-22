@@ -120,4 +120,19 @@ def apply_finetune_mode(
         f"比例={100.0 * trainable_params / total_params:.4f}%"
     )
     log.critical("解冻模块: " + ", ".join(names))
+    frozen_params = total_params - trainable_params
+    log.critical(f"冻结参数={frozen_params:,}")
+    for child_name, child in model.named_children():
+        child_total = sum(p.numel() for p in child.parameters())
+        child_trainable = sum(p.numel() for p in child.parameters() if p.requires_grad)
+        if child_total:
+            log.critical(
+                f"主要模块 {child_name}: total={child_total:,}, trainable={child_trainable:,}, "
+                f"frozen={child_total-child_trainable:,}"
+            )
+    frozen_names = [name for name, parameter in model.named_parameters() if not parameter.requires_grad]
+    if frozen_names:
+        log.critical("冻结参数名称: " + ", ".join(frozen_names))
+    optimizer_names = [name for name, parameter in model.named_parameters() if parameter.requires_grad]
+    log.critical("实际参与 optimizer 更新的参数: " + ", ".join(optimizer_names))
     return FinetuneReport(finetune_mode, total_params, trainable_params, names, optimizer_module)

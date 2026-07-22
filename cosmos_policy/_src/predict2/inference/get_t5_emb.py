@@ -31,6 +31,7 @@ class CosmosT5TextEncoder(torch.nn.Module):
     def __init__(
         self,
         model_name: str = "google-t5/t5-11b",
+        tokenizer_name: str | None = None,
         device: str = "cuda",
         cache_dir=None,
         local_files_only=False,
@@ -44,7 +45,7 @@ class CosmosT5TextEncoder(torch.nn.Module):
         """
         super().__init__()
         self.tokenizer = T5TokenizerFast.from_pretrained(
-            model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            tokenizer_name or model_name, cache_dir=cache_dir, local_files_only=local_files_only
         )
         if torch_dtype is None and device.startswith("cuda"):
             torch_dtype = torch.bfloat16

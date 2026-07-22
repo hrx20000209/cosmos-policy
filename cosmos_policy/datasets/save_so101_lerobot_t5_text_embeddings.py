@@ -7,7 +7,9 @@ import pickle
 from pathlib import Path
 
 from cosmos_policy.datasets.so101_lerobot_dataset import _require_lerobot
-from cosmos_policy.datasets.t5_embedding_utils import generate_t5_embeddings
+import torch
+
+from cosmos_policy._src.predict2.inference.get_t5_emb import CosmosT5TextEncoder
 
 
 def main() -> None:
@@ -15,6 +17,12 @@ def main() -> None:
     parser.add_argument("--repo_id", required=True)
     parser.add_argument("--root")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--model-name", default="google-t5/t5-11b")
+    parser.add_argument(
+        "--tokenizer-name",
+        help="Tokenizer path when the encoder checkpoint and tokenizer are stored separately",
+    )
+    parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
 
     _require_lerobot()
@@ -24,7 +32,17 @@ def main() -> None:
     tasks = sorted(str(task) for task in dataset.meta.tasks.index.tolist())
     if not tasks:
         raise ValueError("LeRobot metadata 中没有 task，无法生成 T5 embeddings")
-    embeddings = generate_t5_embeddings(tasks)
+    encoder = CosmosT5TextEncoder(
+        model_name=args.model_name,
+        tokenizer_name=args.tokenizer_name,
+        device=args.device,
+        local_files_only=Path(args.model_name).exists(),
+        torch_dtype=torch.bfloat16 if args.device.startswith("cuda") else torch.float32,
+    )
+    embeddings = {
+        task: encoder.encode_prompts(task).to(dtype=torch.bfloat16).cpu()
+        for task in tasks
+    }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("wb") as file:
         pickle.dump(embeddings, file)

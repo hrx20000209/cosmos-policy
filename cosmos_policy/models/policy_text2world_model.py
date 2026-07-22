@@ -269,6 +269,12 @@ class CosmosPolicyModelConfig(BaseText2WorldModelConfig):
     # (Must be an integer - or will be cast to an integer later!)
     action_loss_multiplier: int = 1
 
+    # Explicit branch weights for robotics joint training.  These operate on
+    # the repository-native EDM/latent objective; they do not replace it with
+    # pixel MSE or an external action head.
+    lambda_video: float = 1.0
+    lambda_action: float = 1.0
+
     # SO101 默认不使用 LoRA，直接控制主 DiT 的可训练范围。
     finetune_mode: str = "all"
     train_last_n_dit_blocks: int = 8
@@ -288,6 +294,7 @@ class CosmosPolicyModelConfig(BaseText2WorldModelConfig):
         }
         assert self.action_head_fallback in {None, "final_layer_only"}
         assert self.so101_loss_mode in {"joint_action_future_state", "action_only", "future_state_only", "all"}
+        assert self.lambda_video >= 0 and self.lambda_action >= 0
         assert not (
             self.mask_loss_for_action_future_state_prediction and self.mask_value_prediction_loss_for_policy_prediction
         ), (
@@ -381,6 +388,7 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
             epsilon_B_C_T_H_W,
             sigma_B_T,
             action_chunk=data_batch["actions"],
+            action_valid_mask=data_batch.get("action_valid_mask"),
             action_indices=data_batch["action_latent_idx"],
             proprio=data_batch["proprio"],
             current_proprio_indices=data_batch["current_proprio_latent_idx"],
@@ -421,6 +429,7 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         epsilon_B_C_T_H_W: torch.Tensor,
         sigma_B_T: torch.Tensor,
         action_chunk: torch.Tensor,
+        action_valid_mask: Optional[torch.Tensor],
         action_indices: torch.Tensor,
         proprio: torch.Tensor,
         current_proprio_indices: torch.Tensor,
@@ -670,9 +679,37 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
                 self.config.action_loss_multiplier
             )
 
+        # Make the requested objective explicit while retaining Cosmos Policy's
+        # native per-slot EDM loss:
+        # total = lambda_video * video_EDM + lambda_action * action_EDM.
+        # Future image/proprio slots are the video/world branch; the action slot
+        # is overridden with its own weight (and optional legacy multiplier).
+        if self.config.so101_loss_mode != "all":
+            final_mask_B_T = final_mask_B_T * float(self.config.lambda_video)
+            final_mask_B_T[batch_indices, action_indices] = (
+                (so101_mask_B_T[batch_indices, action_indices] > 0).to(final_mask_B_T.dtype)
+                * float(self.config.lambda_action)
+                * int(self.config.action_loss_multiplier)
+            )
+
         # extra loss mask for each sample, for example, human faces, hands
         pred_mse_B_C_T_H_W = (x0_B_C_T_H_W - model_pred.x0) ** 2
         edm_loss_B_C_T_H_W = pred_mse_B_C_T_H_W * rearrange(weights_per_sigma_B_T, "b t -> b 1 t 1 1")
+        action_element_mask = None
+        if action_valid_mask is not None:
+            # Actions are flattened and cyclically repeated into the full action
+            # latent frame by replace_latent_with_action_chunk. Mirror that exact
+            # layout so repeated episode-tail padding contributes zero loss.
+            valid = action_valid_mask.to(device=edm_loss_B_C_T_H_W.device, dtype=edm_loss_B_C_T_H_W.dtype)
+            if valid.shape != action_chunk.shape[:2]:
+                raise ValueError(f"action_valid_mask={valid.shape}, action_chunk={action_chunk.shape}")
+            flat_valid = valid.unsqueeze(-1).expand_as(action_chunk).reshape(B, -1)
+            latent_elements = C_latent * H_latent * W_latent
+            repeats = (latent_elements + flat_valid.shape[1] - 1) // flat_valid.shape[1]
+            action_element_mask = flat_valid.repeat(1, repeats)[:, :latent_elements].reshape(
+                B, C_latent, H_latent, W_latent
+            )
+            edm_loss_B_C_T_H_W[batch_indices, :, action_indices, :, :] *= action_element_mask
 
         kendall_loss = edm_loss_B_C_T_H_W
 
@@ -772,10 +809,19 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         )
         action_diff_demo = action_diff[rollout_data_mask == 0]
         action_diff_world_model = action_diff[world_model_sample_mask == 1]
-        demo_sample_action_mse_loss = (action_diff_demo**2).mean()
-        demo_sample_action_l1_loss = torch.abs(action_diff_demo).mean()
-        all_samples_action_mse_loss = (action_diff**2).mean()
-        all_samples_action_l1_loss = torch.abs(action_diff).mean()
+        if action_element_mask is None:
+            demo_sample_action_mse_loss = (action_diff_demo**2).mean()
+            demo_sample_action_l1_loss = torch.abs(action_diff_demo).mean()
+            all_samples_action_mse_loss = (action_diff**2).mean()
+            all_samples_action_l1_loss = torch.abs(action_diff).mean()
+        else:
+            denom = action_element_mask.sum().clamp_min(1)
+            demo_mask = action_element_mask[rollout_data_mask == 0]
+            demo_denom = demo_mask.sum().clamp_min(1)
+            demo_sample_action_mse_loss = ((action_diff_demo**2) * demo_mask).sum() / demo_denom
+            demo_sample_action_l1_loss = (torch.abs(action_diff_demo) * demo_mask).sum() / demo_denom
+            all_samples_action_mse_loss = ((action_diff**2) * action_element_mask).sum() / denom
+            all_samples_action_l1_loss = (torch.abs(action_diff) * action_element_mask).sum() / denom
 
         # Get losses for value function prediction
         value_diff = (
@@ -793,6 +839,23 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
         all_samples_value_mse_loss = (value_diff**2).mean()
         all_samples_value_l1_loss = torch.abs(value_diff).mean()
 
+        # Branch contributions use the same global mean reduction as the final
+        # tensor, so (with the default legacy multiplier of one) their weighted
+        # sum is exactly the scalar training objective after ``mean()``.
+        action_slot_B_T = torch.zeros_like(final_mask_B_T)
+        action_slot_B_T[batch_indices, action_indices] = 1
+        if self.config.so101_loss_mode != "all":
+            selected_unweighted_B_T = so101_mask_B_T
+        else:
+            selected_unweighted_B_T = torch.ones_like(final_mask_B_T)
+        video_slot_B_T = (selected_unweighted_B_T - action_slot_B_T).clamp_min(0)
+        action_edm_loss = (
+            edm_loss_B_C_T_H_W * rearrange(action_slot_B_T, "b t -> b 1 t 1 1")
+        ).mean()
+        video_edm_loss = (
+            edm_loss_B_C_T_H_W * rearrange(video_slot_B_T, "b t -> b 1 t 1 1")
+        ).mean()
+
         output_batch = {
             "x0": x0_B_C_T_H_W,
             "xt": xt_B_C_T_H_W,
@@ -805,6 +868,14 @@ class CosmosPolicyDiffusionModel(BaseDiffusionModel):
             "edm_loss_per_frame": torch.mean(edm_loss_B_C_T_H_W, dim=[1, 3, 4]),
             "so101_loss_mode": self.config.so101_loss_mode,
             "normalize_so101_masked_loss": self.config.normalize_so101_masked_loss,
+            "lambda_video": self.config.lambda_video,
+            "lambda_action": self.config.lambda_action,
+            "action_loss": action_edm_loss,
+            "video_loss": video_edm_loss,
+            "weighted_action_loss": action_edm_loss
+            * float(self.config.lambda_action)
+            * int(self.config.action_loss_multiplier),
+            "weighted_video_loss": video_edm_loss * float(self.config.lambda_video),
             # Demo sample losses
             "demo_sample_action_mse_loss": demo_sample_action_mse_loss,  # Main action loss for policy
             "demo_sample_action_l1_loss": demo_sample_action_l1_loss,  # Main action loss for policy

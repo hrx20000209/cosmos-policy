@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
 def _model_kwargs(batch: dict[str, torch.Tensor]) -> dict[str, object]:
     return {
         "action_chunk": batch["actions"],
+        "action_valid_mask": batch.get("action_valid_mask"),
         "action_indices": batch["action_latent_idx"],
         "proprio": batch["proprio"],
         "current_proprio_indices": batch["current_proprio_latent_idx"],

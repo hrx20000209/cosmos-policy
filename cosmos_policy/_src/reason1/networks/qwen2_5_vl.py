@@ -65,7 +65,12 @@ else:
     print("flash_attn_2 not available")
     flash_attn_varlen_func = None
 
-assert is_flash_attn_2_available(), "flash_attn_2 not available. run pip install flash_attn"
+# Reason1 is an optional online text encoder.  Importing the Video2World policy
+# configuration must not require its FlashAttention dependency when the policy
+# uses precomputed T5 embeddings (the default robotics path).  The Reason1
+# attention implementation will still fail clearly if invoked without
+# ``flash_attn_varlen_func``; keeping the module importable avoids coupling an
+# unused model family to every Cosmos Policy training entry point.
 
 logger = logging.get_logger(__name__)
 
