@@ -1,0 +1,11 @@
+base: baseline_bf16.yaml
+experiment_name: quant_int4_weight_only
+output_tag: quant_int4_weight_only
+precision: int4
+quantization_backend: torchao
+quantization_mode: int4_weight_only
+quantization_scope: backbone
+group_size: 128
+real_quantization_required: true
+notes:
+  - Real torchao INT4 weight-only tinygemm path; group size 128.

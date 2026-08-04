@@ -1,0 +1,5 @@
+assets: /data/rxhuang/repos/LIBERO-PRO/libero/libero/assets
+bddl_files: /data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep/assets/bddl
+benchmark_root: /data/rxhuang/repos/LIBERO-PRO/libero/libero
+datasets: /data/rxhuang/libero/datasets
+init_states: /data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep/assets/init

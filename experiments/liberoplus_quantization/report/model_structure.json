@@ -1,0 +1,135 @@
+{
+  "model_class": "CosmosPolicyVideo2WorldModel",
+  "net_class": "MinimalV1LVGDiT",
+  "total_params": 1956413440,
+  "net_params": 1956413440,
+  "model_top": {
+    "sampler": 0,
+    "conditioner": 0,
+    "net": 1956413440
+  },
+  "net_children": {
+    "x_embedder": 147456,
+    "pos_embedder": 0,
+    "t_embedder": 16777216,
+    "blocks": 1937782784,
+    "final_layer": 1703936,
+    "t_embedding_norm": 2048
+  },
+  "linear_groups": {
+    "x_embedder.proj.1": {
+      "count": 1,
+      "params": 147456,
+      "shape": "(2048, 72)"
+    },
+    "t_embedder.<i>.linear_1": {
+      "count": 1,
+      "params": 4194304,
+      "shape": "(2048, 2048)"
+    },
+    "t_embedder.<i>.linear_2": {
+      "count": 1,
+      "params": 12582912,
+      "shape": "(6144, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.self_attn.q_proj": {
+      "count": 28,
+      "params": 117440512,
+      "shape": "(2048, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.self_attn.k_proj": {
+      "count": 28,
+      "params": 117440512,
+      "shape": "(2048, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.self_attn.v_proj": {
+      "count": 28,
+      "params": 117440512,
+      "shape": "(2048, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.self_attn.output_proj": {
+      "count": 28,
+      "params": 117440512,
+      "shape": "(2048, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.cross_attn.q_proj": {
+      "count": 28,
+      "params": 117440512,
+      "shape": "(2048, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.cross_attn.k_proj": {
+      "count": 28,
+      "params": 58720256,
+      "shape": "(2048, 1024)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.cross_attn.v_proj": {
+      "count": 28,
+      "params": 58720256,
+      "shape": "(2048, 1024)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.cross_attn.output_proj": {
+      "count": 28,
+      "params": 117440512,
+      "shape": "(2048, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.mlp.layer1": {
+      "count": 28,
+      "params": 469762048,
+      "shape": "(8192, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.mlp.layer2": {
+      "count": 28,
+      "params": 469762048,
+      "shape": "(2048, 8192)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.adaln_modulation_self_attn.1": {
+      "count": 28,
+      "params": 14680064,
+      "shape": "(256, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.adaln_modulation_self_attn.2": {
+      "count": 28,
+      "params": 44040192,
+      "shape": "(6144, 256)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.adaln_modulation_cross_attn.1": {
+      "count": 28,
+      "params": 14680064,
+      "shape": "(256, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.adaln_modulation_cross_attn.2": {
+      "count": 28,
+      "params": 44040192,
+      "shape": "(6144, 256)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.adaln_modulation_mlp.1": {
+      "count": 28,
+      "params": 14680064,
+      "shape": "(256, 2048)"
+    },
+    "blocks.<i>._checkpoint_wrapped_module.adaln_modulation_mlp.2": {
+      "count": 28,
+      "params": 44040192,
+      "shape": "(6144, 256)"
+    },
+    "final_layer._checkpoint_wrapped_module.linear": {
+      "count": 1,
+      "params": 131072,
+      "shape": "(64, 2048)"
+    },
+    "final_layer._checkpoint_wrapped_module.adaln_modulation.1": {
+      "count": 1,
+      "params": 524288,
+      "shape": "(256, 2048)"
+    },
+    "final_layer._checkpoint_wrapped_module.adaln_modulation.2": {
+      "count": 1,
+      "params": 1048576,
+      "shape": "(4096, 256)"
+    }
+  },
+  "n_linear": 454,
+  "net_dtypes": {
+    "torch.bfloat16": 1956413440
+  }
+}

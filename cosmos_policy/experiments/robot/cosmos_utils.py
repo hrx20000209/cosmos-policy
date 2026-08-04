@@ -15,6 +15,7 @@
 
 """Utils for evaluating Cosmos policies."""
 
+import errno
 import json
 import os
 import pickle
@@ -357,22 +358,37 @@ def init_t5_text_embeddings_cache(t5_text_embeddings_path: str = None, worker_id
         and os.path.exists(t5_text_embeddings_path)
         and t5_text_embeddings_cache == {}
     ):
+        def load_cache_file():
+            with open(t5_text_embeddings_path, "rb") as file:
+                data = pickle.load(file)
+            device = torch.device(f"cuda:{worker_id}" if torch.cuda.is_available() else "cpu")
+            for key, value in data.items():
+                if isinstance(value, torch.Tensor):
+                    data[key] = value.to(device)
+            t5_text_embeddings_cache.update(data)
+            return device
+
         # Use file lock to prevent reading while another process is writing
         lock_path = t5_text_embeddings_path + ".lock"
         lock = FileLock(lock_path, timeout=30)
         try:
             with lock:
-                with open(t5_text_embeddings_path, "rb") as file:
-                    data = pickle.load(file)
-                    # Move embeddings to the appropriate device
-                    device = torch.device(f"cuda:{worker_id}" if torch.cuda.is_available() else "cpu")
-                    for key, value in data.items():
-                        if isinstance(value, torch.Tensor):
-                            data[key] = value.to(device)
-                    t5_text_embeddings_cache.update(data)
+                device = load_cache_file()
 
             print(f"Loaded T5 text embeddings from {t5_text_embeddings_path} onto device {device}")
             # Store the path for later saving
+            t5_text_embeddings_path_global = t5_text_embeddings_path
+            t5_text_embeddings_newly_computed = False
+        except OSError as error:
+            if error.errno not in (errno.EACCES, errno.EROFS):
+                raise
+            # Checkpoints on shared/read-only model volumes are immutable, so
+            # a writer lock cannot be created and is not needed for this read.
+            device = load_cache_file()
+            print(
+                f"Loaded read-only T5 text embeddings from {t5_text_embeddings_path} "
+                f"onto device {device} without a lock"
+            )
             t5_text_embeddings_path_global = t5_text_embeddings_path
             t5_text_embeddings_newly_computed = False
         except FileLockTimeout:
@@ -858,6 +874,7 @@ def get_action(
     randomize_seed: bool = False,
     num_denoising_steps_action: int = 5,
     generate_future_state_and_value_in_parallel: bool = True,
+    decode_future_state: bool = True,
     worker_id: int = 0,
     batch_size: int = 1,
 ) -> List[np.ndarray]:
@@ -874,6 +891,8 @@ def get_action(
         randomize_seed (bool): Whether to randomize the seed for sampling actions in each query (still depends on base seed)
         num_denoising_steps_action (int): Number of denoising steps to use for action prediction
         generate_future_state_and_value_in_parallel (bool): Whether to generate future state and value in parallel with the actions
+        decode_future_state (bool): Decode joint future-state latents to RGB. Set False
+            to return actions immediately while preserving the original joint DiT generation.
         worker_id (int): Worker ID (if using parallel inference)
         batch_size (int): Batch size for inference
 
@@ -883,13 +902,35 @@ def get_action(
     # If applicable, randomize the seed used for sampling
     if randomize_seed:
         seed = secrets.randbits(32) % 256
+    inference_metrics_sink = getattr(cfg, "_inference_metrics_sink", None)
+    inference_call_start_ns = time.perf_counter_ns() if inference_metrics_sink is not None else None
+    inference_precision = getattr(cfg, "inference_precision", "bf16")
+    inference_dtype = {
+        "bf16": torch.bfloat16,
+        "bfloat16": torch.bfloat16,
+        "fp16": torch.float16,
+        "float16": torch.float16,
+    }.get(inference_precision)
+    if inference_dtype is None:
+        raise ValueError(
+            f"Unsupported inference_precision={inference_precision!r}; "
+            "expected bf16/bfloat16/fp16/float16."
+        )
 
-    with torch.inference_mode():
+    # Some TransformerEngine attention kernels keep BF16 internal outputs even
+    # when the surrounding DiT weights are converted to FP16. FP16 autocast
+    # normalizes those mixed inputs at GEMM boundaries; without it, native FP16
+    # evaluation fails at Linear with BF16 activations and FP16 weights.
+    with torch.inference_mode(), torch.autocast(
+        device_type="cuda",
+        dtype=torch.float16,
+        enabled=inference_dtype == torch.float16,
+    ):
         # Get T5 embedding of language instruction
         if isinstance(task_label_or_embedding, str):
             text_embedding = get_t5_embedding_from_cache(task_label_or_embedding)
         elif isinstance(task_label_or_embedding, np.ndarray):
-            text_embedding = torch.tensor(task_label_or_embedding, dtype=torch.bfloat16).cuda()
+            text_embedding = torch.tensor(task_label_or_embedding, dtype=inference_dtype).cuda()
 
         # Collect all input images
         # Examples:
@@ -1039,17 +1080,17 @@ def get_action(
         if cfg.use_proprio:
             # Convert proprio to tensor so that it can be injected into latent later
             proprio_tensor = (
-                torch.from_numpy(proprio).reshape(batch_size, -1).to(dtype=torch.bfloat16).cuda()
+                torch.from_numpy(proprio).reshape(batch_size, -1).to(dtype=inference_dtype).cuda()
             )  # (B, proprio_dim)
         data_batch = {
             "dataset_name": "video_data",
             "video": raw_image_sequence,  # (B, C, T, H, W)
-            "t5_text_embeddings": text_embedding.repeat(batch_size, 1, 1).to(dtype=torch.bfloat16).cuda(),
+            "t5_text_embeddings": text_embedding.repeat(batch_size, 1, 1).to(dtype=inference_dtype).cuda(),
             "fps": torch.tensor(
-                [16] * batch_size, dtype=torch.bfloat16
+                [16] * batch_size, dtype=inference_dtype
             ).cuda(),  # Just match the training config (always 16 FPS)
             "padding_mask": torch.zeros(
-                (batch_size, 1, COSMOS_IMAGE_SIZE, COSMOS_IMAGE_SIZE), dtype=torch.bfloat16
+                (batch_size, 1, COSMOS_IMAGE_SIZE, COSMOS_IMAGE_SIZE), dtype=inference_dtype
             ).cuda(),  # Padding mask (assume no padding here)
             "num_conditional_frames": model.config.min_num_conditional_frames,  # Number of latent frames used as conditioning
             "proprio": proprio_tensor if cfg.use_proprio else None,
@@ -1107,6 +1148,12 @@ def get_action(
             ),
             "value_latent_idx": torch.tensor([value_latent_idx] * batch_size, dtype=torch.int64).cuda(),
         }
+        if inference_metrics_sink is not None:
+            torch.cuda.synchronize()
+            generation_start_ns = time.perf_counter_ns()
+            inference_metrics_sink["preprocess_and_h2d_ms"] = (
+                generation_start_ns - inference_call_start_ns
+            ) / 1e6
 
         # Generate the output latent sequence - contains the predicted action chunk, future state, and value, but
         # the action chunk is what we care about here
@@ -1119,6 +1166,12 @@ def get_action(
             use_variance_scale=cfg.use_variance_scale,  # Whether to vary the magnitude of the initial noise - increases diversity slightly in generations
             return_orig_clean_latent_frames=True,  # Return the original (pre-injection) latent frames - needed for future image visualizations
         )  # (B, C'=16, T', H'=28, W'=28)
+        if inference_metrics_sink is not None:
+            torch.cuda.synchronize()
+            generation_end_ns = time.perf_counter_ns()
+            inference_metrics_sink["generation_wall_ms"] = (
+                generation_end_ns - generation_start_ns
+            ) / 1e6
 
         # Extract the predicted action chunk from the generated sample
         action_indices = torch.full(
@@ -1166,18 +1219,20 @@ def get_action(
                 ]  # 0: blank, 1: curr proprio, 2: curr left wrist img, 3: curr right wrist img, 4: curr primary img, 5: action, 6: future proprio, 7: future left wrist img, 8: future right wrist img, 9: future primary img, 10: value
             else:
                 raise ValueError(f"Eval suite not implemented yet: {cfg.suite}")
-            future_image_predictions = get_future_images_from_generated_samples(
-                model,
-                generated_latent_with_action.clone(),
-                cfg,
-                orig_clean_latent_frames,
-                INDICES_TO_REPLACE,
-                future_wrist_image_latent_idx if cfg.use_wrist_image else -1,
-                future_wrist_image2_latent_idx if cfg.use_wrist_image and cfg.num_wrist_images == 2 else -1,
-                future_image_latent_idx if cfg.use_third_person_image else -1,
-                future_image2_latent_idx if cfg.use_third_person_image and cfg.num_third_person_images == 2 else -1,
-                temporal_compression_factor=COSMOS_TEMPORAL_COMPRESSION_FACTOR,
-            )
+            future_image_predictions = None
+            if decode_future_state:
+                future_image_predictions = get_future_images_from_generated_samples(
+                    model,
+                    generated_latent_with_action.clone(),
+                    cfg,
+                    orig_clean_latent_frames,
+                    INDICES_TO_REPLACE,
+                    future_wrist_image_latent_idx if cfg.use_wrist_image else -1,
+                    future_wrist_image2_latent_idx if cfg.use_wrist_image and cfg.num_wrist_images == 2 else -1,
+                    future_image_latent_idx if cfg.use_third_person_image else -1,
+                    future_image2_latent_idx if cfg.use_third_person_image and cfg.num_third_person_images == 2 else -1,
+                    temporal_compression_factor=COSMOS_TEMPORAL_COMPRESSION_FACTOR,
+                )
             # Get value predictions from the generated sample
             value_indices = torch.full((batch_size,), -1, dtype=torch.int64, device=generated_latent_with_action.device)
             value_prediction = extract_value_from_latent_sequence(generated_latent_with_action, value_indices)
@@ -1193,13 +1248,14 @@ def get_action(
                 actions_list.append([act[i] for i in range(len(act))])
             actions = actions_list
             if generate_future_state_and_value_in_parallel:
-                future_image_predictions_list = []
-                for i in range(batch_size):
-                    future_image_predictions_i = {}
-                    for k, v in future_image_predictions.items():
-                        future_image_predictions_i[k] = v[i]
-                    future_image_predictions_list.append(future_image_predictions_i)
-                future_image_predictions = future_image_predictions_list
+                if future_image_predictions is not None:
+                    future_image_predictions_list = []
+                    for i in range(batch_size):
+                        future_image_predictions_i = {}
+                        for k, v in future_image_predictions.items():
+                            future_image_predictions_i[k] = v[i]
+                        future_image_predictions_list.append(future_image_predictions_i)
+                    future_image_predictions = future_image_predictions_list
                 value_predictions_list = []
                 for i in range(batch_size):
                     value_predictions_list.append(value_prediction[i].item())
@@ -1209,7 +1265,8 @@ def get_action(
             actions = actions[0]
             actions = [actions[i] for i in range(len(actions))]
             if generate_future_state_and_value_in_parallel:
-                future_image_predictions = {k: v[0] for k, v in future_image_predictions.items() if v is not None}
+                if future_image_predictions is not None:
+                    future_image_predictions = {k: v[0] for k, v in future_image_predictions.items() if v is not None}
                 value_prediction = value_prediction[0].item()
 
         # Gather all results into a single return dict
@@ -1235,6 +1292,11 @@ def get_action(
             return_dict["future_image_predictions"] = future_image_predictions
             return_dict["value_prediction"] = value_prediction
 
+    if inference_metrics_sink is not None:
+        torch.cuda.synchronize()
+        inference_metrics_sink["postprocess_ms"] = (
+            time.perf_counter_ns() - generation_end_ns
+        ) / 1e6
     return return_dict
 
 

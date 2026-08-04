@@ -1,0 +1,13 @@
+{
+  "hostname": "user-ESC8000A-E11",
+  "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.35",
+  "python": "3.10.12",
+  "cpu": "x86_64",
+  "nvidia_smi": "0, NVIDIA GeForce RTX 4090 D, GPU-e3bed2c3-391e-ffa5-a4bc-d0dc046b64fe, 560.35.03, 24564 MiB, 8.9\n1, NVIDIA GeForce RTX 4090 D, GPU-6f7360e1-c315-a0f1-f5c7-433290fd242e, 560.35.03, 24564 MiB, 8.9\n2, NVIDIA GeForce RTX 4090 D, GPU-012368c4-265c-015b-0e69-8bfb8b6b891e, 560.35.03, 24564 MiB, 8.9\n3, NVIDIA GeForce RTX 4090 D, GPU-e2806685-c4e3-da37-27f9-bf10ff9b4445, 560.35.03, 24564 MiB, 8.9\n4, NVIDIA GeForce RTX 4090 D, GPU-d152c6a7-1dcf-0ff2-1802-80647045e446, 560.35.03, 24564 MiB, 8.9\n5, NVIDIA GeForce RTX 4090 D, GPU-4630f136-1e70-b954-b995-1f460998c448, 560.35.03, 24564 MiB, 8.9\n6, NVIDIA GeForce RTX 4090 D, GPU-82bd0fc6-22b1-ba2b-df93-efc16ee21486, 560.35.03, 24564 MiB, 8.9\n7, NVIDIA GeForce RTX 4090 D, GPU-ca328f49-bd14-173e-7043-d4a8d79ca044, 560.35.03, 24564 MiB, 8.9",
+  "system_memory_bytes": 540823388160,
+  "cpu_count_physical": 96,
+  "cpu_count_logical": 192,
+  "torch": "2.7.0+cu128",
+  "torch_cuda": "12.8",
+  "cudnn": 90701
+}

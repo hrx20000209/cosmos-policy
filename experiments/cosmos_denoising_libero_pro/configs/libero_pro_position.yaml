@@ -1,0 +1,10 @@
+official_repo: /data/rxhuang/repos/LIBERO-PRO
+official_commit: eafdb809426b13153aa1e4c42d6601844217dfec
+task_suites: [libero_spatial, libero_object, libero_goal, libero_10]
+seed: 28
+use_environment: false
+use_swap: true
+use_object: false
+use_language: false
+use_task: false
+config: /data/rxhuang/repos/LIBERO-PRO/libero_ood/ood_spatial_relation.yaml

@@ -1,0 +1,11 @@
+base: baseline_bf16.yaml
+experiment_name: branch_backbone_int4_shared_output_bf16
+output_tag: branch_backbone_int4_shared_output_bf16
+precision: int4
+quantization_backend: torchao
+quantization_mode: int4_weight_only
+quantization_scope: backbone
+real_quantization_required: true
+notes:
+  - Quantizes 28-block shared DiT backbone; final shared output projection remains BF16.
+  - This is the closest valid implementation of backbone INT4 plus action output high precision.

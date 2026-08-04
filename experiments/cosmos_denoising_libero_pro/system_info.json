@@ -1,0 +1,73 @@
+{
+  "collected_at": "2026-07-29T23:04:52+08:00",
+  "python": "3.10.12 (main, Jun 22 2026, 18:55:27) [GCC 11.4.0]",
+  "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.35",
+  "hostname": "user-ESC8000A-E11",
+  "packages": {
+    "torch": "2.7.0+cu128",
+    "numpy": "2.2.6",
+    "robosuite": "1.4.0",
+    "mujoco": "3.3.2",
+    "PyOpenGL": "3.1.10",
+    "transformers": "4.57.1",
+    "scipy": "1.15.3",
+    "matplotlib": "3.10.8",
+    "pandas": "2.3.3",
+    "imageio": "2.37.2"
+  },
+  "nvidia_smi": "Wed Jul 29 23:04:52 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 560.35.03              Driver Version: 560.35.03      CUDA Version: 12.6     |\n|-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 4090 D      Off |   00000000:01:00.0 Off |                  Off |\n| 60%   62C    P0            147W /  425W |   12918MiB /  24564MiB |    100%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   1  NVIDIA GeForce RTX 4090 D      Off |   00000000:23:00.0 Off |                  Off |\n| 52%   62C    P0            151W /  425W |   12910MiB /  24564MiB |    100%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   2  NVIDIA GeForce RTX 4090 D      Off |   00000000:41:00.0 Off |                  Off |\n| 59%   65C    P0            143W /  425W |   12911MiB /  24564MiB |    100%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   3  NVIDIA GeForce RTX 4090 D      Off |   00000000:61:00.0 Off |                  Off |\n| 55%   66C    P0            142W /  425W |   12922MiB /  24564MiB |    100%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   4  NVIDIA GeForce RTX 4090 D      Off |   00000000:81:00.0 Off |                  Off |\n| 33%   45C    P0             36W /  425W |      19MiB /  24564MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   5  NVIDIA GeForce RTX 4090 D      Off |   00000000:A1:00.0 Off |                  Off |\n| 31%   45C    P0             47W /  425W |      19MiB /  24564MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   6  NVIDIA GeForce RTX 4090 D      Off |   00000000:C1:00.0 Off |                  Off |\n| 33%   42C    P0             46W /  425W |      19MiB /  24564MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n|   7  NVIDIA GeForce RTX 4090 D      Off |   00000000:E1:00.0 Off |                  Off |\n| 32%   52C    P0            185W /  425W |    5772MiB /  24564MiB |     28%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n                                                                                         \n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    0   N/A  N/A    535571      C   ...ects/cosmos-policy/.venv/bin/python      12884MiB |\n|    1   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    1   N/A  N/A    535572      C   ...ects/cosmos-policy/.venv/bin/python      12884MiB |\n|    2   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    2   N/A  N/A    535573      C   ...ects/cosmos-policy/.venv/bin/python      12884MiB |\n|    3   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    3   N/A  N/A    522683      G   ...libexec/gnome-remote-desktop-daemon          0MiB |\n|    3   N/A  N/A    535574      C   ...ects/cosmos-policy/.venv/bin/python      12884MiB |\n|    4   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    5   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    6   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    7   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |\n|    7   N/A  N/A   2725071      C   .venv/bin/python                             5748MiB |\n+-----------------------------------------------------------------------------------------+",
+  "gpus": "0, NVIDIA GeForce RTX 4090 D, GPU-e3bed2c3-391e-ffa5-a4bc-d0dc046b64fe, 560.35.03, 24564 MiB\n1, NVIDIA GeForce RTX 4090 D, GPU-6f7360e1-c315-a0f1-f5c7-433290fd242e, 560.35.03, 24564 MiB\n2, NVIDIA GeForce RTX 4090 D, GPU-012368c4-265c-015b-0e69-8bfb8b6b891e, 560.35.03, 24564 MiB\n3, NVIDIA GeForce RTX 4090 D, GPU-e2806685-c4e3-da37-27f9-bf10ff9b4445, 560.35.03, 24564 MiB\n4, NVIDIA GeForce RTX 4090 D, GPU-d152c6a7-1dcf-0ff2-1802-80647045e446, 560.35.03, 24564 MiB\n5, NVIDIA GeForce RTX 4090 D, GPU-4630f136-1e70-b954-b995-1f460998c448, 560.35.03, 24564 MiB\n6, NVIDIA GeForce RTX 4090 D, GPU-82bd0fc6-22b1-ba2b-df93-efc16ee21486, 560.35.03, 24564 MiB\n7, NVIDIA GeForce RTX 4090 D, GPU-ca328f49-bd14-173e-7043-d4a8d79ca044, 560.35.03, 24564 MiB",
+  "repositories": [
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy",
+      "commit": "eaf393e5b5dbe8ab03a6ab08061c99aad6ba2e1e",
+      "branch": "exp/cosmos-tensorrt-fp8",
+      "status": "M cosmos_policy/_src/predict2/networks/minimal_v4_dit.py\n M cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py\n M cosmos_policy/experiments/robot/cosmos_utils.py\n M cosmos_policy/experiments/robot/libero/run_libero_eval.py\n M cosmos_policy/modules/cosmos_sampler.py\n M cosmos_policy/scripts/eval_so101_action_curves.py\n M cosmos_policy/scripts/eval_so101_full_episode_action_curve.py\n?? adapters/\n?? analysis/\n?? cosmos_policy/scripts/plot_so101_single_training_metrics.py\n?? experiments/\n?? finetune_three_cubes/\n?? output_train/\n?? outputs/\n?? plots/\n?? reports/\n?? rollouts/\n?? runtime/\n?? scripts/\n?? tests/"
+    },
+    {
+      "path": "/home/rxhuang/Projects/LIBERO",
+      "commit": "8f1084e3132a39270c3a13ebe37270a43ece2a01",
+      "branch": "master",
+      "status": ""
+    },
+    {
+      "path": "/data/rxhuang/repos/LIBERO-PRO",
+      "commit": "eafdb809426b13153aa1e4c42d6601844217dfec",
+      "branch": "master",
+      "status": ""
+    },
+    {
+      "path": "/data/rxhuang/LIBERO-plus",
+      "commit": "4976dc30028e805ff8094b55501d532c48fec182",
+      "branch": "main",
+      "status": "M libero/libero/benchmark/__init__.py\n?? libero/__init__.py\n?? libero/randomizer/__init__.py"
+    }
+  ],
+  "files": {
+    "checkpoint": {
+      "path": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+      "bytes": 3913017345,
+      "sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2"
+    },
+    "dataset_stats": {
+      "path": "/data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json",
+      "bytes": 2372,
+      "sha256": "5b119a98ad7824507ddff3c6c7507ca244261ee416dcfa623876702160c580d3"
+    },
+    "base_t5": {
+      "path": "/data/rxhuang/models/cosmos-policy-libero-2b/libero_t5_embeddings.pkl",
+      "bytes": 41957938,
+      "sha256": "8a03499676c6c196127c577144b9fd09bb02c30f9caf058adbcef09bb99ad8f5"
+    }
+  },
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": null,
+    "MUJOCO_GL": null,
+    "PYOPENGL_PLATFORM": null,
+    "LD_LIBRARY_PATH": "/usr/local/cuda-12.6/lib64:/usr/local/cuda-12.6/lib64:/usr/local/cuda-12.6/lib64:",
+    "LIBERO_CONFIG_PATH": null,
+    "CUBLAS_WORKSPACE_CONFIG": null
+  },
+  "home_libero_config": "assets: /data/rxhuang/LIBERO-plus/libero/libero/./assets\nbddl_files: /data/rxhuang/LIBERO-plus/libero/libero/./bddl_files\nbenchmark_root: /data/rxhuang/LIBERO-plus/libero/libero\ndatasets: /data/rxhuang/libero/datasets\ninit_states: /data/rxhuang/LIBERO-plus/libero/libero/./init_files\n",
+  "import_conflict": "The environment's editable default resolves libero to /data/rxhuang/LIBERO-plus; workers install an explicit outer-package shim pinned to each manifest row."
+}

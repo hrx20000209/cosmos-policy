@@ -11,3 +11,27 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+
+# Local training/checkpoint outputs.  DCP checkpoints contain multi-gigabyte
+# model and optimizer shards; keep them outside source control.
+/output_train/
+/outputs/
+/rollouts/
+/runtime/
+/plots/
+/reports/
+*.distcp
+*.ckpt
+*.safetensors
+*.pt2
+*.tfevents.*
+
+# Generated artifacts from local experiment runs.  Keep experiment source,
+# configs, and scripts trackable while excluding reproducible run products.
+/experiments/**/logs/
+/experiments/**/plots/
+/experiments/**/reports/
+/experiments/**/summaries/
+/experiments/**/manifests/
+/experiments/cosmos_trt_quantization/engines/
+/experiments/cosmos_trt_quantization/profiles/

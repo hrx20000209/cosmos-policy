@@ -42,6 +42,7 @@ def main() -> None:
     dataset = SO101LeRobotCosmosDataset(
         repo_id=args.repo_id,
         root=args.root,
+        episodes=[args.episode],
         chunk_size=args.chunk_size,
         t5_text_embeddings_path=args.t5_text_embeddings_path,
         dataset_stats_path=args.dataset_stats_path,

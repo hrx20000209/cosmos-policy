@@ -1,0 +1,5 @@
+assets: /home/rxhuang/Projects/LIBERO/libero/libero/assets
+bddl_files: /home/rxhuang/Projects/LIBERO/libero/libero/bddl_files
+benchmark_root: /home/rxhuang/Projects/LIBERO/libero/libero
+datasets: /data/rxhuang/libero/datasets
+init_states: /home/rxhuang/Projects/LIBERO/libero/libero/init_files

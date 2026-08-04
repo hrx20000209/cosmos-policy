@@ -1,0 +1,5 @@
+base: baseline_bf16.yaml
+experiment_name: denoising_bf16_16
+output_tag: denoising_bf16_16
+denoising_steps: 16
+num_open_loop_steps: 8

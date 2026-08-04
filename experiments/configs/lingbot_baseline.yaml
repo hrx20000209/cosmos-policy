@@ -1,0 +1,56 @@
+run_id: null
+output_dir: outputs/wam_libero
+repositories:
+  cosmos: /home/rxhuang/Projects/cosmos-policy
+  lingbot_va: /home/rxhuang/Projects/lingbot-va
+  libero: /home/rxhuang/Projects/LIBERO
+model:
+  name: lingbot_va
+  repo: /home/rxhuang/Projects/lingbot-va
+  checkpoint: /path/to/lingbot-va-posttrain-libero-long
+  transformer_path: null
+  config_name: libero
+  action_horizon: 16
+  action_dim: 7
+  image_resolution: 128
+  camera_views: 2
+  precision: bf16
+  camera_flip_vertical: true
+  enable_offload: false
+  video_inference_steps: 20
+evaluation:
+  task_suite: libero_10
+  task_ids: [0, 1]
+  episodes_per_task: 3
+  seeds: [195, 196, 197]
+  settle_steps: 5
+  settle_gripper_action: 0.0
+  resolution: 128
+  max_steps: 800
+  control_frequency_hz: null
+  record_actions: true
+history:
+  observation_policy: latest_only
+  history_policy: dense_recent
+  length: 1
+  frame_stride: 1
+  buffer_capacity: 64
+  context_capture_stride_actions: 4
+denoising:
+  scheduler: fixed
+  steps: 50
+  official_steps: 50
+  minimum_steps: 5
+  normal_steps: 20
+execution_prefix:
+  mode: fixed
+  length: 16
+  candidates: [1, 2, 4, 8, 16]
+  buffer_strategy: replace
+pipeline:
+  mode: sync_baseline
+  decode_future: false
+  cuda_streams: 1
+metrics:
+  warmup_requests: 10
+  resource_interval_seconds: 0.5

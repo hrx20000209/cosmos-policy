@@ -1,0 +1,7 @@
+base: baseline_bf16.yaml
+experiment_name: baseline_fp16
+output_tag: baseline_fp16
+precision: fp16
+quantization_mode: fp16
+notes:
+  - Native FP16 sensitivity configuration; not integer quantization.

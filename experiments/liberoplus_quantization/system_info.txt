@@ -1,0 +1,61 @@
+# System Info — LIBERO-Plus WAM Quantization Experiment
+Generated: 2026-07-29T01:45:54+08:00
+
+## Host / User
+host: user-ESC8000A-E11
+user: rxhuang
+pwd: /home/rxhuang/Projects/cosmos-policy
+
+## Repo state (cosmos-policy)
+commit: eaf393e5b5dbe8ab03a6ab08061c99aad6ba2e1e
+branch: main
+dirty:
+ M cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py
+ M cosmos_policy/scripts/eval_so101_action_curves.py
+ M cosmos_policy/scripts/eval_so101_full_episode_action_curve.py
+?? cosmos_policy/scripts/plot_so101_single_training_metrics.py
+?? experiments/
+?? output_train/
+?? scripts/
+
+## GPU
+index, name, memory.total [MiB], driver_version, compute_cap
+0, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+1, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+2, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+3, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+4, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+5, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+6, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+7, NVIDIA GeForce RTX 4090 D, 24564 MiB, 560.35.03, 8.9
+CUDA (driver): 12.6 | compute_cap 8.9 (Ada Lovelace, sm_89)
+FP8 tensor cores: YES (Ada E4M3/E5M2) | INT8: YES | INT4 weight-only kernels: YES (tinygemm/Marlin) | NVFP4: NO (Blackwell only)
+
+## CPU / MEM / DISK
+CPU(s):                                  192
+Model name:                              AMD EPYC 7K62 48-Core Processor
+Thread(s) per core:                      2
+Socket(s):                               2
+               total        used        free      shared  buff/cache   available
+Mem:           503Gi        75Gi       357Gi       144Mi        70Gi       422Gi
+DISK: /home 96% used (157G free) -> heavy data on /data (18T free)
+  Filesystem      Size  Used Avail Use% Mounted on
+  /dev/sdc1       3.6T  3.3T  157G  96% /home
+  /dev/sdb         66T   45T   18T  73% /data
+
+## Software (cosmos-policy .venv, python 3.10.12)
+torch 2.7.0+cu128 | torch.version.cuda 12.8 | transformers 4.57.1 | peft 0.18.0 | triton 3.3.0 | numpy 2.2.6
+torchao: NOT INSTALLED  | tensorrt: NOT INSTALLED | modelopt: NOT INSTALLED | bitsandbytes: NOT INSTALLED
+uv 0.11.26
+
+## Conda envs (alt): base, libero, lingbot, fastwam, lerobot, gr00t, ...
+
+## LIBERO / LIBERO-Plus
+LIBERO installed at ~/Projects/LIBERO (commit 8f1084e, origin Lifelong-Robot-Learning/LIBERO)
+~/.libero/config.yaml -> benchmark_root ~/Projects/LIBERO/libero/libero ; datasets /data/rxhuang/libero/datasets
+LIBERO-Plus: NOT installed (only starVLA/examples/LIBERO-plus eval glue present). Need sylvestf/LIBERO-plus.
+task_classification.json: not found yet.
+
+## Checkpoints
+Cosmos-Policy-LIBERO-Predict2-2B: NOT cached locally yet (will download from HF).
+LingBot-VA fallback assets present under ~/Projects/models/lingbot-va-*

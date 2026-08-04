@@ -1,0 +1,10 @@
+base: baseline_bf16.yaml
+experiment_name: branch_quant_shared_mlp
+output_tag: branch_quant_shared_mlp
+precision: int8
+quantization_backend: torchao
+quantization_mode: int8_weight_only
+quantization_scope: mlp
+real_quantization_required: true
+notes:
+  - Quantizes shared DiT MLPs while attention and shared output stay BF16.

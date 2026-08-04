@@ -1,0 +1,5 @@
+base: quant_int8.yaml
+experiment_name: denoising_int8_weight_only_4
+output_tag: denoising_int8_weight_only_4
+denoising_steps: 4
+num_open_loop_steps: 8

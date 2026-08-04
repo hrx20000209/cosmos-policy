@@ -1,0 +1,10 @@
+base: baseline_bf16.yaml
+experiment_name: branch_quant_shared_attention
+output_tag: branch_quant_shared_attention
+precision: int8
+quantization_backend: torchao
+quantization_mode: int8_weight_only
+quantization_scope: attention
+real_quantization_required: true
+notes:
+  - Quantizes shared self/cross-attention projections; both video and action tokens use these weights.

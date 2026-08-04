@@ -570,12 +570,20 @@ SO101_LEROBOT_T5 = os.environ.get(
     "SO101_LEROBOT_T5", os.path.join(SO101_LEROBOT_ROOT, "so101_t5_embeddings.pkl")
 )
 SO101_LEROBOT_STATS = os.environ.get(
-    "SO101_LEROBOT_STATS", os.path.join(SO101_LEROBOT_ROOT, "so101_dataset_statistics.json")
+    "SO101_LEROBOT_STATS",
+    os.path.join(SO101_LEROBOT_ROOT, "so101_dataset_statistics_train_episodes_000_094.json"),
 )
-so101_lerobot_dataset = L(SO101LeRobotCosmosDataset)(
+SO101_LEROBOT_TRAIN_EPISODES = list(range(95))
+SO101_LEROBOT_VAL_EPISODES = list(range(95, 100))
+SO101_ALOHA_BASE_CHECKPOINT = (
+    "/data/hf_cache/hub/models--nvidia--Cosmos-Policy-ALOHA-Predict2-2B/"
+    "snapshots/68e3f927e98e464a954cc157fd0b37e65e185b45/Cosmos-Policy-ALOHA-Predict2-2B.pt"
+)
+
+so101_lerobot_train_dataset = L(SO101LeRobotCosmosDataset)(
     repo_id=SO101_LEROBOT_REPO_ID,
     root=SO101_LEROBOT_ROOT,
-    episodes=None,
+    episodes=SO101_LEROBOT_TRAIN_EPISODES,
     chunk_size=50,
     final_image_size=224,
     t5_text_embeddings_path=SO101_LEROBOT_T5,
@@ -596,6 +604,30 @@ so101_lerobot_dataset = L(SO101LeRobotCosmosDataset)(
     num_duplicates_per_image=4,
     return_value_function_returns=False,
 )
+so101_lerobot_val_dataset = L(SO101LeRobotCosmosDataset)(
+    repo_id=SO101_LEROBOT_REPO_ID,
+    root=SO101_LEROBOT_ROOT,
+    episodes=SO101_LEROBOT_VAL_EPISODES,
+    chunk_size=50,
+    final_image_size=224,
+    t5_text_embeddings_path=SO101_LEROBOT_T5,
+    dataset_stats_path=SO101_LEROBOT_STATS,
+    camera_map={
+        "primary": "observation.images.front",
+        "wrist_left": "observation.images.right",
+        "wrist_right": "observation.images.wrist",
+    },
+    state_key="observation.state",
+    action_key="action",
+    normalize_actions=True,
+    normalize_proprio=True,
+    action_mode="absolute",
+    use_proprio=True,
+    use_image_aug=False,
+    use_stronger_image_aug=False,
+    num_duplicates_per_image=4,
+    return_value_function_returns=False,
+)
 cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
     dict(
         defaults=[
@@ -603,9 +635,13 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
             "_self_",
         ],
         trainer=dict(
-            run_validation=False,
-            logging_iter=5,
+            run_validation=True,
+            run_validation_on_start=False,
+            validation_iter=500,
+            max_val_iter=32,
+            logging_iter=10,
             max_iter=20000,
+            grad_accum_iter=16,
             straggler_detection=dict(enabled=False),
         ),
         model=L(CosmosPolicyVideo2WorldModel)(
@@ -619,7 +655,7 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
                 tokenizer=dict(chunk_duration=41),
                 input_data_key="video",
                 use_lora=False,
-                finetune_mode="partial_dit_last_n",
+                finetune_mode="full_dit",
                 train_last_n_dit_blocks=8,
                 action_head_fallback=None,
                 so101_loss_mode="joint_action_future_state",
@@ -632,10 +668,10 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
         ),
         model_parallel=dict(context_parallel_size=1),
         checkpoint=dict(
-            load_path=get_checkpoint_path("hf://nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt"),
+            load_path=get_checkpoint_path(SO101_ALOHA_BASE_CHECKPOINT),
             load_training_state=False,
             strict_resume=False,
-            save_iter=1000,
+            save_iter=500,
             load_ema_to_reg=True,
             load_from_object_store=dict(enabled=False),
             save_to_object_store=dict(enabled=False),
@@ -652,9 +688,17 @@ cosmos_predict2_2b_480p_so101_lerobot = LazyDict(
             num_workers=4,
             persistent_workers=True,
             pin_memory=True,
-            dataset=so101_lerobot_dataset,
+            dataset=so101_lerobot_train_dataset,
             batch_size=1,
             drop_last=True,
+        ),
+        dataloader_val=L(DataLoader)(
+            num_workers=2,
+            persistent_workers=True,
+            pin_memory=True,
+            dataset=so101_lerobot_val_dataset,
+            batch_size=1,
+            drop_last=False,
         ),
         job=dict(
             group="so101_lerobot",

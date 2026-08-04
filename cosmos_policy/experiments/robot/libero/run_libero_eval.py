@@ -369,7 +369,11 @@ def run_episode(
             f"{cfg.chunk_size}! For best performance (in terms of both speed and success rate), we "
             "recommend executing the full action chunk."
         )
-    action_queue = deque(maxlen=cfg.num_open_loop_steps)
+    # Keep the *first* num_open_loop_steps actions from every predicted chunk.
+    # A bounded deque combined with ``extend(best_actions)`` keeps the last N
+    # elements when N < chunk_size, silently reversing the intended receding
+    # horizon semantics (and skipping the beginning of every action chunk).
+    action_queue = deque()
 
     # Setup
     t = 0
@@ -590,7 +594,7 @@ def run_episode(
                 best_future_predictions = best_return_dict[1]
                 best_value_predictions = best_return_dict[2]
                 # Use the best actions, future predictions, and value predictions found
-                action_queue.extend(best_actions)
+                action_queue.extend(best_actions[: cfg.num_open_loop_steps])
                 future_image_predictions_list.append(best_future_predictions)
                 log_message(f"t={t}: Selected seed {best_seed} with value = {best_value_predictions:.4f}", log_file)
 

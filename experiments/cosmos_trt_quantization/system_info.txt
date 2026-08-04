@@ -1,0 +1,108 @@
+timestamp=2026-07-29T17:46:28.090016+08:00
+hostname=user-ESC8000A-E11
+platform=Linux-6.8.0-110-generic-x86_64-with-glibc2.35
+python=3.10.12 (main, Jun 22 2026, 18:55:27) [GCC 11.4.0]
+python_executable=/home/rxhuang/Projects/cosmos-policy/.venv/bin/python
+cwd=/home/rxhuang/Projects/cosmos-policy
+git_branch=exp/cosmos-tensorrt-fp8
+git_commit=eaf393e5b5dbe8ab03a6ab08061c99aad6ba2e1e
+
+[tools]
+nvidia-smi=/usr/bin/nvidia-smi
+nvcc=/usr/local/cuda-12.6/bin/nvcc
+['nvcc: NVIDIA (R) Cuda compiler driver', 'Copyright (c) 2005-2024 NVIDIA Corporation', 'Built on Tue_Oct_29_23:50:19_PDT_2024', 'Cuda compilation tools, release 12.6, V12.6.85']
+trtexec=NOT AVAILABLE
+nsys=/usr/local/cuda-12.6/bin/nsys
+['NVIDIA Nsight Systems version 2024.5.1.113-245134619542v0']
+ncu=/usr/local/cuda-12.6/bin/ncu
+['NVIDIA (R) Nsight Compute Command Line Profiler', 'Copyright (c) 2018-2024 NVIDIA Corporation', 'Version 2024.3.2.0 (build 34861637) (public-release)']
+uv=/home/rxhuang/.local/bin/uv
+['uv 0.11.26 (x86_64-unknown-linux-gnu)']
+
+[python modules]
+torch=2.7.0+cu128
+torchao=0.11.0
+tensorrt=NOT AVAILABLE ModuleNotFoundError("No module named 'tensorrt'")
+tensorrt_rtx=NOT AVAILABLE ModuleNotFoundError("No module named 'tensorrt_rtx'")
+torch_tensorrt=NOT AVAILABLE ModuleNotFoundError("No module named 'torch_tensorrt'")
+modelopt=NOT AVAILABLE ModuleNotFoundError("No module named 'modelopt'")
+transformer_engine=2.2+cu128.torch27
+onnx=NOT AVAILABLE ModuleNotFoundError("No module named 'onnx'")
+onnxruntime=NOT AVAILABLE ModuleNotFoundError("No module named 'onnxruntime'")
+
+[torch/cuda]
+torch=2.7.0+cu128
+torch_cuda_runtime=12.8
+cudnn=90701
+cuda_available=True
+visible_gpu_count=1
+gpu[0]=NVIDIA GeForce RTX 4090 D; capability=8.9; memory_bytes=25282281472; multiprocessors=114
+
+[nvidia-smi]
+Wed Jul 29 17:46:32 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 560.35.03              Driver Version: 560.35.03      CUDA Version: 12.6     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4090 D      Off |   00000000:01:00.0 Off |                  Off |
+| 60%   59C    P0            167W /  425W |   12864MiB /  24564MiB |    100%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA GeForce RTX 4090 D      Off |   00000000:23:00.0 Off |                  Off |
+| 50%   59C    P0            170W /  425W |   12862MiB /  24564MiB |    100%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA GeForce RTX 4090 D      Off |   00000000:41:00.0 Off |                  Off |
+| 58%   59C    P0            161W /  425W |   12863MiB /  24564MiB |     95%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   3  NVIDIA GeForce RTX 4090 D      Off |   00000000:61:00.0 Off |                  Off |
+| 53%   57C    P0            161W /  425W |   12874MiB /  24564MiB |     96%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   4  NVIDIA GeForce RTX 4090 D      Off |   00000000:81:00.0 Off |                  Off |
+| 33%   43C    P0             35W /  425W |      19MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   5  NVIDIA GeForce RTX 4090 D      Off |   00000000:A1:00.0 Off |                  Off |
+| 31%   44C    P0             46W /  425W |      19MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   6  NVIDIA GeForce RTX 4090 D      Off |   00000000:C1:00.0 Off |                  Off |
+| 33%   40C    P0             44W /  425W |      19MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+|   7  NVIDIA GeForce RTX 4090 D      Off |   00000000:E1:00.0 Off |                  Off |
+| 32%   38C    P0             41W /  425W |      19MiB /  24564MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    0   N/A  N/A    535571      C   ...ects/cosmos-policy/.venv/bin/python      12840MiB |
+|    1   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    1   N/A  N/A    535572      C   ...ects/cosmos-policy/.venv/bin/python      12838MiB |
+|    2   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    2   N/A  N/A    535573      C   ...ects/cosmos-policy/.venv/bin/python      12838MiB |
+|    3   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    3   N/A  N/A    522683      G   ...libexec/gnome-remote-desktop-daemon          0MiB |
+|    3   N/A  N/A    535574      C   ...ects/cosmos-policy/.venv/bin/python      12838MiB |
+|    4   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    5   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    6   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
+|    7   N/A  N/A    327313      G   /usr/lib/xorg/Xorg                              4MiB |
++-----------------------------------------------------------------------------------------+
+
+[nvcc]
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2024 NVIDIA Corporation
+Built on Tue_Oct_29_23:50:19_PDT_2024
+Cuda compilation tools, release 12.6, V12.6.85
+Build cuda_12.6.r12.6/compiler.35059454_0

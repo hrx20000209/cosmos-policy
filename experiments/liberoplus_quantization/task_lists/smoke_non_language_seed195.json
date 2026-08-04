@@ -1,0 +1,39 @@
+{
+  "seed": 195,
+  "purpose": "Phase 0-3 representative smoke set; excludes genuine language perturbations until their T5 embeddings are precomputed.",
+  "initial_state_index": 0,
+  "tasks": [
+    {
+      "suite": "libero_spatial",
+      "id": 22,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_tb_2",
+      "category": "Background Textures",
+      "difficulty_level": 1,
+      "initial_state_index": 0
+    },
+    {
+      "suite": "libero_object",
+      "id": 23,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_tb_18",
+      "category": "Background Textures",
+      "difficulty_level": 3,
+      "initial_state_index": 0
+    },
+    {
+      "suite": "libero_goal",
+      "id": 33,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_table_12",
+      "category": "Background Textures",
+      "difficulty_level": 5,
+      "initial_state_index": 0
+    },
+    {
+      "suite": "libero_10",
+      "id": 5,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_table_14",
+      "category": "Background Textures",
+      "difficulty_level": 5,
+      "initial_state_index": 0
+    }
+  ]
+}

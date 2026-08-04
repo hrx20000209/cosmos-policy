@@ -1,0 +1,45 @@
+collected_at: 2026-07-29T23:04:52+08:00
+python: 3.10.12 (main, Jun 22 2026, 18:55:27) [GCC 11.4.0]
+platform: Linux-6.8.0-110-generic-x86_64-with-glibc2.35
+packages: {"torch": "2.7.0+cu128", "numpy": "2.2.6", "robosuite": "1.4.0", "mujoco": "3.3.2", "PyOpenGL": "3.1.10", "transformers": "4.57.1", "scipy": "1.15.3", "matplotlib": "3.10.8", "pandas": "2.3.3", "imageio": "2.37.2"}
+gpus:
+0, NVIDIA GeForce RTX 4090 D, GPU-e3bed2c3-391e-ffa5-a4bc-d0dc046b64fe, 560.35.03, 24564 MiB
+1, NVIDIA GeForce RTX 4090 D, GPU-6f7360e1-c315-a0f1-f5c7-433290fd242e, 560.35.03, 24564 MiB
+2, NVIDIA GeForce RTX 4090 D, GPU-012368c4-265c-015b-0e69-8bfb8b6b891e, 560.35.03, 24564 MiB
+3, NVIDIA GeForce RTX 4090 D, GPU-e2806685-c4e3-da37-27f9-bf10ff9b4445, 560.35.03, 24564 MiB
+4, NVIDIA GeForce RTX 4090 D, GPU-d152c6a7-1dcf-0ff2-1802-80647045e446, 560.35.03, 24564 MiB
+5, NVIDIA GeForce RTX 4090 D, GPU-4630f136-1e70-b954-b995-1f460998c448, 560.35.03, 24564 MiB
+6, NVIDIA GeForce RTX 4090 D, GPU-82bd0fc6-22b1-ba2b-df93-efc16ee21486, 560.35.03, 24564 MiB
+7, NVIDIA GeForce RTX 4090 D, GPU-ca328f49-bd14-173e-7043-d4a8d79ca044, 560.35.03, 24564 MiB
+repositories:
+{"path": "/home/rxhuang/Projects/cosmos-policy", "commit": "eaf393e5b5dbe8ab03a6ab08061c99aad6ba2e1e", "branch": "exp/cosmos-tensorrt-fp8", "status": "M cosmos_policy/_src/predict2/networks/minimal_v4_dit.py\n M cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py\n M cosmos_policy/experiments/robot/cosmos_utils.py\n M cosmos_policy/experiments/robot/libero/run_libero_eval.py\n M cosmos_policy/modules/cosmos_sampler.py\n M cosmos_policy/scripts/eval_so101_action_curves.py\n M cosmos_policy/scripts/eval_so101_full_episode_action_curve.py\n?? adapters/\n?? analysis/\n?? cosmos_policy/scripts/plot_so101_single_training_metrics.py\n?? experiments/\n?? finetune_three_cubes/\n?? output_train/\n?? outputs/\n?? plots/\n?? reports/\n?? rollouts/\n?? runtime/\n?? scripts/\n?? tests/"}
+{"path": "/home/rxhuang/Projects/LIBERO", "commit": "8f1084e3132a39270c3a13ebe37270a43ece2a01", "branch": "master", "status": ""}
+{"path": "/data/rxhuang/repos/LIBERO-PRO", "commit": "eafdb809426b13153aa1e4c42d6601844217dfec", "branch": "master", "status": ""}
+{"path": "/data/rxhuang/LIBERO-plus", "commit": "4976dc30028e805ff8094b55501d532c48fec182", "branch": "main", "status": "M libero/libero/benchmark/__init__.py\n?? libero/__init__.py\n?? libero/randomizer/__init__.py"}
+files:
+{
+  "checkpoint": {
+    "path": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+    "bytes": 3913017345,
+    "sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2"
+  },
+  "dataset_stats": {
+    "path": "/data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json",
+    "bytes": 2372,
+    "sha256": "5b119a98ad7824507ddff3c6c7507ca244261ee416dcfa623876702160c580d3"
+  },
+  "base_t5": {
+    "path": "/data/rxhuang/models/cosmos-policy-libero-2b/libero_t5_embeddings.pkl",
+    "bytes": 41957938,
+    "sha256": "8a03499676c6c196127c577144b9fd09bb02c30f9caf058adbcef09bb99ad8f5"
+  }
+}
+default ~/.libero/config.yaml:
+assets: /data/rxhuang/LIBERO-plus/libero/libero/./assets
+bddl_files: /data/rxhuang/LIBERO-plus/libero/libero/./bddl_files
+benchmark_root: /data/rxhuang/LIBERO-plus/libero/libero
+datasets: /data/rxhuang/libero/datasets
+init_states: /data/rxhuang/LIBERO-plus/libero/libero/./init_files
+
+isolation:
+The environment's editable default resolves libero to /data/rxhuang/LIBERO-plus; workers install an explicit outer-package shim pinned to each manifest row.

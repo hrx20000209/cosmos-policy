@@ -1,0 +1,4 @@
+base: quant_int8.yaml
+experiment_name: async_int8_weight_only_openloop_4
+output_tag: async_int8_weight_only_openloop_4
+num_open_loop_steps: 4

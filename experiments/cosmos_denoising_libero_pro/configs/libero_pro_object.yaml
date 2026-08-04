@@ -1,0 +1,10 @@
+official_repo: /data/rxhuang/repos/LIBERO-PRO
+official_commit: eafdb809426b13153aa1e4c42d6601844217dfec
+task_suites: [libero_spatial, libero_object, libero_goal, libero_10]
+seed: 28
+use_environment: false
+use_swap: false
+use_object: true
+use_language: false
+use_task: false
+config: /data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep/assets/configs/ood_object.repaired.yaml

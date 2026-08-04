@@ -1,0 +1,7 @@
+cosmos:
+  observation_policies: [latest_only, fifo, uniform_sampling, pixel_change, proprio_change, hybrid_change]
+lingbot_va:
+  history_lengths: [1, 2, 4, 8]
+  frame_strides: [1, 2, 4, 8]
+  history_policies: [dense_recent, uniform_sparse, change_based, latest_cached]
+

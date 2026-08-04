@@ -67,7 +67,16 @@ class CosmosPolicySampler(Sampler):
         in_dtype = x_sigma_max.dtype
 
         def float64_x0_fn(x_B_StateShape: torch.Tensor, t_B: torch.Tensor) -> torch.Tensor:
-            return x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype)).to(torch.float64)
+            timing_events = getattr(self, "step_timing_events", None)
+            if timing_events is None:
+                return x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype)).to(torch.float64)
+            start_event = torch.cuda.Event(enable_timing=True)
+            end_event = torch.cuda.Event(enable_timing=True)
+            start_event.record()
+            output = x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype))
+            end_event.record()
+            timing_events.append((start_event, end_event))
+            return output.to(torch.float64)
 
         is_multistep = is_multi_step_fn_supported(solver_option)
         is_rk = is_runge_kutta_fn_supported(solver_option)
@@ -82,15 +91,32 @@ class CosmosPolicySampler(Sampler):
             rk=solver_option,
             multistep=solver_option,
         )
-        # NOTE (user): If the sampler adds an additional clean step, subtract 1 from num_steps to get correct total # steps
-        # Only do this for num_steps > 1 (num_steps==1 is a special case)
+        if num_steps < 1:
+            raise ValueError(f"num_steps must be at least 1, got {num_steps}")
+        requested_num_steps = num_steps
+        # The final clean prediction is a full denoiser call. Reserve one NFE
+        # for it so the public num_steps value always equals actual forwards.
         sample_clean = True
         if sample_clean and num_steps > 1:
             num_steps = num_steps - 1
         timestamps_cfg = SolverTimestampConfig(nfe=num_steps, t_min=sigma_min, t_max=sigma_max, order=rho)
         sampler_cfg = SamplerConfig(solver=solver_cfg, timestamps=timestamps_cfg, sample_clean=sample_clean)
 
-        return self._forward_impl(float64_x0_fn, x_sigma_max, sampler_cfg, num_steps=num_steps).to(in_dtype)
+        # Progressive-denoising instrumentation hook. Callers may set
+        # `sampler.checkpoint_hook` to a callable to observe every denoiser
+        # forward. When it is unset the value is None, `if callback_fns:`
+        # short-circuits everywhere below, and the control flow is identical
+        # to the un-instrumented path.
+        hook = getattr(self, "checkpoint_hook", None)
+        callback_fns = [hook] if hook is not None else None
+
+        return self._forward_impl(
+            float64_x0_fn,
+            x_sigma_max,
+            sampler_cfg,
+            callback_fns=callback_fns,
+            requested_num_steps=requested_num_steps,
+        ).to(in_dtype)
 
     @torch.no_grad()
     def _forward_impl(
@@ -99,7 +125,7 @@ class CosmosPolicySampler(Sampler):
         noisy_input_B_StateShape: torch.Tensor,
         sampler_cfg: Optional[SamplerConfig] = None,
         callback_fns: Optional[List[Callable]] = None,
-        num_steps: int = 35,
+        requested_num_steps: int = 35,
     ) -> torch.Tensor:
         """
         Internal implementation of the forward pass.
@@ -109,7 +135,7 @@ class CosmosPolicySampler(Sampler):
             noisy_input_B_StateShape: Input tensor with noise.
             sampler_cfg: Configuration for the sampler.
             callback_fns: List of callback functions to be called during sampling.
-            num_steps: Number of denoising steps.
+            requested_num_steps: Public number of denoiser forwards requested.
 
         Returns:
             torch.Tensor: Denoised output tensor.
@@ -122,7 +148,7 @@ class CosmosPolicySampler(Sampler):
             sampler_cfg.timestamps.t_min, sampler_cfg.timestamps.t_max, num_timestamps, sampler_cfg.timestamps.order
         ).to(noisy_input_B_StateShape.device)
 
-        if num_steps > 1:
+        if requested_num_steps > 1:
             # Normal sampling
             denoised_output = differential_equation_solver(
                 denoiser_fn, sigmas_L, sampler_cfg.solver, callback_fns=callback_fns
@@ -131,11 +157,41 @@ class CosmosPolicySampler(Sampler):
             if sampler_cfg.sample_clean:
                 # Override denoised_output with fully denoised version
                 ones = torch.ones(denoised_output.size(0), device=denoised_output.device, dtype=denoised_output.dtype)
-                denoised_output = denoiser_fn(denoised_output, sigmas_L[-1] * ones)
+                solver_state = denoised_output
+                denoised_output = denoiser_fn(solver_state, sigmas_L[-1] * ones)
+                if callback_fns:
+                    # The terminal clean call is a full denoiser forward too, so
+                    # emit it as the final checkpoint. Keeping the same keyword
+                    # names as the solver's `callback_fn(**locals())` lets one
+                    # hook serve both call sites.
+                    for callback_fn in callback_fns:
+                        callback_fn(
+                            i_th=len(sigmas_L) - 1,
+                            input_x_B_StateShape=solver_state,
+                            sigma_cur_0=sigmas_L[-1],
+                            sigma_next_0=sigmas_L[-1],
+                            x0_pred_B_StateShape=denoised_output,
+                            output_x_B_StateShape=denoised_output,
+                            x0_preds=None,
+                            is_terminal_clean=True,
+                        )
         else:
-            # Special case: num_steps==1
+            # Special case: a one-step policy request is one direct x0 call.
             denoised_output = noisy_input_B_StateShape
             ones = torch.ones(denoised_output.size(0), device=denoised_output.device, dtype=denoised_output.dtype)
-            denoised_output = denoiser_fn(denoised_output, sigmas_L[0] * ones)
+            solver_state = denoised_output
+            denoised_output = denoiser_fn(solver_state, sigmas_L[0] * ones)
+            if callback_fns:
+                for callback_fn in callback_fns:
+                    callback_fn(
+                        i_th=0,
+                        input_x_B_StateShape=solver_state,
+                        sigma_cur_0=sigmas_L[0],
+                        sigma_next_0=sigmas_L[0],
+                        x0_pred_B_StateShape=denoised_output,
+                        output_x_B_StateShape=denoised_output,
+                        x0_preds=None,
+                        is_terminal_clean=True,
+                    )
 
         return denoised_output

@@ -1684,8 +1684,14 @@ class MiniTrainDIT(WeightTrainingStat):
             padding_mask = transforms.functional.resize(
                 padding_mask, list(x_B_C_T_H_W.shape[-2:]), interpolation=transforms.InterpolationMode.NEAREST
             )
+            # Keep the broadcast rank at five. ``repeat`` is decomposed by
+            # torch.export into a temporary 10-D expand, which exceeds
+            # TensorRT's shuffle rank limit for this otherwise static mask.
+            padding_mask_B_C_T_H_W = padding_mask.unsqueeze(1).expand(
+                -1, -1, x_B_C_T_H_W.shape[2], -1, -1
+            )
             x_B_C_T_H_W = torch.cat(
-                [x_B_C_T_H_W, padding_mask.unsqueeze(1).repeat(1, 1, x_B_C_T_H_W.shape[2], 1, 1)], dim=1
+                [x_B_C_T_H_W, padding_mask_B_C_T_H_W], dim=1
             )
         x_B_T_H_W_D = self.x_embedder(x_B_C_T_H_W)
 

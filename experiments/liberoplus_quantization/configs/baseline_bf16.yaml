@@ -1,0 +1,49 @@
+experiment_name: baseline_bf16
+checkpoint: /data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt
+dataset_stats_path: /data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json
+t5_embeddings_path: /data/rxhuang/models/cosmos-policy-libero-2b/libero_t5_embeddings.pkl
+task_list: ../task_lists/smoke_non_language_seed195.json
+output_tag: baseline_bf16
+notes:
+  - Official recommended precision and action-only inference path.
+precision: bf16
+quantization_backend: none
+quantization_mode: bf16
+quantization_scope: backbone
+quantized_modules: []
+excluded_modules: []
+group_size: 128
+real_quantization_required: false
+task_names: []
+seeds: [195]
+episodes_per_task: 1
+initial_state_index: 0
+chunk_size: 16
+num_open_loop_steps: 16
+denoising_steps: 5
+device: cuda:0
+episode_timeout_seconds: 300
+max_environment_steps: null
+warmup_policy_calls: 1
+skip_completed: true
+fail_on_missing_t5: true
+deterministic: true
+flip_images: true
+use_jpeg_compression: true
+use_wrist_image: true
+use_proprio: true
+normalize_proprio: true
+unnormalize_actions: true
+collect_power: true
+dynamic_replan:
+  enabled: false
+  candidate_open_loop_steps: [4, 8, 16]
+  visual_change_low: 0.015
+  visual_change_high: 0.050
+  action_magnitude_high: 0.35
+  action_jerk_high: 0.25
+  no_progress_steps: 8
+  min_open_loop_steps: 4
+  dynamic_denoising: false
+  denoising_steps_low_risk: 4
+  denoising_steps_high_risk: 8

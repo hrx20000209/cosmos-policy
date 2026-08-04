@@ -1,0 +1,5 @@
+base: dynamic_replan.yaml
+experiment_name: dynamic_replan_and_denoising_bf16
+output_tag: dynamic_replan_and_denoising_bf16
+dynamic_replan:
+  dynamic_denoising: true

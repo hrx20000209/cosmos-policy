@@ -1,0 +1,19 @@
+base: baseline_bf16.yaml
+experiment_name: dynamic_replan_bf16
+output_tag: dynamic_replan_bf16
+num_open_loop_steps: 16
+notes:
+  - Rule-based controller selects among 4, 8, and 16 open-loop actions.
+  - Thresholds operate only on deployable RGB and action signals.
+dynamic_replan:
+  enabled: true
+  candidate_open_loop_steps: [4, 8, 16]
+  visual_change_low: 0.015
+  visual_change_high: 0.050
+  action_magnitude_high: 0.35
+  action_jerk_high: 0.25
+  no_progress_steps: 8
+  min_open_loop_steps: 4
+  dynamic_denoising: false
+  denoising_steps_low_risk: 4
+  denoising_steps_high_risk: 8

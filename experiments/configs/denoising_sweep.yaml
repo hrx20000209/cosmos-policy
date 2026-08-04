@@ -1,0 +1,10 @@
+cosmos:
+  values: [1, 2, 3, 4, 5, 8]
+  modes: [joint_parallel, action_only_usage, autoregressive_future]
+lingbot_va:
+  action_values: [5, 10, 20, 35, 50]
+  video_values: [5, 10, 15, 20]
+common:
+  fixed_task_ids: [0, 1]
+  fixed_seeds: [195, 196, 197]
+

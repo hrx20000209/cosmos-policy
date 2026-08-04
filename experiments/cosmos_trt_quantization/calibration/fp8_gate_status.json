@@ -1,0 +1,9 @@
+{
+  "status": "not_started",
+  "reason": "BF16 TensorRT engine compiled in memory but could not be persisted and reload-verified.",
+  "calibration_observations_collected": 0,
+  "manifest_generated": false,
+  "stats_generated": false,
+  "quant_config_generated": false,
+  "fp8_engine_generated": false
+}

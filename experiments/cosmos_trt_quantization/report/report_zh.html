@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Cosmos Policy 端侧低精度推理阶段报告</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Cosmos Policy 端侧低精度推理阶段报告</h1>
+</header>
+<h1 id="cosmos-policy-端侧低精度推理阶段报告">Cosmos Policy
+端侧低精度推理阶段报告</h1>
+<p>日期：2026-07-29<br />
+分支：<code>exp/cosmos-tensorrt-fp8</code><br />
+硬件：NVIDIA GeForce RTX 4090 D，Ada sm_89，24 GB<br />
+实验目录：<code>experiments/cosmos_trt_quantization/</code></p>
+<h2 id="摘要">1. 摘要</h2>
+<p>本阶段实际完成了环境隔离、固定输入捕获、单步 DiT wrapper、六种
+torchao 模式的 30+200 latency 测量、四种模式的 torch.profiler
+trace、BF16 Nsight Systems trace、BF16 TensorRT full-graph
+编译尝试、100+1000 单 denoiser BF16 eager 基准和 1–5 步 100+300
+sweep。</p>
+<p>核心结论：</p>
+<ol type="1">
+<li>torchao W8A8 的主要瓶颈是 1400 次动态 activation scale 及其引发的
+50424 次 <code>_local_scalar_dense</code>、约 6.7 万次 D2H
+小传输；INT4-WO 则有 1400 次 tinygemm，累计 1246.17 ms。</li>
+<li>Cosmos DiT 在替换 export-hostile 的 TransformerEngine 算子并增加一个
+BF16 cast converter 后，能够在内存中编译为单一 TensorRT 分区： 6492/6492
+算子支持、无 PyTorch fallback。</li>
+<li>该 BF16 engine 的序列化失败：PyTorch 2.7 的 ExportedProgram 路径对
+大于 4 GiB 的 engine string 使用了不足的 pickle protocol。随后已实现
+TorchScript 保存路径，但继续执行环境不再暴露
+<code>/dev/nvidia*</code>，无法重建、 重载和计时。因此 BF16 TensorRT
+尚不是稳定 baseline。</li>
+<li>由于 BF16 TensorRT 稳定性门禁未通过，严格没有开始 ModelOpt FP8 PTQ、
+FP8 engine、原始 LIBERO rollout 或 LIBERO-Plus rollout；不能声称获得
+TensorRT FP8 加速。</li>
+<li>BF16 eager 的 3-step policy p50 为 326.39 ms，相对 5-step 的 448.42
+ms 快 1.37×；固定输入 action cosine 为 0.9999992、L2 为
+0.00613，是当前最有希望的 latency–error 候选，但尚无 rollout 成功率
+证据。</li>
+</ol>
+<h2 id="上一阶段结果回顾">2. 上一阶段结果回顾</h2>
+<p>上一阶段在原始 LIBERO-10 上得到 BF16 48/50，policy latency 约 492
+ms； torchao INT8-WO、W8A8、INT4-WO 分别约 608、2530、1506
+ms。torch.compile 未改善这些量化路径。上述结果构成本阶段“停止扩大
+torchao rollout、转向 静态 NVIDIA engine”的依据。</p>
+<h2 id="为什么没有使用-llama.cpp">3. 为什么没有使用 llama.cpp</h2>
+<p>Cosmos Policy 是带视频 latent、时序条件、cross-attention 和扩散
+scheduler 的 DiT policy，不是标准自回归 LLM。其主干输入为
+<code>[B,C,T,H,W]</code> 视频/动作 latent，推理要重复调用
+denoiser；llama.cpp 的 token-by-token KV-cache/GGUF
+路径与该计算图不匹配，因此本阶段没有使用。</p>
+<h2 id="环境审计">4. 环境审计</h2>
+<p>主环境保持不变，新增隔离环境
+<code>/data/rxhuang/envs/cosmos-trt</code>：</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>版本/状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU</td>
+<td>RTX 4090 D，compute capability 8.9</td>
+</tr>
+<tr>
+<td>Driver</td>
+<td>560.35.03</td>
+</tr>
+<tr>
+<td>PyTorch / CUDA runtime</td>
+<td>2.7.0+cu128 / 12.8</td>
+</tr>
+<tr>
+<td>系统 CUDA toolkit</td>
+<td>12.6.85</td>
+</tr>
+<tr>
+<td>cuDNN</td>
+<td>9.7.1</td>
+</tr>
+<tr>
+<td>torchao</td>
+<td>0.11.0</td>
+</tr>
+<tr>
+<td>TransformerEngine</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>TensorRT</td>
+<td>10.9.0.34（隔离环境）</td>
+</tr>
+<tr>
+<td>Torch-TensorRT</td>
+<td>2.7.0（隔离环境）</td>
+</tr>
+<tr>
+<td>NVIDIA ModelOpt</td>
+<td>0.27.0（隔离环境）</td>
+</tr>
+<tr>
+<td>ONNX / ORT GPU</td>
+<td>1.17.0 / 1.20.1</td>
+</tr>
+<tr>
+<td>TensorRT-RTX</td>
+<td>未安装</td>
+</tr>
+<tr>
+<td>trtexec</td>
+<td>系统无可执行文件</td>
+</tr>
+<tr>
+<td>Nsight Systems / Compute</td>
+<td>2024.5.1 / 2024.3.2</td>
+</tr>
+</tbody>
+</table>
+<p>Ada sm_89 可测试 FP8，但本报告没有测试或声称 NVFP4。完整安装命令见
+<code>configs/environment.lock.md</code>；主 <code>.venv</code> 中的
+PyTorch/CUDA 未被替换。</p>
+<h2 id="torchao-量化变慢的具体原因">5. torchao 量化变慢的具体原因</h2>
+<p>统一 policy 基准（30 warm-up + 200 measured）：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th style="text-align: right;">p50</th>
+<th style="text-align: right;">p95</th>
+<th style="text-align: right;">p99</th>
+<th style="text-align: right;">相对 BF16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BF16 eager</td>
+<td style="text-align: right;">461.02</td>
+<td style="text-align: right;">540.40</td>
+<td style="text-align: right;">568.13</td>
+<td style="text-align: right;">1.000×</td>
+</tr>
+<tr>
+<td>fake INT4</td>
+<td style="text-align: right;">451.19</td>
+<td style="text-align: right;">511.77</td>
+<td style="text-align: right;">555.60</td>
+<td style="text-align: right;">1.022×</td>
+</tr>
+<tr>
+<td>INT8-WO</td>
+<td style="text-align: right;">552.32</td>
+<td style="text-align: right;">633.69</td>
+<td style="text-align: right;">660.80</td>
+<td style="text-align: right;">0.835×</td>
+</tr>
+<tr>
+<td>torchao FP8</td>
+<td style="text-align: right;">1021.65</td>
+<td style="text-align: right;">1093.72</td>
+<td style="text-align: right;">1130.93</td>
+<td style="text-align: right;">0.451×</td>
+</tr>
+<tr>
+<td>INT4-WO</td>
+<td style="text-align: right;">1494.88</td>
+<td style="text-align: right;">1566.30</td>
+<td style="text-align: right;">1589.56</td>
+<td style="text-align: right;">0.308×</td>
+</tr>
+<tr>
+<td>W8A8</td>
+<td style="text-align: right;">2512.16</td>
+<td style="text-align: right;">2581.07</td>
+<td style="text-align: right;">2662.31</td>
+<td style="text-align: right;">0.184×</td>
+</tr>
+</tbody>
+</table>
+<p>单位均为 ms。</p>
+<h3 id="w8a8">W8A8</h3>
+<ul>
+<li>1400 次 <code>ampere_igemm_int8_128x128_ldg4_nn</code> 只花约 219.20
+ms；</li>
+<li>动态 quantize kernel 9866 次、约 161.06 ms；</li>
+<li>cast/copy 83679 次、约 175.46 ms；</li>
+<li>50423 次 D2H pinned、16801 次 D2H pageable；</li>
+<li><code>_local_scalar_dense</code> 50424 次；</li>
+<li>总 GPU 事件 115765 次，是 BF16 9370 次的 12.35 倍。</li>
+</ul>
+<p>所以 W8A8 主要慢在动态 activation scale、device scalar 同步和 launch
+开销，而非 INT8 GEMM 本身。</p>
+<h3 id="int8-weight-only">INT8 weight-only</h3>
+<p>主 GEMM 仍是
+<code>ampere_bf16_s1688gemm_bf16_*</code>。该路径把量化权重恢复/转换
+后做 BF16 GEMM，额外增加 1401 次 direct-copy/cast 和大量 elementwise。
+它是显存格式优化，不是该 shape 下的真实 INT8 计算加速。</p>
+<h3 id="int4-weight-only">INT4 weight-only</h3>
+<p>1400 次
+<code>tinygemm_m16n8k16_chunk_kernel&lt;...,BLayout_TC_int4&lt;8,128&gt;,...&gt;</code>
+累计 1246.17 ms，占 trace GPU 时间 86.68%。INT4 unpack 与计算融合在该
+kernel 内，无法诚实地拆出独立 unpack 时间；可以明确的是
+batch=1、M=1764、 K/N=2048/8192 的 DiT shape 没有从 tinygemm 获益。</p>
+<h3 id="bf16-融合路径和-torch.compile">BF16 融合路径和
+torch.compile</h3>
+<p>BF16 已走 Tensor Core GEMM、FlashAttention、
+<code>transformer_engine::normalization::rmsnorm_fwd_general_kernel</code>
+和 <code>transformer_engine::fused_rope_forward_kernel</code>。替换
+Linear 后产生的 scale/cast 边界破坏了连续 BF16 路径。</p>
+<p>Dynamo 不能 trace
+<code>transformer_engine_torch.PyCapsule.rmsnorm_fwd</code>，并对
+checkpoint <code>context_fn</code> 给出警告。上一阶段 compiled p50 与
+eager 基本相同， 因为 compile 不能消除 torchao kernel 内部的 dynamic
+scale、D2H 同步或 tinygemm shape 问题。完整证据见
+<code>report/torchao_latency_diagnosis.md</code>。</p>
+<h2 id="cosmos-dit-wrapper">6. Cosmos DiT wrapper</h2>
+<p><code>wrappers/cosmos_denoiser_wrapper.py</code> 直接包裹真实
+<code>MinimalV1LVGDiT.forward</code>，不包含 LIBERO
+env、tokenizer、VAE、文件 I/O 或 Python scheduler。真实捕获输入：</p>
+<table>
+<thead>
+<tr>
+<th>张量</th>
+<th>shape</th>
+<th>dtype</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>noisy/action latent</td>
+<td><code>[1,16,9,28,28]</code></td>
+<td>BF16</td>
+</tr>
+<tr>
+<td>timestep</td>
+<td><code>[1,9]</code></td>
+<td>BF16</td>
+</tr>
+<tr>
+<td>text/cross-attention</td>
+<td><code>[1,512,1024]</code></td>
+<td>BF16</td>
+</tr>
+<tr>
+<td>condition mask</td>
+<td><code>[1,1,9,28,28]</code></td>
+<td>FP32</td>
+</tr>
+<tr>
+<td>fps</td>
+<td><code>[1]</code></td>
+<td>BF16</td>
+</tr>
+<tr>
+<td>padding mask</td>
+<td><code>[1,1,224,224]</code></td>
+<td>BF16</td>
+</tr>
+</tbody>
+</table>
+<p>wrapper 与原始 net 输出 shape/dtype 完全一致，cosine 1.000000119、max
+abs 0、重复执行 max abs 0，无 NaN/Inf。fixture 只有 1.4 MB，位于
+<code>calibration/fixed_denoiser_inputs.pt</code>。</p>
+<h2 id="tensorrt-编译方法">7. TensorRT 编译方法</h2>
+<p>按顺序实际尝试：</p>
+<ol type="1">
+<li>原生 TE graph：FakeTensor export 在 TE RMSNorm 报
+<code>Input x is not allocated</code>。</li>
+<li>替换 113 个 TE RMSNorm：可继续导出，但仍遇到 TE
+attention/RoPE。</li>
+<li>再替换 56 个 TE attention 为 PyTorch SDPA，并关闭 fused RoPE：
+<code>torch.export</code> 成功。</li>
+<li>Torch-TensorRT 内置 capability validator 把 454 个
+<code>aten._to_copy(dtype=BF16)</code> 错判为不支持；原始 dry-run 为
+6038/6492（93.01%），61 个 TRT 分区 + 61 个 PyTorch 分区。</li>
+<li>在仓库内注册仅匹配 BF16 的高优先级 cast converter 后，dry-run 为
+6492/6492、单一 TRT 分区。</li>
+<li>实际 build 又遇到 padding mask <code>repeat</code> 被分解成临时 10-D
+expand， 超过 TensorRT shuffle rank。将其改为语义等价的 5-D
+<code>expand</code> 后， full graph engine 在内存中成功构建。</li>
+</ol>
+<h2 id="bf16-tensorrt-baseline">8. BF16 TensorRT baseline</h2>
+<h3 id="成功部分">成功部分</h3>
+<ul>
+<li>build 时间：388.05 s；</li>
+<li>节点覆盖率：100%（6492/6492）；</li>
+<li>参数覆盖率：100%；</li>
+<li>TRT 分区：1；</li>
+<li>PyTorch fallback：0；</li>
+<li>engine boundary：0；</li>
+<li>输出 finite；</li>
+<li>相对重写后 eager：cosine 0.9999347，max abs 0.109375，L2
+4.12242。</li>
+</ul>
+<h3 id="未通过部分">未通过部分</h3>
+<p>engine
+未能持久化。<code>torch_tensorrt.save(..., exported_program)</code>
+失败：</p>
+<p><code>OverflowError: serializing a string larger than 4 GiB requires pickle protocol 4 or higher</code></p>
+<p>已将保存实现改为 TorchScript zip 路径，但后续执行容器不再暴露
+<code>/dev/nvidia*</code>，无法重新 build、reload 和
+benchmark。因而：</p>
+<ul>
+<li>不能给出 BF16 TRT p50/p95；</li>
+<li>不能证明 engine 可重复加载；</li>
+<li>不能把“内存中构建成功”写成“稳定 BF16 TensorRT baseline”；</li>
+<li><code>engines/</code> 中只有 3.7 GB 的 exported program
+中间产物，不是可用 engine。</li>
+</ul>
+<p>另一个数值限制是 TE→ATen 重写本身相对原始 eager cosine 0.9999757，
+未达到 wrapper 的严格 0.99999 等价门槛，但高于本阶段 engine action gate
+0.999。engine 对原始未重写 graph
+的组合误差没有直接实测，因此不外推。</p>
+<h2 id="fp8-ptq-方法与-calibration-数据">9. FP8 PTQ 方法与 Calibration
+数据</h2>
+<p>本阶段在 BF16 TensorRT 稳定性门禁处停止。没有采集 128–512 条
+calibration observation，没有生成 ModelOpt scale，也没有构建 FP8
+engine。这样做是为了 避免在 BF16 engine
+尚不能持久化/复载时产生不可比较的 FP8 结果。</p>
+<p>计划保持不变：未来使用原始无扰动 LIBERO、多 suite/task/seed 的 agent
+view、 wrist、proprio 和文本 embedding，ModelOpt 静态 PTQ + 显式
+Q/DQ；norm、 softmax、timestep、scheduler 和 action reconstruction 默认
+BF16。</p>
+<h2 id="实际层精度">10. 实际层精度</h2>
+<p>由于 FP8 PTQ 未开始，没有可报告的逐层实际 TensorRT precision、Q/DQ
+scale 或 layer output error。不能把 torchao FP8 的 280 个动态量化 Linear
+当作 TensorRT FP8 层精度审计。</p>
+<h2 id="tensorrt-覆盖率">11. TensorRT 覆盖率</h2>
+<table>
+<thead>
+<tr>
+<th>图版本</th>
+<th style="text-align: right;">节点覆盖</th>
+<th style="text-align: right;">参数覆盖</th>
+<th style="text-align: right;">TRT/PyTorch 分区</th>
+<th style="text-align: right;">fallback</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原生 TE</td>
+<td style="text-align: right;">export 失败</td>
+<td style="text-align: right;">不适用</td>
+<td style="text-align: right;">不适用</td>
+<td style="text-align: right;">不适用</td>
+</tr>
+<tr>
+<td>TE 重写、内置 converter</td>
+<td style="text-align: right;">93.01%</td>
+<td style="text-align: right;">近似 100%</td>
+<td style="text-align: right;">61 / 61</td>
+<td style="text-align: right;">454 个 cast</td>
+</tr>
+<tr>
+<td>+ BF16 cast converter + mask rewrite</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">1 / 0</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>FLOP/latency 覆盖没有用虚构数字填充。最终图按节点和参数为
+100%，但没有 持久化 engine 的 latency trace，故 latency coverage
+标为不可用。</p>
+<h2 id="microbenchmark">12. Microbenchmark</h2>
+<p>单 denoiser BF16 eager 使用 100 warm-up + 1000 measured：</p>
+<ul>
+<li>mean 61.00 ms；</li>
+<li>p50 60.58 ms；</li>
+<li>p95 63.94 ms；</li>
+<li>p99 68.11 ms。</li>
+</ul>
+<p>BF16 TRT/FP8 TRT 因 engine 不可复载而没有计时。真正量化 speedup
+必须比较 BF16 TRT 与 FP8 TRT；本报告没有用 BF16 eager 对 torchao FP8
+的结果冒充 TensorRT precision speedup。</p>
+<h2 id="完整-policy-latency">13. 完整 policy latency</h2>
+<p>完整 5-step policy 的 30+200 基准见第 5 节。BF16 p50 461.02
+ms；torchao FP8、INT8-WO、W8A8、INT4-WO 均更慢。没有 BF16 TRT/FP8 TRT
+p50/p95。</p>
+<h2 id="显存">14. 显存</h2>
+<p>本轮单进程 profiler 的 <code>max_memory_allocated</code> 六种模式均约
+7727 MB；该数字 包含完整 policy、tokenizer/缓存和 allocator
+行为，不足以证明 torchao 显存 没有下降。由于没有持久化 TRT
+engine，也没有可比较的 engine peak memory 与 engine
+size。图表对缺失值留空，而不是填 0。</p>
+<h2 id="数值误差">15. 数值误差</h2>
+<p>相对固定 BF16 action：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th style="text-align: right;">cosine</th>
+<th style="text-align: right;">L1</th>
+<th style="text-align: right;">L2</th>
+<th style="text-align: right;">max abs</th>
+<th style="text-align: right;">NaN/Inf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>INT8-WO</td>
+<td style="text-align: right;">0.9999960</td>
+<td style="text-align: right;">0.000890</td>
+<td style="text-align: right;">0.01422</td>
+<td style="text-align: right;">0.00463</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>W8A8</td>
+<td style="text-align: right;">0.9999808</td>
+<td style="text-align: right;">0.002116</td>
+<td style="text-align: right;">0.03078</td>
+<td style="text-align: right;">0.00762</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>torchao FP8</td>
+<td style="text-align: right;">0.9999405</td>
+<td style="text-align: right;">0.004829</td>
+<td style="text-align: right;">0.07526</td>
+<td style="text-align: right;">0.02830</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>INT4-WO</td>
+<td style="text-align: right;">0.9996271</td>
+<td style="text-align: right;">0.007914</td>
+<td style="text-align: right;">0.14068</td>
+<td style="text-align: right;">0.05843</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>fake INT4</td>
+<td style="text-align: right;">0.9995420</td>
+<td style="text-align: right;">0.009591</td>
+<td style="text-align: right;">0.15210</td>
+<td style="text-align: right;">0.05004</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>torchao FP8 不是 TensorRT FP8，不能回答 TensorRT FP8 是否降低 action
+精度。</p>
+<h2 id="去噪步数实验">16. 去噪步数实验</h2>
+<p>每个配置 100 warm-up + 300 measured，同一 observation、seed 和
+scheduler：</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>配置</th>
+<th style="text-align: right;">policy p50 / p95 (ms)</th>
+<th style="text-align: right;">实际 denoiser total p50</th>
+<th style="text-align: right;">cosine vs 5-step</th>
+<th style="text-align: right;">L2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-step</td>
+<td style="text-align: right;">200.69 / 243.37</td>
+<td style="text-align: right;">60.22</td>
+<td style="text-align: right;">0.9999612</td>
+<td style="text-align: right;">0.04385</td>
+</tr>
+<tr>
+<td>2-step</td>
+<td style="text-align: right;">201.57 / 266.61</td>
+<td style="text-align: right;">60.19</td>
+<td style="text-align: right;">0.9999612</td>
+<td style="text-align: right;">0.04385</td>
+</tr>
+<tr>
+<td>3-step</td>
+<td style="text-align: right;">326.39 / 388.22</td>
+<td style="text-align: right;">180.32</td>
+<td style="text-align: right;">0.9999992</td>
+<td style="text-align: right;">0.00613</td>
+</tr>
+<tr>
+<td>4-step</td>
+<td style="text-align: right;">387.79 / 446.32</td>
+<td style="text-align: right;">240.15</td>
+<td style="text-align: right;">0.9999994</td>
+<td style="text-align: right;">0.00549</td>
+</tr>
+<tr>
+<td>5-step</td>
+<td style="text-align: right;">448.42 / 513.93</td>
+<td style="text-align: right;">300.00</td>
+<td style="text-align: right;">1.0000000</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>当前 scheduler 下 1-step 和 2-step 都只发生一次 net
+forward，因此输出完全 相同；这不是测量错误，也不能把“2”解释为两次
+denoiser。3-step 相对 5-step p50 快
+1.37×，且固定输入误差很小，是最合理的下一轮 rollout 候选。</p>
+<p>不过单 observation 的 action cosine
+不能替代成功率。当前最佳“已验证成功率” 配置仍是上一阶段 BF16 eager
+5-step；当前最佳 microbenchmark Pareto 候选是 BF16 eager 3-step。</p>
+<h2 id="原始-libero-pilot">17. 原始 LIBERO pilot</h2>
+<p>未运行。原因不是算力不足，而是 speedup gate
+明确要求稳定、可复载、已计时的 BF16/FP8 TensorRT
+engine。本阶段没有满足。</p>
+<h2 id="libero-plus-pilot">18. LIBERO-Plus pilot</h2>
+<p>未运行，也没有扩大已知很慢的 torchao W8A8/INT4
+rollout。符合阶段门禁。</p>
+<h2 id="失败配置">19. 失败配置</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>配置/阶段</th>
+<th>失败原因</th>
+<th>证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>原生 TE export</td>
+<td>TE RMSNorm FakeTensor 无 storage</td>
+<td>attempt0 log/report</td>
+</tr>
+<tr>
+<td>TE attention/RoPE export</td>
+<td>fused RoPE/export 不兼容</td>
+<td>attempt2 log/report</td>
+</tr>
+<tr>
+<td>内置 converter full compile</td>
+<td>BF16 <code>_to_copy</code> validator 漏项</td>
+<td>dry-run report</td>
+</tr>
+<tr>
+<td>首次 custom converter build</td>
+<td>10-D expand 超 TRT shuffle rank</td>
+<td>build log</td>
+</tr>
+<tr>
+<td>最终 full graph save</td>
+<td>&gt;4 GiB string / pickle protocol</td>
+<td>partition report</td>
+</tr>
+<tr>
+<td>TorchScript follow-up</td>
+<td>后续容器无 <code>/dev/nvidia*</code></td>
+<td>final status</td>
+</tr>
+<tr>
+<td>W8A8 Nsight follow-up</td>
+<td>权限切换后报告未落盘</td>
+<td>nsys log</td>
+</tr>
+</tbody>
+</table>
+<h2 id="局限性">20. 局限性</h2>
+<ul>
+<li>固定 observation microbenchmark 不能代表任务成功率分布；</li>
+<li>没有 BF16 TRT 可复载 engine，因此没有 BF16 TRT latency；</li>
+<li>没有 FP8 calibration、layer precision 或 TensorRT FP8 latency；</li>
+<li>BF16 TensorRT 使用了 TE→ATen 语义近似重写；</li>
+<li>profiler 会放大 CPU 调度时间，kernel 总时间和事件计数比 profile wall
+time 更适合做归因；</li>
+<li>GPU clock 未锁定，但各正式模式固定单卡、独立进程并记录
+p50/p95/p99；</li>
+<li>当前共享 LIBERO-Plus task order 在实验期间漂移为 2519
+项，固定输入文本用 最长原始指令前缀匹配缓存，已记录在 RUNBOOK。</li>
+</ul>
+<h2 id="是否值得继续量化研究">21. 是否值得继续量化研究</h2>
+<p>torchao 动态量化路径不值得继续扩大 rollout。TensorRT
+路线仍有研究价值， 因为 full graph 已证明可以达到单分区、零
+fallback；下一个工程问题是大 engine
+持久化，而不是算子覆盖。只有解决保存/重载后，ModelOpt 静态 FP8
+才值得继续。</p>
+<h2 id="是否达到端侧加速目标">22. 是否达到端侧加速目标</h2>
+<p>没有。当前没有 BF16 TRT vs FP8 TRT 的公平 latency 对照，也没有满足
+FP8 ≥1.20× speedup gate。不能声称获得低比特端侧加速。</p>
+<p>去噪步数方面，3-step 在 microbenchmark 上已达到 1.37×，比现有 torchao
+量化更有效；但没有 rollout 成功率，暂时只能称为候选。</p>
+<h2 id="下一阶段异步框架计划">23. 下一阶段异步框架计划</h2>
+<p>现有 open-loop 流程是“完整推理 chunk → 执行 E 个 action → 停止 →
+再推理”，不是真正 inference/execution overlap。详细方案位于
+<code>report/async_pipeline_design.md</code>，包含：</p>
+<ul>
+<li>inference worker 与 action execution worker；</li>
+<li>observation/inference 时间戳；</li>
+<li>global action index、chunk start、execution cursor；</li>
+<li>deadline、stale chunk、replacement；</li>
+<li>prefix freezing、action inpainting/overlap；</li>
+<li>deadline miss rate、observation age 和 overlap ratio。</li>
+</ul>
+<p>在 engine 尚不可复载前不大改运行框架。3-step 可先在同步原始 LIBERO
+pilot 中验证；真正异步实验仍应等待稳定 backend。</p>
+<h2 id="完整复现命令">24. 完整复现命令</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/rxhuang/Projects/cosmos-policy</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> switch exp/cosmos-tensorrt-fp8</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># wrapper</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">CUDA_VISIBLE_DEVICES</span><span class="op">=</span>5 <span class="ex">.venv/bin/pytest</span> <span class="at">-q</span> <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  experiments/cosmos_trt_quantization/tests/test_cosmos_denoiser_wrapper.py</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># torchao latency（每个 mode 独立进程）</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> experiments/liberoplus_quantization/env.sh</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="va">CUDA_VISIBLE_DEVICES</span><span class="op">=</span>7 <span class="va">MUJOCO_EGL_DEVICE_ID</span><span class="op">=</span>7 <span class="ex">.venv/bin/python</span> <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  experiments/cosmos_trt_quantization/scripts/profile_torchao.py <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mode</span> int8_backbone <span class="at">--phase</span> latency <span class="at">--warmup</span> 30 <span class="at">--iters</span> 200</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># torch.profiler</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="va">CUDA_VISIBLE_DEVICES</span><span class="op">=</span>7 <span class="va">MUJOCO_EGL_DEVICE_ID</span><span class="op">=</span>7 <span class="ex">.venv/bin/python</span> <span class="dt">\</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  experiments/cosmos_trt_quantization/scripts/profile_torchao.py <span class="dt">\</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mode</span> int4_weight_only <span class="at">--phase</span> torchprof <span class="at">--warmup</span> 30</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># TensorRT（隔离环境）</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> /data/rxhuang/envs/cosmos-trt/bin/activate</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="va">CUDA_VISIBLE_DEVICES</span><span class="op">=</span>5 <span class="ex">python</span> <span class="dt">\</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  experiments/cosmos_trt_quantization/scripts/build_bf16_trt.py <span class="dt">\</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--rewrite-te</span> all <span class="at">--require-full</span> <span class="at">--register-bf16-cast-converter</span> <span class="dt">\</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-gb</span> 8</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 单 denoiser eager</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="va">CUDA_VISIBLE_DEVICES</span><span class="op">=</span>5 <span class="ex">python</span> <span class="dt">\</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  experiments/cosmos_trt_quantization/scripts/benchmark_denoiser.py <span class="dt">\</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">--backend</span> bf16_eager <span class="at">--warmup</span> 100 <span class="at">--iters</span> 1000</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># 1–5 steps</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> experiments/liberoplus_quantization/env.sh</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="va">CUDA_VISIBLE_DEVICES</span><span class="op">=</span>6 <span class="va">MUJOCO_EGL_DEVICE_ID</span><span class="op">=</span>6 <span class="ex">.venv/bin/python</span> <span class="dt">\</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  experiments/cosmos_trt_quantization/scripts/denoising_sweep.py <span class="dt">\</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">--warmup</span> 100 <span class="at">--iters</span> 300</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co"># 汇总和图</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> experiments/cosmos_trt_quantization/scripts/summarize_results.py</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> experiments/cosmos_trt_quantization/scripts/make_figures.py</span></code></pre></div>
+<h2 id="结果索引">25. 结果索引</h2>
+<ul>
+<li>汇总：<code>summaries/backend_latency_summary.csv</code></li>
+<li>speedup gate：<code>summaries/speedup_gate.json</code></li>
+<li>BF16 TRT
+最终状态：<code>summaries/bf16_trt_final_status.json</code></li>
+<li>去噪 sweep：<code>summaries/denoising_sweep_summary.csv</code></li>
+<li>kernel 汇总：<code>profiles/torchao_kernel_summary.csv</code></li>
+<li>graph break：<code>profiles/torchao_graph_breaks.txt</code></li>
+<li>TRT coverage：<code>profiles/bf16_trt_dryrun*.txt</code></li>
+<li>构建日志：<code>logs/bf16_trt_build*.log</code></li>
+<li>图表：<code>figures/</code>（14 组 PNG 300 DPI + PDF）</li>
+<li>异步设计：<code>report/async_pipeline_design.md</code></li>
+</ul>
+</body>
+</html>

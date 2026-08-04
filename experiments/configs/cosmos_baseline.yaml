@@ -1,0 +1,63 @@
+run_id: null
+output_dir: outputs/wam_libero
+repositories:
+  cosmos: /home/rxhuang/Projects/cosmos-policy
+  lingbot_va: /home/rxhuang/Projects/lingbot-va
+  libero: /home/rxhuang/Projects/LIBERO
+model:
+  name: cosmos
+  repo: /home/rxhuang/Projects/cosmos-policy
+  checkpoint: /data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt
+  checkpoint_sha256: 8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2
+  dataset_stats_path: /data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json
+  dataset_stats_sha256: 5b119a98ad7824507ddff3c6c7507ca244261ee416dcfa623876702160c580d3
+  t5_embeddings_path: /data/rxhuang/models/cosmos-policy-libero-2b/libero_t5_embeddings.pkl
+  t5_embeddings_sha256: 8a03499676c6c196127c577144b9fd09bb02c30f9caf058adbcef09bb99ad8f5
+  config_file: cosmos_policy/config/config.py
+  action_horizon: 16
+  action_dim: 7
+  image_resolution: 224
+  camera_views: 2
+  precision: bf16
+  camera_flip_vertical: true
+  native_config:
+    use_jpeg_compression: true
+    trained_with_image_aug: true
+evaluation:
+  task_suite: libero_10
+  task_ids: [0, 1]
+  episodes_per_task: 3
+  seeds: [195, 196, 197]
+  settle_steps: 10
+  settle_gripper_action: -1.0
+  resolution: 256
+  max_steps: 520
+  control_frequency_hz: null
+  record_video: true
+  video_fps: 20
+  record_actions: true
+history:
+  observation_policy: latest_only
+  history_policy: dense_recent
+  length: 1
+  frame_stride: 1
+  buffer_capacity: 64
+  context_capture_stride_actions: 4
+denoising:
+  scheduler: fixed
+  steps: 5
+  official_steps: 5
+  minimum_steps: 1
+  normal_steps: 3
+execution_prefix:
+  mode: fixed
+  length: 16
+  candidates: [1, 2, 4, 8, 16]
+  buffer_strategy: replace
+pipeline:
+  mode: sync_baseline
+  decode_future: true
+  cuda_streams: 1
+metrics:
+  warmup_requests: 10
+  resource_interval_seconds: 0.5

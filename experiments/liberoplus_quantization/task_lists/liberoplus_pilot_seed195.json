@@ -1,0 +1,2581 @@
+{
+  "seed": 195,
+  "per_stratum": 10,
+  "source": "/data/rxhuang/LIBERO-plus/libero/libero/benchmark/task_classification.json",
+  "n_tasks": 360,
+  "stratum_counts": {
+    "Background Textures | diff=1": 10,
+    "Background Textures | diff=2": 10,
+    "Background Textures | diff=3": 10,
+    "Background Textures | diff=4": 10,
+    "Background Textures | diff=5": 10,
+    "Camera Viewpoints | diff=1": 10,
+    "Camera Viewpoints | diff=2": 10,
+    "Camera Viewpoints | diff=3": 10,
+    "Camera Viewpoints | diff=4": 10,
+    "Camera Viewpoints | diff=5": 10,
+    "Language Instructions | diff=1": 10,
+    "Language Instructions | diff=2": 10,
+    "Language Instructions | diff=3": 10,
+    "Language Instructions | diff=4": 10,
+    "Language Instructions | diff=5": 10,
+    "Light Conditions | diff=1": 10,
+    "Light Conditions | diff=2": 10,
+    "Light Conditions | diff=3": 10,
+    "Light Conditions | diff=4": 10,
+    "Light Conditions | diff=5": 10,
+    "Light Conditions | diff=None": 10,
+    "Objects Layout | diff=1": 10,
+    "Objects Layout | diff=2": 10,
+    "Objects Layout | diff=3": 10,
+    "Objects Layout | diff=4": 10,
+    "Objects Layout | diff=5": 10,
+    "Robot Initial States | diff=1": 10,
+    "Robot Initial States | diff=2": 10,
+    "Robot Initial States | diff=3": 10,
+    "Robot Initial States | diff=4": 10,
+    "Robot Initial States | diff=5": 10,
+    "Sensor Noise | diff=1": 10,
+    "Sensor Noise | diff=2": 10,
+    "Sensor Noise | diff=3": 10,
+    "Sensor Noise | diff=4": 10,
+    "Sensor Noise | diff=5": 10
+  },
+  "suite_counts": {
+    "libero_spatial": 83,
+    "libero_object": 106,
+    "libero_goal": 88,
+    "libero_10": 83
+  },
+  "category_counts": {
+    "Background Textures": 50,
+    "Robot Initial States": 50,
+    "Camera Viewpoints": 50,
+    "Language Instructions": 50,
+    "Sensor Noise": 50,
+    "Objects Layout": 50,
+    "Light Conditions": 60
+  },
+  "tasks": [
+    {
+      "suite": "libero_spatial",
+      "id": 22,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_tb_2",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 60,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_tb_16",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 90,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_table_7",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 116,
+      "name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate_tb_19",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 133,
+      "name": "pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate_table_9",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 146,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_table_27",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 149,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_tb_1",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 170,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_table_10",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 207,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_table_12",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 227,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_tb_11",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 245,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_table_1",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 282,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_401",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 340,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_203",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 355,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_383",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 439,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_266",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 448,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_366",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 507,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_278",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 511,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_318",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 516,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_368",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 526,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_468",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 557,
+      "name": "pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_389",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 605,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_470",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 608,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_500",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 609,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_view_0_0_100_2_352_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 621,
+      "name": "pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate_view_0_0_100_4_350_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 643,
+      "name": "pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate_view_26_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 659,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_view_0_0_100_6_350_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 666,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_view_34_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 711,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_view_48_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 740,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_145_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 764,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_view_65_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 818,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_view_294_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 870,
+      "name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate_view_314_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 941,
+      "name": "pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate_view_336_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 953,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_196_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 964,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_100_358_356_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 966,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_345_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 968,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_346_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 994,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_language_10_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1006,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_language_24_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1089,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_language_48_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1128,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_language_45_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1131,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_language_48_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1194,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_language_36_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1261,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_language_17_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1266,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_language_25_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1294,
+      "name": "pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate_language_13_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1327,
+      "name": "pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate_language_50_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1333,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_language_6_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1341,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_language_15_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1378,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_6",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1412,
+      "name": "pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_8",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1507,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_4",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1525,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_23",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1581,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_48",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1685,
+      "name": "pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_49",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1694,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_view_0_0_100_0_0_initstate_0_noise_12",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1726,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_add_10",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1771,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_add_11",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1856,
+      "name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate_add_16",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1860,
+      "name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate_add_21",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1871,
+      "name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate_add_9",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 1922,
+      "name": "pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate_add_22",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2010,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_add_3",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2041,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_add_20",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2080,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_add_24",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2082,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_add_26",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2152,
+      "name": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate_light_9",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2173,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_light_28",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2194,
+      "name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate_light_47",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2208,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_light_14",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2219,
+      "name": "pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate_light_24",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2261,
+      "name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate_light_33",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2294,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_light_14",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2305,
+      "name": "pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate_light_39",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2334,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_light_29",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2341,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_light_43",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2345,
+      "name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate_light_5",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2352,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_light_13",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2365,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_light_33",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2373,
+      "name": "pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate_light_40",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2386,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_light_14",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_spatial",
+      "id": 2388,
+      "name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate_light_2",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 23,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_tb_18",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 26,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_tb_21",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 45,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_table_21",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 48,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_table_24",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 49,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_table_25",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 61,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_tb_11",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 117,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_tb_1",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 139,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_table_1",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 166,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_tb_22",
+      "category": "Background Textures",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 204,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_tb_21",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 226,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_tb_16",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 234,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_tb_8",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 265,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_241",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 288,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_471",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 317,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_372",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 356,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_343",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 359,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_373",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 422,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_265",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 424,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_285",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 474,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_396",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 491,
+      "name": "pick_up_the_butter_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_137",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 518,
+      "name": "pick_up_the_butter_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_427",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 526,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_78",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 555,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_398",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 566,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_99",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 584,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_349",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 708,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_view_32_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 807,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_view_64_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 857,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_view_289_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 864,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_view_292_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 889,
+      "name": "pick_up_the_butter_and_place_it_in_the_basket_view_0_0_100_352_2_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 938,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_0_0_100_354_2_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 970,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_327_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 973,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_328_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 993,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_331_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1006,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_338_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1016,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_344_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1020,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_view_0_0_194_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1030,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_view_0_0_100_358_10_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1062,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_language_43_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1067,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_language_2_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1068,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_language_3_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1080,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_language_24_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1111,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_language_18_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 1139,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_language_6_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1143,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_language_18_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1148,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_language_28_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1155,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_language_43_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 1230,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_language_41_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1234,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_language_50_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1264,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_language_2_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1281,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_language_20_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 1322,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_language_19_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1324,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_language_21_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1342,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_language_39_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 1355,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_language_3_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1357,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_language_6_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1467,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_32",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1482,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_50",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1491,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_9",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1497,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_17",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1507,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_33",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1605,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_47",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1608,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_50",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1616,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_8",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1626,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_20",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1681,
+      "name": "pick_up_the_butter_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_34",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 1687,
+      "name": "pick_up_the_butter_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_40",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1702,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_7",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 1719,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_29",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1733,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_48",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 1755,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_26",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1760,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_31",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1768,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_41",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1817,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_view_0_0_100_0_0_initstate_0_noise_49",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1823,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_add_15",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1895,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_level3_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 1915,
+      "name": "pick_up_the_butter_and_place_it_in_the_basket_add_22",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 1951,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_add_15",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1960,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_add_30",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 1970,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_level2_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2000,
+      "name": "pick_up_the_cream_cheese_and_place_it_in_the_basket_level2_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2013,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_add_22",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 2026,
+      "name": "pick_up_the_ketchup_and_place_it_in_the_basket_level3_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2065,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_level1_sample3",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2102,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_add_28",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2152,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_add_5",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 2160,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_level1_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2163,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_level2_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2167,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_level4_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2184,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_add_19",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 2211,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_level2_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2213,
+      "name": "pick_up_the_tomato_sauce_and_place_it_in_the_basket_level3_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2226,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_light_13",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2259,
+      "name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket_light_50",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2274,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_light_2",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2275,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_light_20",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_object",
+      "id": 2276,
+      "name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket_light_21",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 2370,
+      "name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket_light_31",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 2406,
+      "name": "pick_up_the_milk_and_place_it_in_the_basket_light_10",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 2439,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_light_19",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_object",
+      "id": 2456,
+      "name": "pick_up_the_orange_juice_and_place_it_in_the_basket_light_43",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_object",
+      "id": 2467,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_light_13",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2475,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_light_22",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_object",
+      "id": 2486,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_light_39",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_object",
+      "id": 2487,
+      "name": "pick_up_the_salad_dressing_and_place_it_in_the_basket_light_4",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 33,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_table_12",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 35,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_table_14",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 68,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_tb_22",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 75,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_tb_9",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 101,
+      "name": "push_the_plate_to_the_front_of_the_stove_tb_7",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 196,
+      "name": "put_the_wine_bottle_on_the_rack_table_20",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 202,
+      "name": "put_the_wine_bottle_on_the_rack_table_27",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 207,
+      "name": "put_the_wine_bottle_on_the_rack_table_7",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 222,
+      "name": "put_the_wine_bottle_on_the_rack_tb_21",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 233,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_table_14",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 242,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_table_25",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 284,
+      "name": "open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_51",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 339,
+      "name": "put_the_bowl_on_the_stove_view_0_0_100_0_0_initstate_262",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 356,
+      "name": "put_the_bowl_on_the_stove_view_0_0_100_0_0_initstate_432",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 385,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_view_0_0_100_0_0_initstate_253",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 406,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_view_0_0_100_0_0_initstate_44",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 428,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_view_0_0_100_0_0_initstate_294",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 477,
+      "name": "put_the_bowl_on_top_of_the_cabinet_view_0_0_100_0_0_initstate_365",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 485,
+      "name": "put_the_bowl_on_top_of_the_cabinet_view_0_0_100_0_0_initstate_445",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 557,
+      "name": "put_the_cream_cheese_in_the_bowl_view_0_0_100_0_0_initstate_287",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 634,
+      "name": "put_the_bowl_on_the_plate_view_0_0_100_0_0_initstate_289",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 662,
+      "name": "put_the_wine_bottle_on_the_rack_view_0_0_100_0_0_initstate_130",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 698,
+      "name": "open_the_middle_drawer_of_the_cabinet_view_1_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 762,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_view_35_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 777,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_view_42_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 795,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_view_0_0_100_8_8_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 841,
+      "name": "put_the_bowl_on_top_of_the_cabinet_view_0_0_150_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 910,
+      "name": "push_the_plate_to_the_front_of_the_stove_view_289_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 937,
+      "name": "put_the_cream_cheese_in_the_bowl_view_0_0_167_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1012,
+      "name": "turn_on_the_stove_view_323_0_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1013,
+      "name": "turn_on_the_stove_view_323_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1042,
+      "name": "put_the_bowl_on_the_plate_view_333_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1047,
+      "name": "put_the_bowl_on_the_plate_view_337_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1138,
+      "name": "open_the_middle_drawer_of_the_cabinet_language_44_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1156,
+      "name": "put_the_bowl_on_the_stove_language_39_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1183,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_language_26_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1185,
+      "name": "put_the_wine_bottle_on_top_of_the_cabinet_language_29_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1224,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_language_22_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1249,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_language_47_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1263,
+      "name": "put_the_bowl_on_top_of_the_cabinet_language_12_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1267,
+      "name": "put_the_bowl_on_top_of_the_cabinet_language_17_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1303,
+      "name": "push_the_plate_to_the_front_of_the_stove_language_10_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1306,
+      "name": "push_the_plate_to_the_front_of_the_stove_language_13_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1323,
+      "name": "push_the_plate_to_the_front_of_the_stove_language_32_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1376,
+      "name": "put_the_cream_cheese_in_the_bowl_language_42_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1438,
+      "name": "put_the_bowl_on_the_plate_language_22_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1542,
+      "name": "open_the_middle_drawer_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_42",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1685,
+      "name": "put_the_bowl_on_top_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_29",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1698,
+      "name": "put_the_bowl_on_top_of_the_cabinet_view_0_0_100_0_0_initstate_0_noise_43",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1768,
+      "name": "put_the_cream_cheese_in_the_bowl_view_0_0_100_0_0_initstate_0_noise_34",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1774,
+      "name": "put_the_cream_cheese_in_the_bowl_view_0_0_100_0_0_initstate_0_noise_40",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1780,
+      "name": "put_the_cream_cheese_in_the_bowl_view_0_0_100_0_0_initstate_0_noise_46",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1786,
+      "name": "turn_on_the_stove_view_0_0_100_0_0_initstate_0_noise_6",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1800,
+      "name": "turn_on_the_stove_view_0_0_100_0_0_initstate_0_noise_29",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1833,
+      "name": "put_the_bowl_on_the_plate_view_0_0_100_0_0_initstate_0_noise_37",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1835,
+      "name": "put_the_bowl_on_the_plate_view_0_0_100_0_0_initstate_0_noise_39",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1851,
+      "name": "put_the_wine_bottle_on_the_rack_view_0_0_100_0_0_initstate_0_noise_6",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1854,
+      "name": "put_the_wine_bottle_on_the_rack_view_0_0_100_0_0_initstate_0_noise_9",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1891,
+      "name": "open_the_middle_drawer_of_the_cabinet_add_13",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1911,
+      "name": "open_the_middle_drawer_of_the_cabinet_add_8",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1962,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_moved_level2_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1986,
+      "name": "push_the_plate_to_the_front_of_the_stove_add_19",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 1989,
+      "name": "push_the_plate_to_the_front_of_the_stove_add_22",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2006,
+      "name": "push_the_plate_to_the_front_of_the_stove_moved_level1_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2083,
+      "name": "put_the_bowl_on_the_stove_moved_level3_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2084,
+      "name": "put_the_bowl_on_the_stove_moved_level3_sample2",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2090,
+      "name": "put_the_bowl_on_the_stove_moved_level4_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2172,
+      "name": "put_the_wine_bottle_on_the_rack_add_1",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2180,
+      "name": "put_the_wine_bottle_on_the_rack_add_17",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2185,
+      "name": "put_the_wine_bottle_on_the_rack_add_21",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2297,
+      "name": "turn_on_the_stove_moved_level1_sample3",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2316,
+      "name": "open_the_middle_drawer_of_the_cabinet_light_12",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2318,
+      "name": "open_the_middle_drawer_of_the_cabinet_light_14",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2357,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_light_11",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2383,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_light_35",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2387,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_light_39",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2399,
+      "name": "open_the_top_drawer_and_put_the_bowl_inside_light_5",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2412,
+      "name": "push_the_plate_to_the_front_of_the_stove_light_2",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2413,
+      "name": "push_the_plate_to_the_front_of_the_stove_light_21",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2433,
+      "name": "push_the_plate_to_the_front_of_the_stove_light_41",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2435,
+      "name": "push_the_plate_to_the_front_of_the_stove_light_43",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2455,
+      "name": "put_the_bowl_on_the_plate_light_36",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2470,
+      "name": "put_the_bowl_on_the_stove_light_37",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2510,
+      "name": "put_the_wine_bottle_on_the_rack_light_11",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2519,
+      "name": "put_the_wine_bottle_on_the_rack_light_20",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2524,
+      "name": "put_the_wine_bottle_on_the_rack_light_26",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2541,
+      "name": "put_the_wine_bottle_on_the_rack_light_7",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_goal",
+      "id": 2588,
+      "name": "turn_on_the_stove_light_39",
+      "category": "Light Conditions",
+      "difficulty_level": null
+    },
+    {
+      "suite": "libero_10",
+      "id": 5,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_table_14",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 6,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_table_15",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 44,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_table_2",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 71,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_tb_22",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 87,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_table_24",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 91,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_table_28",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 125,
+      "name": "KITCHEN_SCENE8_put_both_moka_pots_on_the_stove_table_9",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 139,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_table_12",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 141,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_table_24",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 178,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_tb_12",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 183,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_tb_17",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 232,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_tb_3",
+      "category": "Background Textures",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 236,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_tb_8",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 239,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_table_10",
+      "category": "Background Textures",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 272,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_tb_5",
+      "category": "Background Textures",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 283,
+      "name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy_table_28",
+      "category": "Background Textures",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 300,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket_view_0_0_100_0_0_initstate_171",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 310,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket_view_0_0_100_0_0_initstate_281",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 332,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_view_0_0_100_0_0_initstate_42",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 368,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_view_0_0_100_0_0_initstate_23",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 384,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_view_0_0_100_0_0_initstate_223",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 444,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_view_0_0_100_0_0_initstate_394",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 465,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_view_0_0_100_0_0_initstate_195",
+      "category": "Robot Initial States",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 554,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_view_0_0_100_0_0_initstate_367",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 580,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_view_0_0_100_0_0_initstate_218",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 585,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_view_0_0_100_0_0_initstate_268",
+      "category": "Robot Initial States",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 593,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_view_0_0_100_0_0_initstate_358",
+      "category": "Robot Initial States",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 655,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_view_0_0_100_0_0_initstate_210",
+      "category": "Robot Initial States",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 663,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_view_0_0_100_0_0_initstate_310",
+      "category": "Robot Initial States",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 693,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket_view_6_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 703,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_view_0_0_119_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 730,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_view_28_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 740,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_view_0_0_126_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 813,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_view_52_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 837,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_view_0_0_149_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 844,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_view_0_0_100_10_350_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 925,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_view_0_0_163_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 969,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_view_0_0_171_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1040,
+      "name": "KITCHEN_SCENE8_put_both_moka_pots_on_the_stove_view_332_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 1090,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_view_350_15_100_0_0_initstate_0",
+      "category": "Camera Viewpoints",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 1157,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_language_27_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 1187,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_language_24_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 1259,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_language_4_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1296,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_language_48_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 1407,
+      "name": "LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket_language_44_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 1455,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_language_13_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1456,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_language_14_view_0_0_100_0_0_initstate_0",
+      "category": "Language Instructions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1503,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket_view_0_0_100_0_0_initstate_0_noise_21",
+      "category": "Sensor Noise",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 1539,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_view_0_0_100_0_0_initstate_0_noise_13",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 1543,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_view_0_0_100_0_0_initstate_0_noise_17",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1562,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_view_0_0_100_0_0_initstate_0_noise_47",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1577,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_view_0_0_100_0_0_initstate_0_noise_14",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 1588,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_view_0_0_100_0_0_initstate_0_noise_25",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 1596,
+      "name": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it_view_0_0_100_0_0_initstate_0_noise_33",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 1643,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_view_0_0_100_0_0_initstate_0_noise_31",
+      "category": "Sensor Noise",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1651,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_view_0_0_100_0_0_initstate_0_noise_39",
+      "category": "Sensor Noise",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 1665,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_view_0_0_100_0_0_initstate_0_noise_4",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 1674,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_view_0_0_100_0_0_initstate_0_noise_14",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 1685,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_view_0_0_100_0_0_initstate_0_noise_26",
+      "category": "Sensor Noise",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 1725,
+      "name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy_view_0_0_100_0_0_initstate_0_noise_18",
+      "category": "Sensor Noise",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 1975,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_level3_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 1987,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_add_16",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 1991,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_add_2",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 1992,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_add_20",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 2090,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket_level5_sample1",
+      "category": "Objects Layout",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 2129,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_add_10",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 2173,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_add_24",
+      "category": "Objects Layout",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 2190,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_level3_sample4",
+      "category": "Objects Layout",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 2226,
+      "name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy_add_9",
+      "category": "Objects Layout",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 2313,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_light_33",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 2329,
+      "name": "KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it_light_48",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 2364,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_light_41",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 2374,
+      "name": "KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it_light_9",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 2383,
+      "name": "KITCHEN_SCENE8_put_both_moka_pots_on_the_stove_light_26",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 2397,
+      "name": "KITCHEN_SCENE8_put_both_moka_pots_on_the_stove_light_46",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 2411,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket_light_44",
+      "category": "Light Conditions",
+      "difficulty_level": 5
+    },
+    {
+      "suite": "libero_10",
+      "id": 2426,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_light_38",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 2427,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_light_44",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 2433,
+      "name": "LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket_light_8",
+      "category": "Light Conditions",
+      "difficulty_level": 1
+    },
+    {
+      "suite": "libero_10",
+      "id": 2443,
+      "name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate_light_2",
+      "category": "Light Conditions",
+      "difficulty_level": 3
+    },
+    {
+      "suite": "libero_10",
+      "id": 2474,
+      "name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate_light_19",
+      "category": "Light Conditions",
+      "difficulty_level": 4
+    },
+    {
+      "suite": "libero_10",
+      "id": 2500,
+      "name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy_light_12",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    },
+    {
+      "suite": "libero_10",
+      "id": 2502,
+      "name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy_light_14",
+      "category": "Light Conditions",
+      "difficulty_level": 2
+    }
+  ]
+}

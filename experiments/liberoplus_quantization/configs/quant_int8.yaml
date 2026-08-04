@@ -1,0 +1,10 @@
+base: baseline_bf16.yaml
+experiment_name: quant_int8_weight_only
+output_tag: quant_int8_weight_only
+precision: int8
+quantization_backend: torchao
+quantization_mode: int8_weight_only
+quantization_scope: backbone
+real_quantization_required: true
+notes:
+  - Real torchao INT8 weight-only kernels on selected DiT backbone Linear modules.

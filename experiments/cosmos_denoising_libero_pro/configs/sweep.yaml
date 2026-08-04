@@ -1,0 +1,52 @@
+schema_version: 1
+experiment: cosmos_denoising_libero_pro
+output_root: /data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep
+repositories:
+  cosmos: /home/rxhuang/Projects/cosmos-policy
+  libero: /home/rxhuang/Projects/LIBERO
+  libero_pro: /data/rxhuang/repos/LIBERO-PRO
+model:
+  name: cosmos
+  checkpoint: /data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt
+  checkpoint_sha256: 8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2
+  dataset_stats_path: /data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json
+  dataset_stats_sha256: 5b119a98ad7824507ddff3c6c7507ca244261ee416dcfa623876702160c580d3
+  t5_embeddings_path: /data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep/assets/cosmos_libero_pro_t5_embeddings.pkl
+  action_horizon: 16
+  action_dim: 7
+  image_resolution: 224
+  camera_flip_vertical: true
+  generation_mode: action_only_usage
+  precision: bf16
+  native_config:
+    use_jpeg_compression: true
+    trained_with_image_aug: true
+    randomize_seed: false
+evaluation:
+  seed: 195
+  init_state_index: 0
+  perturbation_seed: 28
+  denoising_steps: [1, 2, 3, 4, 5, 6]
+  settle_steps: 10
+  settle_gripper_action: -1.0
+  resolution: 256
+  record_actions: true
+  record_video: false
+  video_fps: 20
+  max_steps:
+    libero_spatial: 220
+    libero_object: 280
+    libero_goal: 300
+    libero_10: 520
+runtime:
+  deterministic: true
+  randomize_seed: false
+  decode_future: false
+  pipeline_mode: sync_baseline
+  action_prefix: 16
+  warmup_requests: 10
+  resource_interval_seconds: 0.5
+provenance:
+  cosmos_commit: eaf393e5b5dbe8ab03a6ab08061c99aad6ba2e1e
+  libero_commit: 8f1084e3132a39270c3a13ebe37270a43ece2a01
+  libero_pro_commit: eafdb809426b13153aa1e4c42d6601844217dfec

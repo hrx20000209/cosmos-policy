@@ -1,0 +1,5 @@
+modes: [sync_baseline, action_first_sync, action_first_async_decode, async_encode_sync_dit, full_pipeline]
+profile:
+  pytorch: true
+  nsight_systems: optional
+

@@ -1,0 +1,4 @@
+base: baseline_bf16.yaml
+experiment_name: async_bf16_openloop_16
+output_tag: async_bf16_openloop_16
+num_open_loop_steps: 16

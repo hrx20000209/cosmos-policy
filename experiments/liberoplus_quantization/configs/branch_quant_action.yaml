@@ -1,0 +1,11 @@
+base: baseline_bf16.yaml
+experiment_name: branch_quant_shared_output_proxy
+output_tag: branch_quant_shared_output_proxy
+precision: int8
+quantization_backend: torchao
+quantization_mode: int8_weight_only
+quantization_scope: shared_output_proxy
+real_quantization_required: true
+notes:
+  - Cosmos Policy has no independent action head.
+  - This quantizes the shared final projection only and must not be described as action-only quantization.

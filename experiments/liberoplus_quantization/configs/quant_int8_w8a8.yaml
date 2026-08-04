@@ -1,0 +1,10 @@
+base: baseline_bf16.yaml
+experiment_name: quant_int8_w8a8
+output_tag: quant_int8_w8a8
+precision: int8_w8a8
+quantization_backend: torchao
+quantization_mode: int8_backbone
+quantization_scope: backbone
+real_quantization_required: true
+notes:
+  - Real dynamic-activation INT8 plus INT8 weight kernels; microbenchmarked separately.

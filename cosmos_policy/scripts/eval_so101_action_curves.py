@@ -49,6 +49,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--t5_text_embeddings_path", required=True)
     parser.add_argument("--dataset_stats_path", required=True)
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        nargs="*",
+        default=None,
+        help="Optional LeRobot episode ids to evaluate. Use e.g. --episodes 95 for fixed validation curves.",
+    )
     parser.add_argument("--num_samples", type=int, default=16)
     parser.add_argument("--chunk_size", type=int, default=50)
     parser.add_argument("--num_denoising_steps", type=int, default=10)
@@ -167,6 +174,7 @@ def main() -> None:
     dataset = SO101LeRobotCosmosDataset(
         repo_id=args.repo_id,
         root=args.root,
+        episodes=args.episodes,
         chunk_size=args.chunk_size,
         t5_text_embeddings_path=args.t5_text_embeddings_path,
         dataset_stats_path=args.dataset_stats_path,

@@ -1,0 +1,4 @@
+prefix_lengths: [1, 2, 4, 8, 16]
+adaptive_modes: [proprio_change, visual_change, action_variance, task_stage]
+buffer_strategies: [replace, blend, temporal_aggregation, keep_prefix]
+
