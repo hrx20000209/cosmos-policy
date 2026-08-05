@@ -251,9 +251,17 @@ class SO101CosmosAsyncServerConfig:
     #                          3.1x smaller than the demonstrations (0.204 vs
     #                          0.634 deg). Gain amplifies each step away from the
     #                          measured pose: a' = proprio + gain * (a - proprio).
-    #                          This takes the robot off the training
-    #                          distribution and amplifies chunk-boundary jumps
-    #                          along with everything else -- 1.0 disables it.
+    #                          MEASURED AND REJECTED: gain=2.0 at 24 fps is not
+    #                          a 2x scaling, it is positive feedback. The arm
+    #                          overshoots the model's target, the next inference
+    #                          sees an out-of-distribution pose and its output
+    #                          degrades, and the gain amplifies that too --
+    #                          103.4 deg/s against a 19.0 deg/s demonstration
+    #                          (5.4x, not 2x), command step p95 1.5 -> 19.0 deg
+    #                          (12.7x), tracking error max 65 -> 119 deg, and the
+    #                          motion shook the wrist camera off the bus 117 s
+    #                          in. Leave at 1.0; raise fps instead, which speeds
+    #                          the arm up without distorting the trajectory.
     #
     #   action_stride          keep every Nth action, covering the chunk's motion
     #                          in 1/N the steps. Same waypoints, coarser. 1 disables.
