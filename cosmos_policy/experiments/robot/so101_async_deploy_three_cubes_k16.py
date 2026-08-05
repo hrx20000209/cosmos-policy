@@ -268,6 +268,30 @@ class SO101CosmosAsyncServerConfig:
     action_gain: float = 1.0
     action_stride: int = 1
 
+    # --- event-triggered inference ---
+    #
+    # Most chunks carry little new information. Measured on the 20k traces, the
+    # model's *incremental intent* (raw action minus the proprio it was
+    # conditioned on) changes by only 0.37-1.00 deg between consecutive chunks,
+    # so re-anchoring the previous chunk to the current pose is within 2 deg of
+    # a fresh inference for 58.8% of chunks at 30 fps and 84.5% at 8 fps.
+    #
+    # The point is not to save GPU for its own sake. The server is 100% busy, so
+    # a genuinely new observation has to queue behind an inference that was
+    # going to produce nearly the same answer. Skipping the redundant ones lets
+    # the informative ones start immediately.
+    #
+    # The trigger has to be cheap or it defeats the purpose: both signals are
+    # read before the encode, from data already in hand.
+    skip_if_static: bool = False
+    # Skip only if the arm moved less than this since the last real inference.
+    skip_proprio_deg: float = 1.0
+    # ...and the cameras changed less than this (mean |diff| on 0-255, subsampled).
+    skip_image_diff: float = 2.0
+    # Never skip more than this many in a row, so a mis-tuned threshold cannot
+    # stall the policy indefinitely.
+    skip_max_consecutive: int = 8
+
     # If true, do everything except return executable actions; useful for camera/schema smoke tests.
     # Never enable hardware motion by default.  The current checkpoint has
     # excessive replanning-boundary jumps in held-out offline evaluation.
@@ -355,6 +379,10 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         self.logger.info("Loaded Cosmos SO101 checkpoint: %s", config.ckpt_path)
 
         self._future_dir = None
+        self._last_infer: dict | None = None
+        self._consecutive_skips = 0
+        self._n_skipped = 0
+        self._n_inferred = 0
         if config.generate_future_state:
             if config.truncate_vae_encode:
                 # Truncation zeroes the slots the future decode needs; refuse to
@@ -631,6 +659,36 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             except Exception as exc:  # noqa: BLE001 - never fail a chunk over a debug artefact
                 self.logger.debug("future frame save failed for %s: %s", key, exc)
 
+    @staticmethod
+    def _thumb(img: np.ndarray) -> np.ndarray:
+        """A cheap fingerprint of a frame: every 8th pixel, as float."""
+        return img[::8, ::8].astype(np.float32)
+
+    def _should_skip_inference(self, cosmos_obs: dict) -> tuple[bool, dict]:
+        """Decide whether this observation is worth a full inference.
+
+        Both signals come from data already in hand and cost well under a
+        millisecond, against the ~484 ms the inference would take.
+        """
+        prev = self._last_infer
+        if prev is None:
+            return False, {"reason": "no previous inference"}
+        if self._consecutive_skips >= self.config.skip_max_consecutive:
+            return False, {"reason": "consecutive skip cap"}
+
+        proprio_delta = float(np.max(np.abs(cosmos_obs["proprio"] - prev["proprio"])))
+        img_delta = 0.0
+        for key in ("primary_image", "left_wrist_image", "right_wrist_image"):
+            cur, old = cosmos_obs.get(key), prev["thumbs"].get(key)
+            if cur is None or old is None:
+                continue
+            img_delta = max(img_delta, float(np.abs(self._thumb(cur) - old).mean()))
+
+        info = {"proprio_delta": proprio_delta, "image_delta": img_delta}
+        static = proprio_delta < self.config.skip_proprio_deg and img_delta < self.config.skip_image_diff
+        info["reason"] = "static" if static else "changed"
+        return static, info
+
     def _predict_action_chunk(self, observation_t: TimedObservation) -> tuple[list[TimedAction], dict[str, float]]:
         raw = observation_t.get_observation()
         task = str(raw.get("task") or (self.policy_specs.task if self.policy_specs else "") or "")
@@ -647,25 +705,55 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         if profiling:
             stage_profiler.add("obs_prep", prepare_ms)
 
-        infer_start = time.perf_counter()
-        result = get_action(
-            self.cosmos_cfg,
-            self.model,
-            self.dataset_stats,
-            cosmos_obs,
-            task,
-            seed=(self.config.seed + int(observation_t.get_timestep())
-                  if self.config.vary_seed_per_step else self.config.seed),
-            randomize_seed=self.config.randomize_seed,
-            num_denoising_steps_action=self.config.num_denoising_steps_action,
-            generate_future_state_and_value_in_parallel=self.config.generate_future_state,
+        skipped, skip_info = (
+            self._should_skip_inference(cosmos_obs) if self.config.skip_if_static else (False, {})
         )
+        infer_start = time.perf_counter()
+        if skipped:
+            # Reuse the previous chunk's *incremental intent* -- "where the
+            # policy wanted to go relative to wherever it is" -- re-anchored to
+            # the pose we are at now. That quantity is what the traces show to
+            # be stable between chunks; the absolute targets are not.
+            self._consecutive_skips += 1
+            self._n_skipped += 1
+            model_action_array = (self._last_infer["intent"] + cosmos_obs["proprio"][None, :]).astype(np.float32)
+            self.logger.info(
+                "SKIPPED inference | obs=%s proprio_delta=%.2f img_delta=%.2f consecutive=%d",
+                observation_t.get_timestep(), skip_info.get("proprio_delta", -1.0),
+                skip_info.get("image_delta", -1.0), self._consecutive_skips,
+            )
+        else:
+            self._consecutive_skips = 0
+            self._n_inferred += 1
+            result = get_action(
+                self.cosmos_cfg,
+                self.model,
+                self.dataset_stats,
+                cosmos_obs,
+                task,
+                seed=(self.config.seed + int(observation_t.get_timestep())
+                      if self.config.vary_seed_per_step else self.config.seed),
+                randomize_seed=self.config.randomize_seed,
+                num_denoising_steps_action=self.config.num_denoising_steps_action,
+                generate_future_state_and_value_in_parallel=self.config.generate_future_state,
+            )
+            if self._future_dir is not None:
+                self._save_future_frames(result, observation_t)
+            model_action_array = np.asarray(result["actions"], dtype=np.float32)
         infer_ms = (time.perf_counter() - infer_start) * 1000
 
-        if self._future_dir is not None:
-            self._save_future_frames(result, observation_t)
+        if not skipped:
+            # Remember what this inference wanted, for the next skip to reuse.
+            self._last_infer = {
+                "proprio": cosmos_obs["proprio"].copy(),
+                "intent": model_action_array - cosmos_obs["proprio"][None, :],
+                "thumbs": {
+                    k: self._thumb(cosmos_obs[k])
+                    for k in ("primary_image", "left_wrist_image", "right_wrist_image")
+                    if k in cosmos_obs
+                },
+            }
 
-        model_action_array = np.asarray(result["actions"], dtype=np.float32)
         expected_shape = (self.cosmos_cfg.chunk_size, self.cosmos_cfg.action_dim)
         if model_action_array.shape != expected_shape:
             raise RuntimeError(
@@ -725,6 +813,7 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             "raw_abs_max_delta": float(np.max(np.abs(raw_delta))),
             "dry_run_zero_actions": bool(self.config.dry_run_zero_actions),
             "num_denoising_steps_action": int(self.config.num_denoising_steps_action),
+            "inference_skipped": bool(skipped),
         }
         stages = stage_profiler.collect() if profiling else {}
         if stages:
@@ -757,6 +846,13 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
     def stop(self) -> None:
         self.shutdown_event.set()
         self.observation_queue.clear()
+        if self.config.skip_if_static:
+            total = self._n_skipped + self._n_inferred
+            if total:
+                self.logger.warning(
+                    "Event-triggered inference: %d/%d chunks skipped (%.1f%%), %d inferences run",
+                    self._n_skipped, total, 100 * self._n_skipped / total, self._n_inferred,
+                )
         if self._trace_file is not None:
             with self._trace_lock:
                 self._trace_file.close()
