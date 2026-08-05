@@ -304,6 +304,13 @@ class SO101CosmosAsyncServerConfig:
     # Requires future-state/value prediction to stay off.
     truncate_vae_encode: bool = False
 
+    # Drop one conditioning slot from the encode and splice into the latent.
+    # -1 disables. Slot 2 = left_wrist = the "right" camera, the third-person
+    # view most redundant with "front". Requires truncate_vae_encode.
+    # splice_fill: zero | copy_next | copy_last
+    splice_drop_slot: int = -1
+    splice_fill: str = "zero"
+
     # Also decode the model's predicted future frames and write them to disk, so
     # a run can be checked against the observation that actually arrived next.
     # This is what makes the checkpoint a *world*-action model rather than just a
@@ -399,11 +406,14 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         # Apply before instrumentation so the profiler's vae_encode timer
         # covers the truncated call rather than the original one.
         if config.truncate_vae_encode:
-            info = truncated_encode.install(self.model)
+            info = truncated_encode.install(
+                self.model, drop_slot=self.config.splice_drop_slot, fill=self.config.splice_fill
+            )
             if info.get("applied"):
                 self.logger.warning(
-                    "Truncated VAE encode ON: encoding %d/%d frames (%.0f%%)",
+                    "Truncated VAE encode ON: encoding %d/%d frames (%.0f%%)%s",
                     info["pixel_frames_encoded"], info["pixel_frames_total"], 100 * info["fraction_encoded"],
+                    f"  | dropped slot {info['drop_slot']}, fill={info['fill']}" if info.get("drop_slot", -1) >= 0 else "",
                 )
             else:
                 self.logger.warning("Truncated VAE encode NOT applied: %s", info.get("reason"))
