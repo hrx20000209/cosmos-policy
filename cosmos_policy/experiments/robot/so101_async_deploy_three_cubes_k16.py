@@ -14,6 +14,7 @@ Safety note:
 
 import contextlib
 import io
+import json
 import logging
 import pickle  # nosec - LeRobot async protocol uses trusted local pickle.
 import sys
@@ -44,6 +45,7 @@ if not hasattr(typing, "Unpack"):
 from lerobot.transport import services_pb2, services_pb2_grpc  # type: ignore
 from lerobot.transport.utils import receive_bytes_in_chunks
 
+from cosmos_policy.experiments.robot import stage_profiler
 from cosmos_policy.experiments.robot.cosmos_utils import (
     get_action,
     get_model,
@@ -218,6 +220,13 @@ class SO101CosmosAsyncServerConfig:
     # excessive replanning-boundary jumps in held-out offline evaluation.
     dry_run_zero_actions: bool = True
 
+    # Per-request stage breakdown (VAE encode / DiT denoise / decode / ...).
+    # Stage boundaries are CUDA-synchronised, which perturbs the end-to-end
+    # number slightly, so it is opt-in.
+    profile_stages: bool = False
+    # JSONL trace, one line per served chunk.  Empty = derive from timeline dir.
+    trace_path: str = ""
+
     @property
     def environment_dt(self) -> float:
         return 1 / self.fps
@@ -274,6 +283,17 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         init_t5_text_embeddings_cache(config.t5_text_embeddings_path)
         self.model, self.model_config = get_model(cfg)
         self.logger.info("Loaded Cosmos SO101 checkpoint: %s", config.ckpt_path)
+
+        self._trace_lock = threading.Lock()
+        self._trace_file = None
+        if config.profile_stages:
+            stage_profiler.instrument(self.model)
+            trace_path = config.trace_path or str(
+                Path(config.ckpt_path).parent.parent / f"server_stage_trace_{int(time.time())}.jsonl"
+            )
+            Path(trace_path).parent.mkdir(parents=True, exist_ok=True)
+            self._trace_file = open(trace_path, "w", buffering=1)  # noqa: SIM115
+            self.logger.warning("Stage profiling ON (CUDA-synchronised); trace -> %s", trace_path)
 
     @property
     def running(self) -> bool:
@@ -342,18 +362,46 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         obs = self.observation_queue.pop(0)
         try:
             start = time.perf_counter()
+            recv_time = time.time()
             actions, timing = self._predict_action_chunk(obs)
+            predict_end = time.perf_counter()
             self.logger.info(
                 "Generated SO101 action chunk for obs #%s | %d actions | %.1f ms",
                 obs.get_timestep(),
                 len(actions),
-                (time.perf_counter() - start) * 1000,
+                (predict_end - start) * 1000,
             )
             if actions:
                 actions[0].metadata["server_latency"] = timing
                 actions[0].metadata["server_timestamp"] = time.time()
+            serialize_start = time.perf_counter()
             with _plain_torch_tensor_pickling():
                 payload = pickle.dumps(actions)  # nosec
+            serialize_ms = (time.perf_counter() - serialize_start) * 1000
+
+            if self._trace_file is not None:
+                stages = dict(timing.get("stages_ms") or {})
+                stages["serialize"] = serialize_ms
+                # Whatever the CUDA-synchronised stages did not account for.
+                accounted = sum(v for k, v in stages.items() if k != "dit_calls")
+                total_ms = (time.perf_counter() - start) * 1000
+                record = {
+                    "server_recv_time": recv_time,
+                    "server_reply_time": time.time(),
+                    "source_observation_timestep": timing.get("source_observation_timestep"),
+                    "source_observation_timestamp": timing.get("source_observation_timestamp"),
+                    "obs_to_reply_ms": (time.time() - obs.get_timestamp()) * 1000,
+                    "total_server_ms": total_ms,
+                    "unaccounted_ms": total_ms - accounted,
+                    "n_actions": len(actions),
+                    "payload_bytes": len(payload),
+                    "stages_ms": stages,
+                    "proprio": timing.get("proprio"),
+                    "raw_model_action_first": timing.get("raw_model_action_first"),
+                    "raw_abs_max_delta": timing.get("raw_abs_max_delta"),
+                }
+                with self._trace_lock:
+                    self._trace_file.write(json.dumps(record) + "\n")
             return services_pb2.Actions(data=payload)
         except Exception:
             self.logger.exception("Error while generating SO101 action chunk")
@@ -445,9 +493,15 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         if not task:
             raise ValueError("Task instruction is empty; pass --task to the LeRobot robot client.")
 
+        profiling = self.config.profile_stages
+        if profiling:
+            stage_profiler.reset()
+
         prepare_start = time.perf_counter()
         cosmos_obs = self._build_cosmos_observation(raw)
         prepare_ms = (time.perf_counter() - prepare_start) * 1000
+        if profiling:
+            stage_profiler.add("obs_prep", prepare_ms)
 
         infer_start = time.perf_counter()
         result = get_action(
@@ -475,7 +529,10 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         # the checkpoint is safe enough to promote, and it keeps the raw-vs-
         # bounded comparison available when the safety clamps are what actually
         # gets executed.
+        safety_start = time.perf_counter()
         bounded_candidate = self._apply_safety_filters(model_action_array, cosmos_obs["proprio"])
+        if profiling:
+            stage_profiler.add("safety_filter", (time.perf_counter() - safety_start) * 1000)
         raw_delta = model_action_array - cosmos_obs["proprio"][None, :]
         bounded_delta = bounded_candidate - cosmos_obs["proprio"][None, :]
         self.logger.warning(
@@ -512,6 +569,9 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             "dry_run_zero_actions": bool(self.config.dry_run_zero_actions),
             "num_denoising_steps_action": int(self.config.num_denoising_steps_action),
         }
+        stages = stage_profiler.collect() if profiling else {}
+        if stages:
+            metadata["stages_ms"] = stages
         timed_actions = [
             TimedAction(
                 timestamp=observation_t.get_timestamp() + i * self.config.environment_dt,
@@ -526,11 +586,24 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             )
             for i in range(len(action_array))
         ]
-        return timed_actions, {"prepare_ms": prepare_ms, "cosmos_predict_ms": infer_ms}
+        return timed_actions, {
+            "prepare_ms": prepare_ms,
+            "cosmos_predict_ms": infer_ms,
+            "stages_ms": stages,
+            "source_observation_timestep": observation_t.get_timestep(),
+            "source_observation_timestamp": observation_t.get_timestamp(),
+            "proprio": cosmos_obs["proprio"].astype(float).tolist(),
+            "raw_model_action_first": model_action_array[0].astype(float).tolist(),
+            "raw_abs_max_delta": float(np.max(np.abs(raw_delta))),
+        }
 
     def stop(self) -> None:
         self.shutdown_event.set()
         self.observation_queue.clear()
+        if self._trace_file is not None:
+            with self._trace_lock:
+                self._trace_file.close()
+                self._trace_file = None
         self.logger.info("SO101 Cosmos async policy server stopped")
 
 
