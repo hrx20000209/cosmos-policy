@@ -194,6 +194,24 @@ class SO101CosmosAsyncServerConfig:
     left_wrist_camera_key: str = "right"
     right_wrist_camera_key: str = "wrist"
 
+    # View-count ablation.  Dropping a view genuinely shortens the VAE input
+    # sequence -- the omitted slot is not zero-padded, its latent index is set
+    # to -1 -- so each dropped view removes 2 of 11 latent slots (the current
+    # frame and its future placeholder), i.e. ~20% of the encode.
+    #
+    #   use_wrist_image=True,  num_wrist_images=2 -> front + right + wrist (trained config)
+    #   use_wrist_image=True,  num_wrist_images=1 -> front + left_wrist_camera_key
+    #   use_wrist_image=False                     -> front only
+    #
+    # With num_wrist_images=1 the surviving wrist slot is fed by
+    # left_wrist_camera_key, so set that to "wrist" to drop the redundant
+    # third-person "right" view instead of the wrist-mounted one.
+    #
+    # The checkpoint was trained with all three views; anything else is a
+    # distribution shift and its accuracy is an open question.
+    use_wrist_image: bool = True
+    num_wrist_images: int = 2
+
     # Inference behavior.
     num_denoising_steps_action: int = 10
     seed: int = 195
@@ -254,8 +272,8 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             config_file=config.config_file,
             use_third_person_image=True,
             num_third_person_images=1,
-            use_wrist_image=True,
-            num_wrist_images=2,
+            use_wrist_image=config.use_wrist_image,
+            num_wrist_images=config.num_wrist_images,
             use_proprio=True,
             normalize_proprio=True,
             unnormalize_actions=True,
@@ -435,24 +453,38 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         return np.asarray([raw[name] for name in SO101_ACTION_NAMES], dtype=np.float32)
 
     def _build_cosmos_observation(self, raw: dict[str, Any]) -> dict[str, Any]:
-        camera_keys = [
-            self.config.primary_camera_key,
-            self.config.left_wrist_camera_key,
-            self.config.right_wrist_camera_key,
-        ]
+        # Only demand the views this configuration actually consumes, so a
+        # view-ablation run can also stop capturing the dropped camera on the
+        # client side (saving its capture cost and USB bandwidth too).
+        camera_keys = [self.config.primary_camera_key]
+        if self.config.use_wrist_image:
+            camera_keys.append(self.config.left_wrist_camera_key)
+            if self.config.num_wrist_images == 2:
+                camera_keys.append(self.config.right_wrist_camera_key)
         missing = [key for key in camera_keys if key not in raw]
         if missing:
             raise KeyError(f"Robot observation missing camera keys: {missing}; available={sorted(raw)}")
-        return {
+
+        out: dict[str, Any] = {
             "primary_image": self._to_uint8_image(raw[self.config.primary_camera_key], self.config.primary_camera_key),
-            "left_wrist_image": self._to_uint8_image(
-                raw[self.config.left_wrist_camera_key], self.config.left_wrist_camera_key
-            ),
-            "right_wrist_image": self._to_uint8_image(
-                raw[self.config.right_wrist_camera_key], self.config.right_wrist_camera_key
-            ),
             "proprio": self._extract_proprio(raw),
         }
+        if self.config.use_wrist_image:
+            out["left_wrist_image"] = self._to_uint8_image(
+                raw[self.config.left_wrist_camera_key], self.config.left_wrist_camera_key
+            )
+            # get_action indexes right_wrist_image only when num_wrist_images==2,
+            # but the aloha branch builds the list unconditionally, so keep a
+            # harmless alias rather than a missing key.
+            out["right_wrist_image"] = (
+                self._to_uint8_image(raw[self.config.right_wrist_camera_key], self.config.right_wrist_camera_key)
+                if self.config.num_wrist_images == 2
+                else out["left_wrist_image"]
+            )
+        else:
+            out["left_wrist_image"] = out["primary_image"]
+            out["right_wrist_image"] = out["primary_image"]
+        return out
 
     def _apply_safety_filters(self, actions: np.ndarray, proprio: np.ndarray) -> np.ndarray:
         actions = np.asarray(actions, dtype=np.float32).copy()
