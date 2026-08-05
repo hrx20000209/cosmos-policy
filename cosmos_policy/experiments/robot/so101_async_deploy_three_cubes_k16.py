@@ -233,6 +233,33 @@ class SO101CosmosAsyncServerConfig:
     max_step_delta: float = 4.0
     max_gripper_step_delta: float = 5.0
 
+    # --- action scale ---
+    #
+    # Measured on the 2026-08-05 deploy300 run: the arm executes at ~1.6 deg/s
+    # against ~19.0 deg/s in the demonstrations, i.e. 11.7x slower. Two
+    # independent causes, hence two independent knobs:
+    #
+    #   fps (client + server)  the chunk is 16 steps of *training* time, which
+    #                          was 30 fps. Running the client at 8 fps stretches
+    #                          the motion 3.75x. The server produces 31.9
+    #                          actions/s and only 7.95 are consumed, so there is
+    #                          4x headroom -- raising fps costs nothing and also
+    #                          shortens the queue (1250 ms -> 417 ms at 24 fps).
+    #                          Prefer this: it does not distort the trajectory.
+    #
+    #   action_gain            even at matched fps the chunk's internal steps are
+    #                          3.1x smaller than the demonstrations (0.204 vs
+    #                          0.634 deg). Gain amplifies each step away from the
+    #                          measured pose: a' = proprio + gain * (a - proprio).
+    #                          This takes the robot off the training
+    #                          distribution and amplifies chunk-boundary jumps
+    #                          along with everything else -- 1.0 disables it.
+    #
+    #   action_stride          keep every Nth action, covering the chunk's motion
+    #                          in 1/N the steps. Same waypoints, coarser. 1 disables.
+    action_gain: float = 1.0
+    action_stride: int = 1
+
     # If true, do everything except return executable actions; useful for camera/schema smoke tests.
     # Never enable hardware motion by default.  The current checkpoint has
     # excessive replanning-boundary jumps in held-out offline evaluation.
@@ -665,6 +692,16 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             action_array = np.broadcast_to(cosmos_obs["proprio"], model_action_array.shape).copy()
         else:
             action_array = bounded_candidate
+        # Amplify/subsample before trimming, so the trim still yields the
+        # requested number of executable actions.
+        if self.config.action_stride > 1:
+            action_array = action_array[:: self.config.action_stride]
+        if self.config.action_gain != 1.0:
+            # Anchor on the measured pose, not on the chunk's own first step, so
+            # the gain scales the *intended displacement* rather than compounding
+            # whatever offset the chunk starts with.
+            anchor = cosmos_obs["proprio"][None, :]
+            action_array = anchor + self.config.action_gain * (action_array - anchor)
         action_array = action_array[: self.actions_per_chunk]
 
         metadata = {
