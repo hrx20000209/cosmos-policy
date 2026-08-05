@@ -45,7 +45,7 @@ if not hasattr(typing, "Unpack"):
 from lerobot.transport import services_pb2, services_pb2_grpc  # type: ignore
 from lerobot.transport.utils import receive_bytes_in_chunks
 
-from cosmos_policy.experiments.robot import stage_profiler
+from cosmos_policy.experiments.robot import stage_profiler, truncated_encode
 from cosmos_policy.experiments.robot.cosmos_utils import (
     get_action,
     get_model,
@@ -238,6 +238,13 @@ class SO101CosmosAsyncServerConfig:
     # excessive replanning-boundary jumps in held-out offline evaluation.
     dry_run_zero_actions: bool = True
 
+    # Encode only the latent slots the model actually conditions on and pad the
+    # rest with zeros.  The tokenizer is causal, so the conditioning latents are
+    # bit-identical; the discarded slots are generated from noise anyway.
+    # Measured: 830 -> 502 ms per chunk, max action delta 0.067 deg.
+    # Requires future-state/value prediction to stay off.
+    truncate_vae_encode: bool = False
+
     # Per-request stage breakdown (VAE encode / DiT denoise / decode / ...).
     # Stage boundaries are CUDA-synchronised, which perturbs the end-to-end
     # number slightly, so it is opt-in.
@@ -301,6 +308,18 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         init_t5_text_embeddings_cache(config.t5_text_embeddings_path)
         self.model, self.model_config = get_model(cfg)
         self.logger.info("Loaded Cosmos SO101 checkpoint: %s", config.ckpt_path)
+
+        # Apply before instrumentation so the profiler's vae_encode timer
+        # covers the truncated call rather than the original one.
+        if config.truncate_vae_encode:
+            info = truncated_encode.install(self.model)
+            if info.get("applied"):
+                self.logger.warning(
+                    "Truncated VAE encode ON: encoding %d/%d frames (%.0f%%)",
+                    info["pixel_frames_encoded"], info["pixel_frames_total"], 100 * info["fraction_encoded"],
+                )
+            else:
+                self.logger.warning("Truncated VAE encode NOT applied: %s", info.get("reason"))
 
         self._trace_lock = threading.Lock()
         self._trace_file = None
