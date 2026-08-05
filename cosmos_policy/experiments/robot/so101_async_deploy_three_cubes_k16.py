@@ -171,18 +171,20 @@ sys.modules.setdefault("lerobot.async_inference.helpers", _helpers_module)
 class SO101CosmosAsyncServerConfig:
     """Config for serving a Cosmos Policy checkpoint through LeRobot async RPC."""
 
-    host: str = "localhost"
-    port: int = 8080
+    host: str = "127.0.0.1"
+    port: int = 8082
     fps: int = 30
     inference_latency: float = 1 / 30
     obs_queue_timeout: float = 2.0
 
     # Cosmos checkpoint/config.
-    ckpt_path: str = "/home/hrx/Projects/models/cosmos_policy/iter_000005000"
-    cosmos_config: str = "cosmos_predict2_2b_480p_so101_lerobot"
-    config_file: str = "cosmos_policy/config/config.py"
-    dataset_stats_path: str = "/home/hrx/Projects/models/cosmos_policy/so101_dataset_statistics.json"
-    t5_text_embeddings_path: str = "/home/hrx/Projects/models/cosmos_policy/so101_t5_embeddings.pkl"
+    # 10K three-cubes checkpoint trained with K=16.  This must not use the
+    # older K=30 SO101 experiment registered in the base deployment script.
+    ckpt_path: str = "/home/hrx/Projects/models/three_cubes_1/cosmos_policy/model"
+    cosmos_config: str = "cosmos_predict2_2b_three_cubes_full_ft"
+    config_file: str = "configs/eval_config.py"
+    dataset_stats_path: str = "/home/hrx/Projects/models/three_cubes_1/cosmos_policy/processed_data/dataset_statistics.json"
+    t5_text_embeddings_path: str = "/home/hrx/Projects/models/three_cubes_1/cosmos_policy/processed_data/t5_text_embeddings.pkl"
 
     # Robot observation camera keys produced by LeRobot SOFollower.get_observation().
     # These names must match the camera names passed to the LeRobot robot client.
@@ -202,7 +204,7 @@ class SO101CosmosAsyncServerConfig:
     # is executed as motion and shows up as the arm jittering in place between chunks.
     # Default false: hold the seed fixed so consecutive plans are consistent.
     vary_seed_per_step: bool = False
-    actions_per_chunk: int = 10
+    actions_per_chunk: int = 1
 
     # Safety clamps in physical action units: body joints are degrees, gripper is 0..100.
     # 0 disables the corresponding clamp.
@@ -212,7 +214,9 @@ class SO101CosmosAsyncServerConfig:
     max_gripper_step_delta: float = 5.0
 
     # If true, do everything except return executable actions; useful for camera/schema smoke tests.
-    dry_run_zero_actions: bool = False
+    # Never enable hardware motion by default.  The current checkpoint has
+    # excessive replanning-boundary jumps in held-out offline evaluation.
+    dry_run_zero_actions: bool = True
 
     @property
     def environment_dt(self) -> float:
@@ -249,8 +253,8 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             dataset_stats_path=config.dataset_stats_path,
             t5_text_embeddings_path=config.t5_text_embeddings_path,
             trained_with_image_aug=True,
-            chunk_size=30,
-            num_open_loop_steps=30,
+            chunk_size=16,
+            num_open_loop_steps=16,
             ar_future_prediction=False,
             ar_value_prediction=False,
             ar_qvalue_prediction=False,
@@ -404,7 +408,11 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
 
     def _apply_safety_filters(self, actions: np.ndarray, proprio: np.ndarray) -> np.ndarray:
         actions = np.asarray(actions, dtype=np.float32).copy()
-        actions = np.clip(actions, self.dataset_stats["actions_min"], self.dataset_stats["actions_max"])
+        # Dataset extrema describe what was observed during training, not the
+        # robot's physical limits.  Applying them to a live target can turn an
+        # identity command (the current joint position) into motion whenever
+        # the arm starts outside the dataset envelope.  Physical safety is
+        # enforced below relative to the measured current pose instead.
 
         body_delta = float(self.config.max_delta_from_observation)
         grip_delta = float(self.config.max_gripper_delta_from_observation)
@@ -456,13 +464,38 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         )
         infer_ms = (time.perf_counter() - infer_start) * 1000
 
-        action_array = np.asarray(result["actions"], dtype=np.float32)
+        model_action_array = np.asarray(result["actions"], dtype=np.float32)
         expected_shape = (self.cosmos_cfg.chunk_size, self.cosmos_cfg.action_dim)
-        if action_array.shape != expected_shape:
-            raise RuntimeError(f"Cosmos action chunk shape mismatch: expected {expected_shape}, got {action_array.shape}")
+        if model_action_array.shape != expected_shape:
+            raise RuntimeError(
+                f"Cosmos action chunk shape mismatch: expected {expected_shape}, got {model_action_array.shape}"
+            )
+        # Always evaluate and record the learned policy against live robot
+        # observations.  This makes an HIL shadow run useful for judging whether
+        # the checkpoint is safe enough to promote, and it keeps the raw-vs-
+        # bounded comparison available when the safety clamps are what actually
+        # gets executed.
+        bounded_candidate = self._apply_safety_filters(model_action_array, cosmos_obs["proprio"])
+        raw_delta = model_action_array - cosmos_obs["proprio"][None, :]
+        bounded_delta = bounded_candidate - cosmos_obs["proprio"][None, :]
+        self.logger.warning(
+            "SHADOW candidate | obs=%s | dry_run=%s | raw_first=%s | raw_abs_max=%.3f | "
+            "bounded_first=%s | bounded_abs_max=%.3f",
+            observation_t.get_timestep(),
+            self.config.dry_run_zero_actions,
+            np.array2string(raw_delta[0], precision=2, suppress_small=True),
+            float(np.max(np.abs(raw_delta))),
+            np.array2string(bounded_delta[0], precision=2, suppress_small=True),
+            float(np.max(np.abs(bounded_delta))),
+        )
         if self.config.dry_run_zero_actions:
-            action_array[:] = cosmos_obs["proprio"][None, :]
-        action_array = self._apply_safety_filters(action_array, cosmos_obs["proprio"])
+            # A hardware shadow run must remain an exact identity mapping.
+            # Do not pass it through dataset/relative safety filters: those
+            # filters are intended for model targets and may alter an identity
+            # target if the current pose lies outside training statistics.
+            action_array = np.broadcast_to(cosmos_obs["proprio"], model_action_array.shape).copy()
+        else:
+            action_array = bounded_candidate
         action_array = action_array[: self.actions_per_chunk]
 
         metadata = {
@@ -470,13 +503,26 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
             "source_observation_timestamp": observation_t.get_timestamp(),
             "joint_order": SO101_ACTION_NAMES,
             "server_latency": {"prepare_ms": prepare_ms, "cosmos_predict_ms": infer_ms},
+            # Raw (unclamped) model output and the live proprio it was conditioned
+            # on, so the shadow client can audit action semantics end-to-end.
+            "proprio": cosmos_obs["proprio"].astype(float).tolist(),
+            "raw_model_action_first": model_action_array[0].astype(float).tolist(),
+            "raw_model_action_last": model_action_array[-1].astype(float).tolist(),
+            "raw_abs_max_delta": float(np.max(np.abs(raw_delta))),
+            "dry_run_zero_actions": bool(self.config.dry_run_zero_actions),
+            "num_denoising_steps_action": int(self.config.num_denoising_steps_action),
         }
         timed_actions = [
             TimedAction(
                 timestamp=observation_t.get_timestamp() + i * self.config.environment_dt,
                 timestep=observation_t.get_timestep() + i,
                 action=torch.from_numpy(action_array[i]).to(torch.float32),
-                metadata=metadata if i == 0 else {},
+                # Same dict object for every action in the chunk: the client's
+                # aggregation keeps whichever action wins per timestep, so
+                # head-only metadata is usually discarded and the shadow record
+                # loses its audit trail.  Pickle memoises the shared reference,
+                # so attaching it to all K actions costs nothing on the wire.
+                metadata=metadata,
             )
             for i in range(len(action_array))
         ]
