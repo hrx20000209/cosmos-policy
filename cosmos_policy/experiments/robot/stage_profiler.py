@@ -9,9 +9,12 @@ Stages
 ------
   t5_lookup       text embedding fetch from the precomputed cache
   image_preproc   resize/normalise the 3 views into the 11-slot Cosmos layout
-  vae_encode      Wan2.1 tokenizer encode/decode of the conditioning frames
+  vae_encode      Wan2.1 tokenizer encoding the conditioning frames
+  vae_decode      decoding predicted future frames -- ONLY when future-state
+                  prediction is on. It is a diagnostic, not part of the deployed
+                  control loop, so it must be excluded from end-to-end latency.
   dit_denoise     DiT forward passes -- one per denoising step
-  sampler_other   generate_samples_from_batch minus vae_encode minus dit_denoise
+  sampler_other   generate_samples_from_batch minus the encode/decode/denoise
   action_decode   latent -> action chunk + unnormalisation
 
 The server adds ``obs_prep``, ``safety_filter`` and ``serialize`` around these.
@@ -37,6 +40,7 @@ STAGE_ORDER = [
     "t5_lookup",
     "image_preproc",
     "vae_encode",
+    "vae_decode",
     "dit_denoise",
     "sampler_other",
     "action_decode",
@@ -107,13 +111,17 @@ def instrument(model) -> None:
     from cosmos_policy.experiments.robot import cosmos_utils
 
     # --- VAE tokenizer ---
+    # encode and decode must be timed separately. Decode only runs when
+    # future-state prediction is on, which is a diagnostic, not part of the
+    # deployed control loop -- folding it into the encode number would inflate
+    # the end-to-end latency that deployment actually pays.
     tok = model.tokenizer
-    for meth in ("encode", "decode"):
+    for meth, label in (("encode", "vae_encode"), ("decode", "vae_decode")):
         if hasattr(tok, meth):
             orig = getattr(tok, meth)
 
-            def wrapper(*a, _orig=orig, **kw):
-                with stage("vae_encode"):
+            def wrapper(*a, _orig=orig, _label=label, **kw):
+                with stage(_label):
                     return _orig(*a, **kw)
 
             setattr(tok, meth, wrapper)
@@ -154,7 +162,8 @@ def instrument(model) -> None:
         sync()
         total = (time.perf_counter() - t0) * 1000
         cur = _bucket()
-        other = total - cur.get("dit_denoise", 0.0) - cur.get("vae_encode", 0.0)
+        other = (total - cur.get("dit_denoise", 0.0)
+                 - cur.get("vae_encode", 0.0) - cur.get("vae_decode", 0.0))
         add("sampler_other", max(other, 0.0))
         return out
 

@@ -58,6 +58,7 @@ def main():
     ap.add_argument("--iters", type=int, default=5)
     ap.add_argument("--real-obs-dir", default=None)
     ap.add_argument("--obs-count", type=int, default=4)
+    ap.add_argument("--dump", default=None, help="Save the per-mode action chunks to this .npz")
     ap.add_argument("--task", default="go to red cube. take the red cube. go to box. put the red cube in box.")
     args = ap.parse_args()
 
@@ -168,6 +169,13 @@ def main():
             per_mode_actions[m] = [run(o) for o in observations]
         finally:
             tok.encode = orig_encode
+
+    # Dump the raw chunks so the action curves can be drawn where the CJK fonts
+    # and matplotlib live, instead of adding a plotting dependency here.
+    if args.dump:
+        np.savez(args.dump, **{m: np.stack(per_mode_actions[m]) for m in modes},
+                 drop_slot=np.array(args.drop_slot))
+        print(f"\n动作序列已保存 -> {args.dump}")
 
     base = per_mode_actions["baseline"]
     print(f"\n=== 动作偏差 vs 完整 3 视角 (n={len(observations)} 观测, 单位 deg) ===")

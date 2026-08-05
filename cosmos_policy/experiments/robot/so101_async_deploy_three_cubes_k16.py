@@ -245,6 +245,16 @@ class SO101CosmosAsyncServerConfig:
     # Requires future-state/value prediction to stay off.
     truncate_vae_encode: bool = False
 
+    # Also decode the model's predicted future frames and write them to disk, so
+    # a run can be checked against the observation that actually arrived next.
+    # This is what makes the checkpoint a *world*-action model rather than just a
+    # policy, and it is the part `truncate_vae_encode` cannot coexist with:
+    # decoding the future frames replaces latent slots 5 and 6 with their
+    # original encoded values (INDICES_TO_REPLACE = [0, 1, 5, 6]), and truncation
+    # zeroes exactly those. Enabling this forces truncation off.
+    generate_future_state: bool = False
+    future_state_dir: str = ""
+
     # Per-request stage breakdown (VAE encode / DiT denoise / decode / ...).
     # Stage boundaries are CUDA-synchronised, which perturbs the end-to-end
     # number slightly, so it is opt-in.
@@ -308,6 +318,20 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         init_t5_text_embeddings_cache(config.t5_text_embeddings_path)
         self.model, self.model_config = get_model(cfg)
         self.logger.info("Loaded Cosmos SO101 checkpoint: %s", config.ckpt_path)
+
+        self._future_dir = None
+        if config.generate_future_state:
+            if config.truncate_vae_encode:
+                # Truncation zeroes the slots the future decode needs; refuse to
+                # produce future frames that would silently be garbage.
+                self.logger.warning(
+                    "generate_future_state=True forces truncate_vae_encode off "
+                    "(the future decode reads latent slots 5-6 that truncation zeroes)."
+                )
+                config.truncate_vae_encode = False
+            self._future_dir = Path(config.future_state_dir or (Path(config.ckpt_path).parent.parent / "future_state"))
+            self._future_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.warning("Future-state prediction ON; frames -> %s", self._future_dir)
 
         # Apply before instrumentation so the profiler's vae_encode timer
         # covers the truncated call rather than the original one.
@@ -538,6 +562,40 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                 prev = actions[i]
         return actions
 
+    # Cosmos slot -> the robot camera that feeds it, so a predicted frame can be
+    # compared against the right real camera later.
+    _FUTURE_KEY_TO_CAMERA = {
+        "future_image": "front",        # primary
+        "future_wrist_image": "right",  # left_wrist slot
+        "future_wrist_image2": "wrist",  # right_wrist slot
+    }
+
+    def _save_future_frames(self, result: dict, observation_t: TimedObservation) -> None:
+        preds = result.get("future_image_predictions")
+        if not preds:
+            return
+        try:
+            from PIL import Image
+        except ImportError:
+            return
+        ts = observation_t.get_timestep()
+        wall = observation_t.get_timestamp()
+        for key, arr in preds.items():
+            cam = self._FUTURE_KEY_TO_CAMERA.get(key, key)
+            try:
+                a = arr.detach().float().cpu().numpy() if hasattr(arr, "detach") else np.asarray(arr)
+                if a.ndim == 4:
+                    a = a[0]
+                if a.ndim == 3 and a.shape[0] in (1, 3):
+                    a = np.moveaxis(a, 0, -1)
+                if a.dtype != np.uint8:
+                    # The decoder emits [-1, 1]; anything else is already 0-255.
+                    a = (a + 1.0) * 127.5 if float(a.min()) < -0.01 else a
+                    a = np.clip(np.rint(a), 0, 255).astype(np.uint8)
+                Image.fromarray(a).save(self._future_dir / f"t{ts:06d}_{wall:.3f}_{cam}_pred.jpg", quality=90)
+            except Exception as exc:  # noqa: BLE001 - never fail a chunk over a debug artefact
+                self.logger.debug("future frame save failed for %s: %s", key, exc)
+
     def _predict_action_chunk(self, observation_t: TimedObservation) -> tuple[list[TimedAction], dict[str, float]]:
         raw = observation_t.get_observation()
         task = str(raw.get("task") or (self.policy_specs.task if self.policy_specs else "") or "")
@@ -565,9 +623,12 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                   if self.config.vary_seed_per_step else self.config.seed),
             randomize_seed=self.config.randomize_seed,
             num_denoising_steps_action=self.config.num_denoising_steps_action,
-            generate_future_state_and_value_in_parallel=False,
+            generate_future_state_and_value_in_parallel=self.config.generate_future_state,
         )
         infer_ms = (time.perf_counter() - infer_start) * 1000
+
+        if self._future_dir is not None:
+            self._save_future_frames(result, observation_t)
 
         model_action_array = np.asarray(result["actions"], dtype=np.float32)
         expected_shape = (self.cosmos_cfg.chunk_size, self.cosmos_cfg.action_dim)
