@@ -182,7 +182,10 @@ class Supervisor:
         self.anchor_path = self.manifest_dir / "s4_condition_compile_anchors.jsonl"
         self.state_path = self.run_dir / "run_state.json"
         self.pid_path = self.run_dir / "supervisor.pid"
-        self.python = str(Path(sys.executable).resolve())
+        # Do not resolve this symlink: virtual environments rely on the
+        # executable's original ``.venv/bin/python`` location to locate their
+        # site-packages (including torch).
+        self.python = sys.executable
         self.handles: dict[str, subprocess.Popen[str]] = {}
         self.stop_requested = False
         self.hard_end_seen_monotonic: float | None = None
@@ -250,6 +253,24 @@ class Supervisor:
                 job.pop("gpu", None)
                 self._event("requeue_recovered", f"requeued {job['id']} after supervisor restart")
         self._ensure_manifests()
+        # A supervisor version prior to this guard resolved the venv Python
+        # symlink, launching workers through the system interpreter.  Preserve
+        # its failure artifacts but automatically requeue only that known
+        # infrastructure bootstrap error after the corrected supervisor starts.
+        for job in self.state["jobs"].values():
+            if job.get("status") != "terminal_failure":
+                continue
+            log_tail = self._read_log_tail(job)
+            if "ModuleNotFoundError: No module named 'torch'" in log_tail:
+                job.update(
+                    {
+                        "status": "pending",
+                        "attempts": 0,
+                        "last_failure": "REQUEUED_AFTER_VENV_PATH_FIX",
+                        "requeued_at": utc_now(),
+                    }
+                )
+                self._event("requeue_venv_fix", f"requeued {job['id']} after virtualenv-path repair")
         self._save_state()
 
     def _ensure_manifests(self) -> None:
