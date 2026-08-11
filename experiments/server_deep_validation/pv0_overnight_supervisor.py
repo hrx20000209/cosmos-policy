@@ -45,6 +45,9 @@ STATE_SHARD_SIZE = 48
 ANCHOR_SHARD_SIZE = 5
 INITIAL_REQUIRED_VRAM_MIB = 8200
 MIN_RESERVE_MIB = 3000
+CALIBRATION_HEADROOM_MIB = 1024
+OOM_GPU_COOLDOWN_S = 5.0 * 60.0
+OOM_GPU_EXTRA_RESERVE_MIB = 2048
 ANALYSIS_MIN_INTERVAL_S = 120.0
 HEARTBEAT_INTERVAL_S = 30.0
 GPU_SNAPSHOT_INTERVAL_S = 8.0
@@ -206,6 +209,9 @@ class Supervisor:
             self.state.setdefault("jobs", {})
             self.state.setdefault("gpu_seconds_used", 0.0)
             self.state.setdefault("memory_calibration_mib", {})
+            self.state.setdefault("measured_peak_mib", {})
+            self.state.setdefault("gpu_oom_cooldown_until_epoch", {})
+            self.state.setdefault("gpu_oom_extra_reserve_mib", {})
             self.state.setdefault("events", [])
             self._recover_running_jobs()
             return
@@ -234,6 +240,9 @@ class Supervisor:
                 "S5": INITIAL_REQUIRED_VRAM_MIB,
                 "CLOSED_LOOP": INITIAL_REQUIRED_VRAM_MIB,
             },
+            "measured_peak_mib": {},
+            "gpu_oom_cooldown_until_epoch": {},
+            "gpu_oom_extra_reserve_mib": {},
             "events": [],
             "phase_a_promoted": False,
             "phase_a_terminal": None,
@@ -241,8 +250,49 @@ class Supervisor:
         }
         self._event("initialized", "new autonomous run initialized")
         self._ensure_manifests()
+        self._migrate_memory_policy_if_needed()
         self._create_initial_jobs()
         self._save_state()
+
+    def _migrate_memory_policy_if_needed(self) -> None:
+        """Replace legacy global OOM inflation with measured per-GPU guards.
+
+        An OOM while an unrelated process suddenly consumes the remaining
+        memory says little about the Cosmos worker's intrinsic residency.  The
+        old policy promoted that transient race to a global family requirement,
+        which unnecessarily excluded otherwise-safe shared GPUs.  Keep the
+        measured model requirement global and attach the additional guard to
+        the GPU that actually raced.
+        """
+
+        if int(self.state.get("memory_policy_version", 0)) >= 2:
+            return
+        recovered: dict[str, int] = {}
+        for family, root, entries, path_for in (
+            ("S1", self.run_dir / "s1_fidelity/states", self.state_index, record_path_for_state),
+            ("S4", self.run_dir / "s4_condition_compile/anchors", self.anchors, record_path_for_anchor),
+        ):
+            peaks: list[float] = []
+            for entry in entries:
+                payload = read_json(path_for(root, entry)) or {}
+                for route in (payload.get("route_metrics") or {}).values():
+                    peak = route.get("peak_reserved_mib") if isinstance(route, Mapping) else None
+                    if isinstance(peak, (int, float)):
+                        peaks.append(float(peak))
+            if not peaks:
+                continue
+            observed = int(math.ceil(max(peaks)))
+            required = max(INITIAL_REQUIRED_VRAM_MIB, observed + CALIBRATION_HEADROOM_MIB)
+            self.state["measured_peak_mib"][family] = observed
+            self.state["memory_calibration_mib"][family] = required
+            recovered[family] = required
+            for job in self.state["jobs"].values():
+                if job.get("family") == family and job.get("status") == "pending":
+                    job["required_vram_mib"] = required
+        self.state["memory_policy_version"] = 2
+        if recovered:
+            detail = ", ".join(f"{family}={required}MiB" for family, required in sorted(recovered.items()))
+            self._event("memory_policy_migration", f"restored measured worker requirements: {detail}")
 
     def _recover_running_jobs(self) -> None:
         for job in self.state["jobs"].values():
@@ -253,6 +303,7 @@ class Supervisor:
                 job.pop("gpu", None)
                 self._event("requeue_recovered", f"requeued {job['id']} after supervisor restart")
         self._ensure_manifests()
+        self._migrate_memory_policy_if_needed()
         # Job commands are persisted so an overnight run can survive a
         # supervisor restart.  The first supervisor version serialized the
         # resolved system Python path before the virtualenv-path correction.
@@ -513,15 +564,22 @@ class Supervisor:
         required = self._family_required_vram(job)
         reserve = self._safety_reserve(required)
         active = self._active_gpu_ids()
+        now_epoch = time.time()
+        cooldowns = self.state.get("gpu_oom_cooldown_until_epoch", {})
+        gpu_extra_reserve = self.state.get("gpu_oom_extra_reserve_mib", {})
         candidates = []
         for row in self.last_gpu_data:
             if not isinstance(row.get("gpu"), int) or row["gpu"] in active:
+                continue
+            gpu_key = str(row["gpu"])
+            if float(cooldowns.get(gpu_key, 0.0)) > now_epoch:
                 continue
             if job.get("requires_clean_gpu") and (
                 int(row.get("used_mib", 10**9)) > 1024 or row.get("all_compute_processes")
             ):
                 continue
-            if int(row.get("free_mib", 0)) > required + reserve:
+            extra = int(gpu_extra_reserve.get(gpu_key, 0))
+            if int(row.get("free_mib", 0)) > required + reserve + extra:
                 candidates.append(row)
         return sorted(candidates, key=lambda row: int(row["free_mib"]), reverse=True)
 
@@ -697,10 +755,15 @@ class Supervisor:
             if isinstance(peak, (int, float)):
                 peaks.append(float(peak))
         if peaks:
-            measured = int(math.ceil(max(peaks) + 1024.0))
+            observed = int(math.ceil(max(peaks)))
             family = str(job["family"])
-            current = int(self.state["memory_calibration_mib"].get(family, INITIAL_REQUIRED_VRAM_MIB))
-            self.state["memory_calibration_mib"][family] = max(current, measured)
+            current_observed = int(self.state.get("measured_peak_mib", {}).get(family, 0))
+            measured = max(current_observed, observed)
+            self.state.setdefault("measured_peak_mib", {})[family] = measured
+            self.state["memory_calibration_mib"][family] = max(
+                INITIAL_REQUIRED_VRAM_MIB,
+                measured + CALIBRATION_HEADROOM_MIB,
+            )
 
     def _finish_job(self, job: dict[str, Any], returncode: int | None) -> None:
         elapsed = max(0.0, time.monotonic() - float(job.get("started_monotonic", time.monotonic())))
@@ -736,10 +799,21 @@ class Supervisor:
         attempts = int(job["attempts"])
         self.handles.pop(job["id"], None)
         if classification == "OOM_RETRY":
-            old = self._family_required_vram(job)
-            updated = max(old + 1024, int(math.ceil(old * 1.18)))
-            self.state["memory_calibration_mib"][str(job["family"])] = updated
-            job["required_vram_mib"] = updated
+            # Preserve the measured worker requirement.  The failure snapshot
+            # may reflect a co-tenant's abrupt allocation rather than a larger
+            # model.  Increase the safety guard only for that physical GPU and
+            # let work stealing choose a different card during its cooldown.
+            gpu = job.get("gpu")
+            if isinstance(gpu, int):
+                key = str(gpu)
+                cooldowns = self.state.setdefault("gpu_oom_cooldown_until_epoch", {})
+                extras = self.state.setdefault("gpu_oom_extra_reserve_mib", {})
+                cooldowns[key] = max(float(cooldowns.get(key, 0.0)), time.time() + OOM_GPU_COOLDOWN_S)
+                extras[key] = max(int(extras.get(key, 0)), OOM_GPU_EXTRA_RESERVE_MIB)
+                self._event(
+                    "gpu_oom_guard",
+                    f"GPU{gpu} cooldown={OOM_GPU_COOLDOWN_S:.0f}s extra_reserve={extras[key]}MiB",
+                )
         retry_allowed = attempts < int(job["max_attempts"])
         if retry_allowed:
             job.update(
@@ -1056,13 +1130,19 @@ class Supervisor:
         # without needlessly idling through its entire final half hour.
         if remaining_s < 15.0 * 60.0:
             return
-        candidate = self._select_gpu_job()
-        if candidate is None:
-            return
-        job, gpu = candidate
-        if job["family"] in {"S5", "CLOSED_LOOP"} and not self._closed_loop_cpu_allows_more():
-            return
-        self._launch(job, int(gpu["gpu"]))
+        # An external process can change its residency between periodic polls.
+        # Refresh immediately before placement, then fill every independent
+        # eligible card in this scheduling pass rather than waiting one poll
+        # per GPU.  ``_active_gpu_ids`` prevents double-placement.
+        self._update_gpu_snapshot(force=True)
+        for _ in range(max(1, len(self.last_gpu_data))):
+            candidate = self._select_gpu_job()
+            if candidate is None:
+                return
+            job, gpu = candidate
+            if job["family"] in {"S5", "CLOSED_LOOP"} and not self._closed_loop_cpu_allows_more():
+                return
+            self._launch(job, int(gpu["gpu"]))
 
     def _write_artifact_audit(self) -> None:
         now = time.monotonic()
