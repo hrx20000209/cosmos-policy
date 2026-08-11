@@ -43,6 +43,7 @@ class CosmosAdapter:
             "predict_correct",
             "predict_correct_async",
             "predicted_reuse",
+            "native_persistent",
         }:
             raise ValueError(f"unknown closed_loop_mode={self.closed_loop_mode!r}")
         self.request_index = 0
@@ -142,6 +143,17 @@ class CosmosAdapter:
             if self.previous_generated_latent is None:
                 raise RuntimeError("predicted-reuse request has no previous generated latent")
             return "predicted", self._predicted_visual_latent(self.previous_generated_latent)
+        if self.closed_loop_mode == "native_persistent":
+            if self.request_index == 0:
+                return "fresh", None
+            if self.previous_generated_latent is None:
+                raise RuntimeError("native-persistent request has no previous generated latent")
+            # Keep the predicted latent as the base condition, then ask the
+            # native Cosmos input path to assimilate a causal fresh visual
+            # prefix before its sole denoiser forward.  This is intentionally
+            # distinct from predict_correct, whose two-forward correction is
+            # not compatible with the one-denoise PV0 contract.
+            return "native_persistent", self._predicted_visual_latent(self.previous_generated_latent)
         if self.request_index % 2 == 0:
             return "fresh", None
         if self.closed_loop_mode == "alternate_speculative":
@@ -180,7 +192,7 @@ class CosmosAdapter:
         self.model.sampler.step_timing_events = []
         original_encode = None
         async_runtime = self.closed_loop_mode == "predict_correct_async" and visual_input_mode == "predict_correct"
-        if visual_input_mode in {"fresh", "predict_correct"} and not async_runtime:
+        if visual_input_mode in {"fresh", "predict_correct", "native_persistent"} and not async_runtime:
             import torch
 
             original_encode = self.model.encode
@@ -211,11 +223,16 @@ class CosmosAdapter:
                 decode_future_state=False,
                 skip_vae_encoding=reused_latent is not None,
                 previous_generated_latent=reused_latent,
-                skip_camera_preprocessing=reused_latent is not None and visual_input_mode != "predict_correct",
-                persistent_visual_correction_prefix_frames=(
-                    13 if visual_input_mode == "predict_correct" else None
+                skip_camera_preprocessing=(
+                    reused_latent is not None
+                    and visual_input_mode not in {"predict_correct", "native_persistent"}
                 ),
-                persistent_visual_correction_arrival=1,
+                persistent_visual_correction_prefix_frames=(
+                    13 if visual_input_mode in {"predict_correct", "native_persistent"} else None
+                ),
+                persistent_visual_correction_arrival=(
+                    0 if visual_input_mode == "native_persistent" else 1
+                ),
                 async_predict_correct=async_runtime,
                 async_visual_arrival_delay_ms=float(self.config.get("async_visual_arrival_delay_ms", 0.0)),
             )
@@ -296,11 +313,16 @@ class CosmosAdapter:
                 "visual_source": visual_input_mode,
                 "cosmos_request_index": cosmos_request_index,
                 "fresh_visual_request_count": int(visual_input_mode == "fresh"),
-                "fresh_sensing_request_count": int(visual_input_mode in {"fresh", "predict_correct"}),
+                "fresh_sensing_request_count": int(
+                    visual_input_mode in {"fresh", "predict_correct", "native_persistent"}
+                ),
                 "predicted_visual_request_count": int(visual_input_mode == "predicted"),
                 "predict_correct_request_count": int(visual_input_mode == "predict_correct"),
+                "native_persistent_request_count": int(visual_input_mode == "native_persistent"),
                 "cached_visual_request_count": int(visual_input_mode == "cache"),
-                "rgb_preprocessing_count": int(visual_input_mode in {"fresh", "predict_correct"}),
+                "rgb_preprocessing_count": int(
+                    visual_input_mode in {"fresh", "predict_correct", "native_persistent"}
+                ),
             },
         )
 

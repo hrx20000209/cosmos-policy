@@ -309,6 +309,8 @@ def _trace_from_output(trace: InferenceTrace, output: Any) -> None:
         "visual_source",
         "fresh_visual_request_count",
         "predicted_visual_request_count",
+        "predict_correct_request_count",
+        "native_persistent_request_count",
         "cached_visual_request_count",
         "rgb_preprocessing_count",
     ):
