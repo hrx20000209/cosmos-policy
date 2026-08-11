@@ -65,17 +65,41 @@ class CosmosPolicySampler(Sampler):
         solver_option: str = "2ab",
     ) -> torch.Tensor:
         in_dtype = x_sigma_max.dtype
+        denoiser_forward_index = 0
 
         def float64_x0_fn(x_B_StateShape: torch.Tensor, t_B: torch.Tensor) -> torch.Tensor:
+            nonlocal denoiser_forward_index
+            pre_hook = getattr(self, "pre_denoise_hook", None)
+            if pre_hook is not None:
+                pre_hook(
+                    denoiser_forward_index=denoiser_forward_index,
+                    solver_state=x_B_StateShape,
+                    sigma=t_B,
+                )
             timing_events = getattr(self, "step_timing_events", None)
             if timing_events is None:
-                return x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype)).to(torch.float64)
-            start_event = torch.cuda.Event(enable_timing=True)
-            end_event = torch.cuda.Event(enable_timing=True)
-            start_event.record()
-            output = x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype))
-            end_event.record()
-            timing_events.append((start_event, end_event))
+                output = x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype))
+            else:
+                start_event = torch.cuda.Event(enable_timing=True)
+                end_event = torch.cuda.Event(enable_timing=True)
+                start_event.record()
+                output = x0_fn(x_B_StateShape.to(in_dtype), t_B.to(in_dtype))
+                end_event.record()
+                timing_events.append((start_event, end_event))
+            transform = getattr(self, "x0_transform", None)
+            if transform is not None:
+                transformed = transform(
+                    denoiser_forward_index=denoiser_forward_index,
+                    solver_state=x_B_StateShape,
+                    sigma=t_B,
+                    predicted_clean=output,
+                )
+                if transformed.shape != output.shape:
+                    raise ValueError(
+                        f"x0_transform changed shape {tuple(output.shape)} -> {tuple(transformed.shape)}"
+                    )
+                output = transformed.to(device=output.device, dtype=output.dtype)
+            denoiser_forward_index += 1
             return output.to(torch.float64)
 
         is_multistep = is_multi_step_fn_supported(solver_option)

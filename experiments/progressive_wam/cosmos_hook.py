@@ -54,6 +54,8 @@ class CosmosCheckpointCapture:
         latent_indices: Optional[dict[str, int]] = None,
         capture_future_latent: bool = True,
         capture_noisy_state: bool = False,
+        capture_value: bool = False,
+        capture_compact_hidden: bool = False,
         unnormalize: bool = True,
     ) -> None:
         self.model = model
@@ -62,6 +64,11 @@ class CosmosCheckpointCapture:
         self.latent_indices = dict(latent_indices or LIBERO_LATENT_INDICES)
         self.capture_future_latent = capture_future_latent
         self.capture_noisy_state = capture_noisy_state
+        # Value is structurally present in Cosmos Policy, but mechanism/runtime
+        # experiments must not read it unless an explicitly separate planning
+        # study opts in.  The overnight WAM study keeps this False.
+        self.capture_value = capture_value
+        self.capture_compact_hidden = capture_compact_hidden
         self.unnormalize = unnormalize
         self.recorder = CheckpointRecorder(model_name="cosmos")
         self._installed = False
@@ -126,8 +133,9 @@ class CosmosCheckpointCapture:
         is_terminal = bool(kwargs.get("is_terminal_clean", False))
 
         action = self._extract_action(x0_pred)
-        value = self._extract_value(x0_pred)
+        value = self._extract_value(x0_pred) if self.capture_value else None
         future = self._extract_future(x0_pred) if self.capture_future_latent else None
+        compact_hidden = self._extract_compact_hidden() if self.capture_compact_hidden else None
         noisy = None
         if self.capture_noisy_state:
             state = kwargs.get("input_x_B_StateShape")
@@ -143,6 +151,7 @@ class CosmosCheckpointCapture:
             noisy_state=noisy,
             predicted_future_latent=future,
             value_prediction=value,
+            compact_hidden=compact_hidden,
             is_terminal_clean=is_terminal,
             extra={"solver_index": step_index},
         )
@@ -186,6 +195,24 @@ class CosmosCheckpointCapture:
         # Stored as fp16: these are only used for relative distance metrics in P7,
         # and fp32 would double the dump size for no measurable benefit.
         return latent[:, :, slots, :, :].to(torch.float16).squeeze(0)
+
+    def _extract_compact_hidden(self) -> Optional[torch.Tensor]:
+        """Capture the current denoiser forward's reduced block features.
+
+        The model callback runs immediately after ``x0_fn`` returns, while
+        ``last_intermediate_features`` still belongs to that exact denoising
+        stage.  Full token maps are deliberately rejected here.
+        """
+        features = self.model.last_intermediate_features
+        if not features:
+            return None
+        if any(feature.ndim != 3 for feature in features):
+            shapes = [tuple(feature.shape) for feature in features]
+            raise ValueError(f"compact hidden capture requires [B,T,D] features, got {shapes}")
+        stacked = torch.stack(features, dim=1)
+        if stacked.shape[0] != 1:
+            raise ValueError(f"compact hidden capture expects batch size one, got {stacked.shape[0]}")
+        return stacked.squeeze(0).detach().to(torch.float16)
 
     # ------------------------------------------------------------ postprocess
 

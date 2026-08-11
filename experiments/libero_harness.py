@@ -32,7 +32,6 @@ from runtime.runtime_metrics import (
     write_json,
 )
 
-
 LOGGER = logging.getLogger("wam_libero")
 MAX_STEPS = {"libero_spatial": 220, "libero_object": 280, "libero_goal": 300, "libero_10": 520}
 
@@ -154,8 +153,7 @@ class MockLiberoEnvironment:
 class RealLiberoEnvironment:
     def __init__(self, task_suite_name: str, task_id: int, resolution: int):
         import torch
-        from libero.libero import benchmark
-        from libero.libero import get_libero_path
+        from libero.libero import benchmark, get_libero_path
         from libero.libero.envs import OffScreenRenderEnv
 
         suite = benchmark.get_benchmark_dict()[task_suite_name]()
@@ -258,7 +256,13 @@ def choose_prefix(config: dict[str, Any], output_actions: np.ndarray, state: Run
 
 def _trace_from_output(trace: InferenceTrace, output: Any) -> None:
     metrics = output.stage_metrics_ms
-    trace.preprocessing_latency_ms = float(metrics.get("preprocessing_ms", metrics.get("preprocess_and_h2d_ms", 0.0)))
+    trace.preprocessing_latency_ms = float(
+        metrics.get(
+            "preprocessing_ms",
+            float(metrics.get("camera_preprocessing_ms", 0.0))
+            + float(metrics.get("latent_assembly_h2d_ms", 0.0)),
+        )
+    )
     trace.vae_encoding_latency_ms = float(metrics.get("vae_encoding_ms", 0.0))
     trace.conditioning_latency_ms = float(metrics.get("conditioning_ms", 0.0))
     trace.per_denoising_step_latency_ms = list(
@@ -285,6 +289,31 @@ def _trace_from_output(trace: InferenceTrace, output: Any) -> None:
             if key in output.extra
         }
     )
+    trace.extra["non_overlapping_stage_ms"] = {
+        key: float(metrics.get(key, 0.0))
+        for key in (
+            "camera_preprocessing_ms",
+            "latent_assembly_h2d_ms",
+            "vae_encoding_ms",
+            "dit_denoising_ms",
+            "generation_conditioning_overhead_ms",
+            "action_extraction_ms",
+            "postprocess_after_action_ms",
+            "model_generate_inclusive_ms",
+            "non_overlapping_stage_sum_ms",
+            "unattributed_stage_ms",
+        )
+    }
+    for key in (
+        "visual_input_mode",
+        "visual_source",
+        "fresh_visual_request_count",
+        "predicted_visual_request_count",
+        "cached_visual_request_count",
+        "rgb_preprocessing_count",
+    ):
+        if key in output.extra:
+            trace.extra[key] = output.extra[key]
 
 
 def run_episode(
@@ -297,6 +326,7 @@ def run_episode(
     trace_writer: JsonlWriter,
     video_path: str | Path | None = None,
     action_trace_path: str | Path | None = None,
+    inference_capture_callback: Any | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     episode_id = f"{task_name}:{episode_index}:{seed}"
     adapter.reset(task_name, seed)
@@ -425,6 +455,14 @@ def run_episode(
                 )
                 if not installed:
                     trace.stale = True
+                if inference_capture_callback is not None:
+                    inference_capture_callback(
+                        observation=selected,
+                        output=output,
+                        trace=trace,
+                        request=request,
+                        prefix_length=prefix_length,
+                    )
                 trace.action_buffer_occupancy = actions.occupancy
                 inference_count += 1
                 previous_observation = selected

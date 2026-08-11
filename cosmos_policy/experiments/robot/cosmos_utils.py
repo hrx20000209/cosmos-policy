@@ -22,6 +22,7 @@ import pickle
 import queue
 import secrets
 import shutil
+import threading
 import time
 import traceback
 import uuid
@@ -877,6 +878,13 @@ def get_action(
     decode_future_state: bool = True,
     worker_id: int = 0,
     batch_size: int = 1,
+    skip_vae_encoding: bool = False,
+    previous_generated_latent: torch.Tensor | None = None,
+    skip_camera_preprocessing: bool = False,
+    persistent_visual_correction_prefix_frames: int | None = None,
+    persistent_visual_correction_arrival: int = 1,
+    async_predict_correct: bool = False,
+    async_visual_arrival_delay_ms: float = 0.0,
 ) -> List[np.ndarray]:
     """
     Generate action predictions with the policy.
@@ -895,6 +903,25 @@ def get_action(
             to return actions immediately while preserving the original joint DiT generation.
         worker_id (int): Worker ID (if using parallel inference)
         batch_size (int): Batch size for inference
+        skip_vae_encoding (bool): Reuse ``previous_generated_latent`` as the
+            complete clean latent sequence instead of running RGB-to-VAE.
+        previous_generated_latent (torch.Tensor): Complete scaled Cosmos latent
+            sequence used when ``skip_vae_encoding`` is True.
+        skip_camera_preprocessing (bool): Replace camera preprocessing with a
+            shape-compatible zero video. This is only valid for latent-reuse
+            experiments and makes the camera preprocessing bypass explicit.
+        persistent_visual_correction_prefix_frames (int): If set, encode only
+            this causal RGB prefix and use its current visual slots to update
+            the persistent denoiser condition starting at the selected forward
+            index. Sampling itself starts from ``previous_generated_latent``.
+        persistent_visual_correction_arrival (int): Zero-based denoiser call at
+            which the fresh visual prefix becomes the persistent condition.
+        async_predict_correct (bool): Run the persistent correction with a real
+            single-GPU CUDA stream/event overlap. This is opt-in so the
+            previously validated synchronous path remains unchanged.
+        async_visual_arrival_delay_ms (float): Optional sensing-arrival delay
+            used for the async timing characterization. The delay is released
+            by a host-side gate while the speculative DiT forward is running.
 
     Returns:
         Dict[str, Any]: Dictionary containing actions and related predictions
@@ -903,7 +930,6 @@ def get_action(
     if randomize_seed:
         seed = secrets.randbits(32) % 256
     inference_metrics_sink = getattr(cfg, "_inference_metrics_sink", None)
-    inference_call_start_ns = time.perf_counter_ns() if inference_metrics_sink is not None else None
     inference_precision = getattr(cfg, "inference_precision", "bf16")
     inference_dtype = {
         "bf16": torch.bfloat16,
@@ -926,6 +952,10 @@ def get_action(
         dtype=torch.float16,
         enabled=inference_dtype == torch.float16,
     ):
+        if async_predict_correct and persistent_visual_correction_prefix_frames is None:
+            raise ValueError("async_predict_correct requires a persistent visual correction prefix")
+        if inference_metrics_sink is not None and torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
         # Get T5 embedding of language instruction
         if isinstance(task_label_or_embedding, str):
             text_embedding = get_t5_embedding_from_cache(task_label_or_embedding)
@@ -968,7 +998,24 @@ def get_action(
 
         # Preprocess images
         # Shape: (N, H, W, C)
-        all_camera_images = prepare_images_for_model(all_camera_images, cfg)
+        camera_preprocessing_start_ns = (
+            time.perf_counter_ns() if inference_metrics_sink is not None else None
+        )
+        if skip_camera_preprocessing:
+            if not skip_vae_encoding:
+                raise ValueError("skip_camera_preprocessing requires skip_vae_encoding")
+            all_camera_images = [
+                np.zeros((COSMOS_IMAGE_SIZE, COSMOS_IMAGE_SIZE, 3), dtype=np.uint8)
+                for _ in all_camera_images
+            ]
+        else:
+            all_camera_images = prepare_images_for_model(all_camera_images, cfg)
+        if inference_metrics_sink is not None:
+            inference_metrics_sink["camera_preprocessing_ms"] = (
+                time.perf_counter_ns() - camera_preprocessing_start_ns
+            ) / 1e6
+        if skip_vae_encoding and previous_generated_latent is None:
+            raise ValueError("previous_generated_latent is required when skip_vae_encoding is True")
 
         # Process the robot proprioceptive state
         proprio = None
@@ -978,6 +1025,7 @@ def get_action(
                 proprio = rescale_proprio(proprio, dataset_stats, non_negative_only=False, scale_multiplier=1.0)
 
         # Build the raw image sequence that will be fed to the model (and the VAE tokenizer)
+        latent_assembly_start_ns = time.perf_counter_ns() if inference_metrics_sink is not None else None
         image_sequence = []
         current_sequence_idx = 0  # Used to track which index in the sequence of images we are on
 
@@ -1151,29 +1199,327 @@ def get_action(
         if inference_metrics_sink is not None:
             torch.cuda.synchronize()
             generation_start_ns = time.perf_counter_ns()
-            inference_metrics_sink["preprocess_and_h2d_ms"] = (
-                generation_start_ns - inference_call_start_ns
+            inference_metrics_sink["latent_assembly_h2d_ms"] = (
+                generation_start_ns - latent_assembly_start_ns
             ) / 1e6
+
+        condition_transform_installed = False
+        async_trace = None
+        async_arrival_gate = None
+        async_arrival_thread = None
+        async_prefix_stream = None
+        sampler_original_x0_transform = getattr(model.sampler, "x0_transform", None)
+        if persistent_visual_correction_prefix_frames is not None:
+            if not skip_vae_encoding or previous_generated_latent is None:
+                raise ValueError(
+                    "persistent visual correction requires skip_vae_encoding and a speculative latent"
+                )
+            if persistent_visual_correction_arrival < 0:
+                raise ValueError("persistent visual correction arrival must be non-negative")
+            if async_predict_correct and async_visual_arrival_delay_ms < 0:
+                raise ValueError("async_visual_arrival_delay_ms must be non-negative")
+            # Normalize once here so the causal prefix can be encoded directly.
+            # generate_samples_from_batch observes the preprocessed marker and
+            # therefore will not normalize the full tensor a second time.
+            model._normalize_video_databatch_inplace(data_batch)
+            prefix_frames = int(persistent_visual_correction_prefix_frames)
+            visual_indices = []
+            for index_key in (
+                "current_wrist_image_latent_idx",
+                "current_wrist_image2_latent_idx",
+                "current_image_latent_idx",
+                "current_image2_latent_idx",
+            ):
+                indices = data_batch.get(index_key)
+                if indices is not None and torch.all(indices != -1):
+                    visual_indices.extend(int(index) for index in indices.detach().cpu().tolist())
+            visual_indices = sorted(set(visual_indices))
+            if not visual_indices or max(visual_indices) >= previous_generated_latent.shape[2]:
+                raise ValueError(
+                    f"causal prefix does not cover current visual slots {visual_indices}; "
+                    f"predicted latent slots={previous_generated_latent.shape[2]}"
+                )
+
+            if getattr(model, "inference_condition_transform", None) is not None:
+                raise RuntimeError("model already has an inference condition transform installed")
+
+            if async_predict_correct:
+                # The normalized camera tensor is immutable after this point.
+                # A separate stream may therefore read the causal prefix while
+                # the compute stream constructs the predicted condition and
+                # performs the first DiT forward.
+                compute_stream = torch.cuda.current_stream(device=data_batch["video"].device)
+                prefix_input = data_batch["video"][:, :, :prefix_frames].contiguous()
+                input_ready_event = torch.cuda.Event(enable_timing=True)
+                prefix_start_event = torch.cuda.Event(enable_timing=True)
+                prefix_done_event = torch.cuda.Event(enable_timing=True)
+                input_ready_event.record(compute_stream)
+                async_prefix_stream = getattr(model, "_persistent_correction_stream", None)
+                if async_prefix_stream is None:
+                    async_prefix_stream = torch.cuda.Stream(device=data_batch["video"].device, priority=0)
+                    model._persistent_correction_stream = async_prefix_stream
+                async_prefix_stream.wait_event(input_ready_event)
+                with torch.cuda.stream(async_prefix_stream):
+                    # Record explicitly on the prefix stream. The output is
+                    # consumed only after prefix_done_event on compute_stream.
+                    prefix_start_event.record(async_prefix_stream)
+                    async_fresh_prefix = model.encode(prefix_input).contiguous().float()
+                    if async_fresh_prefix.shape[2] <= max(visual_indices):
+                        raise RuntimeError(
+                            f"causal prefix produced {async_fresh_prefix.shape[2]} latent slots, "
+                            f"but visual slot {max(visual_indices)} is required"
+                        )
+                    prefix_done_event.record(async_prefix_stream)
+
+                async_arrival_gate = threading.Event()
+                launch_wall_ns = time.perf_counter_ns()
+                arrival_delay_s = float(async_visual_arrival_delay_ms) / 1000.0
+
+                def _release_arrival_gate() -> None:
+                    if arrival_delay_s > 0:
+                        time.sleep(arrival_delay_s)
+                    async_arrival_gate.set()
+
+                if arrival_delay_s == 0:
+                    async_arrival_gate.set()
+                else:
+                    async_arrival_thread = threading.Thread(
+                        target=_release_arrival_gate,
+                        name="cosmos-visual-arrival-gate",
+                        daemon=True,
+                    )
+                    async_arrival_thread.start()
+
+                visual_indices_tensor = torch.tensor(
+                    visual_indices, device=previous_generated_latent.device, dtype=torch.int64
+                )
+                async_trace = {
+                    "prefix_start_event": prefix_start_event,
+                    "prefix_done_event": prefix_done_event,
+                    "dit_start_events": {},
+                    "dit_end_events": {},
+                    "condition_switch_event": None,
+                    "compute_stream": compute_stream,
+                    "prefix_stream": async_prefix_stream,
+                    "launch_wall_ns": launch_wall_ns,
+                    "arrival_delay_ms": float(async_visual_arrival_delay_ms),
+                    "visual_indices": visual_indices,
+                }
+
+                def persistent_condition_transform(*, denoiser_forward_index, condition):
+                    if denoiser_forward_index >= persistent_visual_correction_arrival:
+                        wait_start_ns = time.perf_counter_ns()
+                        async_arrival_gate.wait()
+                        # This is the correctness barrier: no compute-stream
+                        # read of the prefix is allowed before the VAE event.
+                        compute_stream.wait_event(prefix_done_event)
+                        fresh_selected = async_fresh_prefix.index_select(2, visual_indices_tensor)
+                        condition.gt_frames.index_copy_(
+                            2,
+                            visual_indices_tensor,
+                            fresh_selected.to(
+                                device=condition.gt_frames.device,
+                                dtype=condition.gt_frames.dtype,
+                            ),
+                        )
+                        switch_event = torch.cuda.Event(enable_timing=True)
+                        switch_event.record(compute_stream)
+                        async_trace["condition_switch_event"] = switch_event
+                        async_trace["condition_wait_host_ms"] = (
+                            time.perf_counter_ns() - wait_start_ns
+                        ) / 1e6
+                    start_event = torch.cuda.Event(enable_timing=True)
+                    start_event.record(compute_stream)
+                    async_trace["dit_start_events"][int(denoiser_forward_index)] = start_event
+                    return condition
+
+                def async_x0_transform(*, denoiser_forward_index, predicted_clean, **kwargs):
+                    end_event = torch.cuda.Event(enable_timing=True)
+                    end_event.record(compute_stream)
+                    async_trace["dit_end_events"][int(denoiser_forward_index)] = end_event
+                    return predicted_clean
+
+                if getattr(model.sampler, "x0_transform", None) is not None:
+                    raise RuntimeError("model sampler already has an x0_transform installed")
+                model.sampler.x0_transform = async_x0_transform
+
+            def persistent_condition_transform_sync(*, denoiser_forward_index, condition):
+                if denoiser_forward_index >= persistent_visual_correction_arrival:
+                    # Sync path deliberately retains the original behavior.
+                    fresh_selected = fresh_prefix.index_select(
+                        2, torch.tensor(visual_indices, device=fresh_prefix.device, dtype=torch.int64)
+                    )
+                    condition.gt_frames.index_copy_(
+                        2,
+                        torch.tensor(visual_indices, device=condition.gt_frames.device, dtype=torch.int64),
+                        fresh_selected.to(device=condition.gt_frames.device, dtype=condition.gt_frames.dtype),
+                    )
+                return condition
+
+            if async_predict_correct:
+                model.inference_condition_transform = persistent_condition_transform
+            else:
+                # Encode only on the caller's stream for the existing sync
+                # reference implementation.
+                fresh_prefix = model.encode(data_batch["video"][:, :, :prefix_frames]).contiguous().float()
+                if fresh_prefix.shape[2] <= max(visual_indices):
+                    raise RuntimeError(
+                        f"causal prefix produced {fresh_prefix.shape[2]} latent slots, "
+                        f"but visual slot {max(visual_indices)} is required"
+                    )
+                if fresh_prefix.shape[2] > previous_generated_latent.shape[2]:
+                    raise ValueError(
+                        f"fresh prefix has {fresh_prefix.shape[2]} latent slots, "
+                        f"condition has {previous_generated_latent.shape[2]}"
+                    )
+                model.inference_condition_transform = persistent_condition_transform_sync
+
+            condition_transform_installed = True
 
         # Generate the output latent sequence - contains the predicted action chunk, future state, and value, but
         # the action chunk is what we care about here
-        generated_latent_with_action, orig_clean_latent_frames = model.generate_samples_from_batch(
-            data_batch,
-            n_sample=batch_size,  # Generate samples
-            num_steps=num_denoising_steps_action,
-            seed=seed,
-            is_negative_prompt=False,  # Negative prompt is for CFG
-            use_variance_scale=cfg.use_variance_scale,  # Whether to vary the magnitude of the initial noise - increases diversity slightly in generations
-            return_orig_clean_latent_frames=True,  # Return the original (pre-injection) latent frames - needed for future image visualizations
-        )  # (B, C'=16, T', H'=28, W'=28)
+        try:
+            generated_latent_with_action, orig_clean_latent_frames = model.generate_samples_from_batch(
+                data_batch,
+                n_sample=batch_size,  # Generate samples
+                num_steps=num_denoising_steps_action,
+                seed=seed,
+                is_negative_prompt=False,  # Negative prompt is for CFG
+                use_variance_scale=cfg.use_variance_scale,  # Whether to vary the magnitude of the initial noise - increases diversity slightly in generations
+                skip_vae_encoding=skip_vae_encoding,
+                previous_generated_latent=previous_generated_latent,
+                return_orig_clean_latent_frames=True,  # Return the original (pre-injection) latent frames - needed for future image visualizations
+            )  # (B, C'=16, T', H'=28, W'=28)
+        finally:
+            if condition_transform_installed:
+                model.inference_condition_transform = None
+            if async_arrival_gate is not None:
+                async_arrival_gate.set()
+            if async_arrival_thread is not None:
+                async_arrival_thread.join(timeout=1.0)
+            if async_prefix_stream is not None:
+                async_prefix_stream.synchronize()
+            model.sampler.x0_transform = sampler_original_x0_transform
+        if async_trace is not None:
+            # CUDA event timestamps are device-global, so offsets from the
+            # prefix-start event give a stream-independent GPU timeline.
+            torch.cuda.synchronize()
+            prefix_start_event = async_trace["prefix_start_event"]
+            prefix_done_event = async_trace["prefix_done_event"]
+            prefix_ms = float(prefix_start_event.elapsed_time(prefix_done_event))
+            timeline = [
+                {
+                    "stage": "vae_prefix",
+                    "start_ms": 0.0,
+                    "end_ms": prefix_ms,
+                    "duration_ms": prefix_ms,
+                    "stream": "A",
+                }
+            ]
+            dit_durations = []
+            dit_offsets = []
+            for forward_index in sorted(async_trace["dit_start_events"]):
+                start_event = async_trace["dit_start_events"][forward_index]
+                end_event = async_trace["dit_end_events"].get(forward_index)
+                if end_event is None:
+                    continue
+                start_ms = float(prefix_start_event.elapsed_time(start_event))
+                end_ms = float(prefix_start_event.elapsed_time(end_event))
+                duration_ms = max(0.0, end_ms - start_ms)
+                dit_durations.append(duration_ms)
+                dit_offsets.append((start_ms, end_ms))
+                timeline.append(
+                    {
+                        "stage": f"dit_forward_{forward_index + 1}",
+                        "start_ms": start_ms,
+                        "end_ms": end_ms,
+                        "duration_ms": duration_ms,
+                        "stream": "B",
+                    }
+                )
+            critical_end_ms = max(
+                [prefix_ms]
+                + [float(prefix_start_event.elapsed_time(event)) for event in async_trace["dit_end_events"].values()]
+            )
+            overlap_ms = 0.0
+            if dit_offsets:
+                first_start_ms, first_end_ms = dit_offsets[0]
+                overlap_ms = max(0.0, min(prefix_ms, first_end_ms) - max(0.0, first_start_ms))
+            total_dit_ms = float(sum(dit_durations))
+            total_gpu_compute_ms = prefix_ms + total_dit_ms
+            overlap_ratio = overlap_ms / max(min(prefix_ms, dit_durations[0] if dit_durations else prefix_ms), 1e-9)
+            first_dit_end_ms = dit_offsets[0][1] if dit_offsets else 0.0
+            condition_slack_ms = max(0.0, first_dit_end_ms - prefix_ms)
+            late_condition_wait_ms = max(0.0, prefix_ms - first_dit_end_ms)
+            async_trace.update(
+                {
+                    "prefix_gpu_ms": prefix_ms,
+                    "dit_gpu_ms": total_dit_ms,
+                    "critical_path_gpu_ms": critical_end_ms,
+                    "overlap_ms": overlap_ms,
+                    "overlap_ratio": overlap_ratio,
+                    "total_gpu_compute_ms": total_gpu_compute_ms,
+                    "useful_speculative_compute_ms": float(dit_durations[0] if dit_durations else 0.0),
+                    # Predict-Correct never discards the first forward: its
+                    # solver state is the input to the corrected forward.
+                    "wasted_speculative_compute_ms": 0.0,
+                    "gpu_timeline": sorted(timeline, key=lambda item: item["start_ms"]),
+                    "condition_switch_gpu_ms": (
+                        float(prefix_start_event.elapsed_time(async_trace["condition_switch_event"]))
+                        if async_trace.get("condition_switch_event") is not None
+                        else None
+                    ),
+                    "arrival_delay_ms": float(async_trace["arrival_delay_ms"]),
+                    "condition_wait_host_ms": float(async_trace.get("condition_wait_host_ms", 0.0)),
+                    "hidden_sensing_latency_ms": overlap_ms,
+                    "condition_slack_ms": condition_slack_ms,
+                    "late_condition_wait_ms": late_condition_wait_ms,
+                }
+            )
+            if inference_metrics_sink is not None:
+                inference_metrics_sink.update(
+                    {
+                        "async_predict_correct": True,
+                        "async_prefix_gpu_ms": prefix_ms,
+                        "async_dit_gpu_ms": total_dit_ms,
+                        "async_critical_path_gpu_ms": critical_end_ms,
+                        "async_overlap_ms": overlap_ms,
+                        "async_overlap_ratio": overlap_ratio,
+                        "async_total_gpu_compute_ms": total_gpu_compute_ms,
+                        "async_useful_speculative_compute_ms": async_trace[
+                            "useful_speculative_compute_ms"
+                        ],
+                        "async_wasted_speculative_compute_ms": 0.0,
+                        "async_condition_wait_host_ms": async_trace.get("condition_wait_host_ms", 0.0),
+                        "async_hidden_sensing_latency_ms": async_trace["hidden_sensing_latency_ms"],
+                        "async_condition_slack_ms": condition_slack_ms,
+                        "async_late_condition_wait_ms": late_condition_wait_ms,
+                        "async_gpu_timeline": async_trace["gpu_timeline"],
+                    }
+                )
+                inference_metrics_sink["peak_memory_allocated_bytes"] = int(torch.cuda.max_memory_allocated())
+                inference_metrics_sink["peak_memory_reserved_bytes"] = int(torch.cuda.max_memory_reserved())
+            return_dict_async_trace = async_trace
+        if inference_metrics_sink is not None and torch.cuda.is_available():
+            inference_metrics_sink["peak_memory_allocated_bytes"] = int(torch.cuda.max_memory_allocated())
+            inference_metrics_sink["peak_memory_reserved_bytes"] = int(torch.cuda.max_memory_reserved())
         if inference_metrics_sink is not None:
             torch.cuda.synchronize()
             generation_end_ns = time.perf_counter_ns()
-            inference_metrics_sink["generation_wall_ms"] = (
+            inference_metrics_sink["model_generate_inclusive_ms"] = (
                 generation_end_ns - generation_start_ns
             ) / 1e6
+            # Compatibility alias retained for existing trace readers.  This is
+            # intentionally inclusive of VAE, DiT, and native generate overhead;
+            # it is not the non-overlapping DiT stage.
+            inference_metrics_sink["generation_wall_ms"] = inference_metrics_sink[
+                "model_generate_inclusive_ms"
+            ]
 
         # Extract the predicted action chunk from the generated sample
+        action_extraction_start_ns = (
+            time.perf_counter_ns() if inference_metrics_sink is not None else None
+        )
         action_indices = torch.full(
             (batch_size,), action_latent_idx, dtype=torch.int64, device=generated_latent_with_action.device
         )
@@ -1191,6 +1537,10 @@ def get_action(
         # Unnormalize actions back to original dataset scale
         if cfg.unnormalize_actions:
             actions = unnormalize_actions(actions, dataset_stats)
+        if inference_metrics_sink is not None:
+            inference_metrics_sink["action_extraction_ms"] = (
+                time.perf_counter_ns() - action_extraction_start_ns
+            ) / 1e6
 
         # If generating future state and value in parallel with the actions (instead of autoregressively),
         # extract future state and value predictions from the generated sample now
@@ -1288,15 +1638,21 @@ def get_action(
             proprio=proprio,
             text_embedding=text_embedding,
         )
+        if async_trace is not None:
+            return_dict["async_trace"] = return_dict_async_trace
         if generate_future_state_and_value_in_parallel:
             return_dict["future_image_predictions"] = future_image_predictions
             return_dict["value_prediction"] = value_prediction
 
     if inference_metrics_sink is not None:
         torch.cuda.synchronize()
+        postprocess_end_ns = time.perf_counter_ns()
         inference_metrics_sink["postprocess_ms"] = (
-            time.perf_counter_ns() - generation_end_ns
+            postprocess_end_ns - generation_end_ns
         ) / 1e6
+        inference_metrics_sink["postprocess_after_action_ms"] = (
+            postprocess_end_ns - action_extraction_start_ns
+        ) / 1e6 - inference_metrics_sink.get("action_extraction_ms", 0.0)
     return return_dict
 
 

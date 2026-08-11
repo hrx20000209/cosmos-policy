@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import torch
 import torch.amp as amp
@@ -92,6 +92,7 @@ class ActionConditionedMinimalV1LVGDiT(MiniTrainDIT):
         img_context_emb: Optional[torch.Tensor] = None,
         action: Optional[torch.Tensor] = None,
         intermediate_feature_ids: Optional[List[int]] = None,
+        intermediate_feature_reducer: Optional[Callable[[torch.Tensor, int], torch.Tensor]] = None,
         **kwargs,
     ) -> torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor, List[torch.Tensor]]:
         del kwargs
@@ -168,13 +169,16 @@ class ActionConditionedMinimalV1LVGDiT(MiniTrainDIT):
                 adaln_lora_B_T_3D=adaln_lora_B_T_3D,
                 extra_per_block_pos_emb=extra_pos_emb_B_T_H_W_D_or_T_H_W_B_D,
             )
-            if intermediate_feature_ids and i in intermediate_feature_ids:
-                x_reshaped_for_disc = rearrange(x_B_T_H_W_D, "b tp hp wp d -> b (tp hp wp) d")
+            if intermediate_feature_ids is not None and i in intermediate_feature_ids:
+                if intermediate_feature_reducer is None:
+                    x_reshaped_for_disc = rearrange(x_B_T_H_W_D, "b tp hp wp d -> b (tp hp wp) d")
+                else:
+                    x_reshaped_for_disc = intermediate_feature_reducer(x_B_T_H_W_D, i)
                 intermediate_features_outputs.append(x_reshaped_for_disc)
 
         x_B_T_H_W_O = self.final_layer(x_B_T_H_W_D, t_embedding_B_T_D, adaln_lora_B_T_3D=adaln_lora_B_T_3D)
         x_B_C_Tt_Hp_Wp = self.unpatchify(x_B_T_H_W_O)
-        if intermediate_feature_ids:
+        if intermediate_feature_ids is not None:
             if len(intermediate_features_outputs) != len(intermediate_feature_ids):
                 log.warning(
                     f"Collected {len(intermediate_features_outputs)} intermediate features, "
@@ -244,6 +248,7 @@ class ActionChunkConditionedMinimalV1LVGDiT(MiniTrainDIT):
         img_context_emb: Optional[torch.Tensor] = None,
         action: Optional[torch.Tensor] = None,
         intermediate_feature_ids: Optional[List[int]] = None,
+        intermediate_feature_reducer: Optional[Callable[[torch.Tensor, int], torch.Tensor]] = None,
         **kwargs,
     ) -> torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor, List[torch.Tensor]]:
         del kwargs
@@ -334,13 +339,16 @@ class ActionChunkConditionedMinimalV1LVGDiT(MiniTrainDIT):
                 adaln_lora_B_T_3D=adaln_lora_B_T_3D,
                 extra_per_block_pos_emb=extra_pos_emb_B_T_H_W_D_or_T_H_W_B_D,
             )
-            if intermediate_feature_ids and i in intermediate_feature_ids:
-                x_reshaped_for_disc = rearrange(x_B_T_H_W_D, "b tp hp wp d -> b (tp hp wp) d")
+            if intermediate_feature_ids is not None and i in intermediate_feature_ids:
+                if intermediate_feature_reducer is None:
+                    x_reshaped_for_disc = rearrange(x_B_T_H_W_D, "b tp hp wp d -> b (tp hp wp) d")
+                else:
+                    x_reshaped_for_disc = intermediate_feature_reducer(x_B_T_H_W_D, i)
                 intermediate_features_outputs.append(x_reshaped_for_disc)
 
         x_B_T_H_W_O = self.final_layer(x_B_T_H_W_D, t_embedding_B_T_D, adaln_lora_B_T_3D=adaln_lora_B_T_3D)
         x_B_C_Tt_Hp_Wp = self.unpatchify(x_B_T_H_W_O)
-        if intermediate_feature_ids:
+        if intermediate_feature_ids is not None:
             if len(intermediate_features_outputs) != len(intermediate_feature_ids):
                 log.warning(
                     f"Collected {len(intermediate_features_outputs)} intermediate features, "

@@ -11,7 +11,6 @@ from adapters.base import PolicyOutput
 from runtime.async_pipeline import InferenceRequest
 from runtime.observation_buffer import Observation
 
-
 COSMOS_LIBERO_SLOT_SEMANTICS = {
     0: "temporal_vae_leading_placeholder",
     1: "current_proprio",
@@ -36,6 +35,19 @@ class CosmosAdapter:
         self.model = None
         self.dataset_stats = None
         self.cfg = None
+        self.closed_loop_mode = str(config.get("closed_loop_mode", "fresh")).lower()
+        if self.closed_loop_mode not in {
+            "fresh",
+            "alternate_speculative",
+            "alternate_cache",
+            "predict_correct",
+            "predict_correct_async",
+            "predicted_reuse",
+        }:
+            raise ValueError(f"unknown closed_loop_mode={self.closed_loop_mode!r}")
+        self.request_index = 0
+        self.previous_real_latent = None
+        self.previous_generated_latent = None
 
     @staticmethod
     def validate_history(history: list[Observation] | None) -> None:
@@ -92,6 +104,53 @@ class CosmosAdapter:
         self._ensure_loaded()
         self.task_description = task_description
         self.seed = seed
+        self.request_index = 0
+        self.previous_real_latent = None
+        self.previous_generated_latent = None
+
+    @staticmethod
+    def _predicted_visual_latent(latent):
+        """Move predicted LIBERO future visual content into current slots.
+
+        The slot positions remain current positions 2/3.  Only latent content
+        is copied from future wrist/primary slots 6/7; positional encodings and
+        the native conditional mask are still created by the Cosmos path.
+        """
+        import torch
+
+        if latent is None or not isinstance(latent, torch.Tensor):
+            raise RuntimeError("predicted visual latent is unavailable")
+        if latent.ndim != 5 or latent.shape[2] != 9:
+            raise ValueError(f"expected LIBERO latent [B,C,9,H,W], got {tuple(latent.shape)}")
+        result = latent.detach().clone()
+        result[:, :, 2] = result[:, :, 6]
+        result[:, :, 3] = result[:, :, 7]
+        return result
+
+    def _visual_input_for_request(self):
+        if self.closed_loop_mode == "fresh":
+            return "fresh", None
+        if self.closed_loop_mode in {"predict_correct", "predict_correct_async"}:
+            if self.request_index == 0:
+                return "fresh", None
+            if self.previous_generated_latent is None:
+                raise RuntimeError("predict-correct request has no previous generated latent")
+            return "predict_correct", self._predicted_visual_latent(self.previous_generated_latent)
+        if self.closed_loop_mode == "predicted_reuse":
+            if self.request_index == 0:
+                return "fresh", None
+            if self.previous_generated_latent is None:
+                raise RuntimeError("predicted-reuse request has no previous generated latent")
+            return "predicted", self._predicted_visual_latent(self.previous_generated_latent)
+        if self.request_index % 2 == 0:
+            return "fresh", None
+        if self.closed_loop_mode == "alternate_speculative":
+            if self.previous_generated_latent is None:
+                raise RuntimeError("alternate speculative request has no previous generated latent")
+            return "predicted", self._predicted_visual_latent(self.previous_generated_latent)
+        if self.previous_real_latent is None:
+            raise RuntimeError("alternate cache request has no previous real visual latent")
+        return "cache", self.previous_real_latent.detach().clone()
 
     def infer(
         self,
@@ -103,6 +162,14 @@ class CosmosAdapter:
         self.validate_history(history)
         from cosmos_policy.experiments.robot.cosmos_utils import get_action
 
+        visual_input_mode, reused_latent = self._visual_input_for_request()
+        effective_denoising_steps = (
+            int(self.config.get("predict_correct_steps", 2))
+            if visual_input_mode == "predict_correct"
+            else denoising_steps
+        )
+        if visual_input_mode == "predict_correct" and effective_denoising_steps < 2:
+            raise ValueError("predict-correct requires at least two denoiser forwards")
         obs = {
             "primary_image": observation.primary_image,
             "wrist_image": observation.wrist_image,
@@ -111,6 +178,24 @@ class CosmosAdapter:
         metrics: dict[str, float] = {}
         self.cfg._inference_metrics_sink = metrics
         self.model.sampler.step_timing_events = []
+        original_encode = None
+        async_runtime = self.closed_loop_mode == "predict_correct_async" and visual_input_mode == "predict_correct"
+        if visual_input_mode in {"fresh", "predict_correct"} and not async_runtime:
+            import torch
+
+            original_encode = self.model.encode
+
+            def timed_encode(state):
+                torch.cuda.synchronize()
+                encode_start = time.monotonic_ns()
+                output = original_encode(state)
+                torch.cuda.synchronize()
+                metrics["vae_encoding_ms"] = (time.monotonic_ns() - encode_start) / 1e6
+                return output
+
+            self.model.encode = timed_encode
+        else:
+            metrics["vae_encoding_ms"] = 0.0
         start = time.monotonic_ns()
         try:
             result = get_action(
@@ -121,26 +206,73 @@ class CosmosAdapter:
                 self.task_description,
                 seed=self.seed,
                 randomize_seed=bool(self.config.get("native_config", {}).get("randomize_seed", False)),
-                num_denoising_steps_action=denoising_steps,
-                generate_future_state_and_value_in_parallel=self.config.get("generation_mode", "joint_parallel")
-                != "autoregressive_future",
+                num_denoising_steps_action=effective_denoising_steps,
+                generate_future_state_and_value_in_parallel=False,
                 decode_future_state=False,
+                skip_vae_encoding=reused_latent is not None,
+                previous_generated_latent=reused_latent,
+                skip_camera_preprocessing=reused_latent is not None and visual_input_mode != "predict_correct",
+                persistent_visual_correction_prefix_frames=(
+                    13 if visual_input_mode == "predict_correct" else None
+                ),
+                persistent_visual_correction_arrival=1,
+                async_predict_correct=async_runtime,
+                async_visual_arrival_delay_ms=float(self.config.get("async_visual_arrival_delay_ms", 0.0)),
             )
-            step_events = self.model.sampler.step_timing_events
-            metrics["per_denoising_step_latency_ms"] = [
-                float(start_event.elapsed_time(end_event)) for start_event, end_event in step_events
-            ]
+            if async_runtime and "async_gpu_timeline" in metrics:
+                metrics["per_denoising_step_latency_ms"] = [
+                    float(item["duration_ms"])
+                    for item in metrics["async_gpu_timeline"]
+                    if item["stage"].startswith("dit_forward_")
+                ]
+                metrics["vae_encoding_ms"] = float(metrics.get("async_prefix_gpu_ms", 0.0))
+            else:
+                step_events = self.model.sampler.step_timing_events
+                metrics["per_denoising_step_latency_ms"] = [
+                    float(start_event.elapsed_time(end_event)) for start_event, end_event in step_events
+                ]
         finally:
+            if original_encode is not None and "encode" in self.model.__dict__:
+                del self.model.__dict__["encode"]
             self.model.sampler.step_timing_events = None
         total_ms = (time.monotonic_ns() - start) / 1e6
         metrics.setdefault("total_ms", total_ms)
-        metrics.setdefault("dit_denoising_ms", metrics.get("generation_wall_ms", 0.0))
+        metrics["model_generate_inclusive_ms"] = float(metrics.get("model_generate_inclusive_ms", 0.0))
+        metrics["dit_denoising_ms"] = float(sum(metrics.get("per_denoising_step_latency_ms", [])))
+        metrics["generation_conditioning_overhead_ms"] = max(
+            metrics["model_generate_inclusive_ms"]
+            - float(metrics.get("vae_encoding_ms", 0.0))
+            - metrics["dit_denoising_ms"],
+            0.0,
+        )
         metrics.setdefault("action_extraction_ms", metrics.get("postprocess_ms", 0.0))
+        metrics.setdefault("camera_preprocessing_ms", 0.0)
+        metrics.setdefault("latent_assembly_h2d_ms", 0.0)
+        metrics.setdefault("postprocess_after_action_ms", 0.0)
+        stage_total_ms = sum(
+            float(metrics.get(key, 0.0))
+            for key in (
+                "camera_preprocessing_ms",
+                "latent_assembly_h2d_ms",
+                "vae_encoding_ms",
+                "dit_denoising_ms",
+                "generation_conditioning_overhead_ms",
+                "action_extraction_ms",
+                "postprocess_after_action_ms",
+            )
+        )
+        metrics["non_overlapping_stage_sum_ms"] = stage_total_ms
+        metrics["unattributed_stage_ms"] = metrics["total_ms"] - stage_total_ms
         actions = np.asarray(result["actions"], dtype=np.float32).reshape(self.action_horizon, -1)
         canonical_actions = np.ascontiguousarray(actions, dtype=np.float32)
+        cosmos_request_index = self.request_index
+        if visual_input_mode == "fresh":
+            self.previous_real_latent = result["orig_clean_latent_frames"].detach().clone()
+        self.previous_generated_latent = result["generated_latent"].detach().clone()
+        self.request_index += 1
         return PolicyOutput(
             actions=actions,
-            denoiser_forward_count=denoising_steps,
+            denoiser_forward_count=effective_denoising_steps,
             generated_latent=result.get("generated_latent"),
             future_state=result.get("future_image_predictions"),
             value=result.get("value_prediction"),
@@ -160,6 +292,15 @@ class CosmosAdapter:
                 "latent_indices": result.get("latent_indices", {}),
                 "orig_clean_latent_frames": result.get("orig_clean_latent_frames"),
                 "data_batch": result.get("data_batch"),
+                "visual_input_mode": visual_input_mode,
+                "visual_source": visual_input_mode,
+                "cosmos_request_index": cosmos_request_index,
+                "fresh_visual_request_count": int(visual_input_mode == "fresh"),
+                "fresh_sensing_request_count": int(visual_input_mode in {"fresh", "predict_correct"}),
+                "predicted_visual_request_count": int(visual_input_mode == "predicted"),
+                "predict_correct_request_count": int(visual_input_mode == "predict_correct"),
+                "cached_visual_request_count": int(visual_input_mode == "cache"),
+                "rgb_preprocessing_count": int(visual_input_mode in {"fresh", "predict_correct"}),
             },
         )
 
@@ -170,8 +311,9 @@ class CosmosAdapter:
         if output.generated_latent is None:
             return None
         if self.config.get("generation_mode", "joint_parallel") == "autoregressive_future":
-            from cosmos_policy.experiments.robot.cosmos_utils import get_future_state_prediction
             import torch
+
+            from cosmos_policy.experiments.robot.cosmos_utils import get_future_state_prediction
 
             indices = output.extra["latent_indices"]
             with torch.inference_mode():
@@ -190,8 +332,9 @@ class CosmosAdapter:
                     num_denoising_steps_future_state=int(self.config.get("future_state_steps", 1)),
                 )
             return result["future_image_predictions"]
-        from cosmos_policy.experiments.robot.cosmos_utils import get_future_images_from_generated_samples
         import torch
+
+        from cosmos_policy.experiments.robot.cosmos_utils import get_future_images_from_generated_samples
 
         indices = output.extra["latent_indices"]
         replacements = [0, 1, 4, 5]

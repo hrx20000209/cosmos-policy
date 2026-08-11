@@ -1,0 +1,44 @@
+schema_version: 1
+experiment: server_inflight_wam_deep_validation
+output_root: /data/rxhuang/wam_server_deep_validation/queue_a/collector
+model:
+  name: cosmos
+  checkpoint: /data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt
+  checkpoint_sha256: 8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2
+  dataset_stats_path: /data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json
+  dataset_stats_sha256: 5b119a98ad7824507ddff3c6c7507ca244261ee416dcfa623876702160c580d3
+  t5_embeddings_path: /data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep/assets/cosmos_libero_pro_t5_embeddings.pkl
+  action_horizon: 16
+  action_dim: 7
+  image_resolution: 224
+  camera_flip_vertical: true
+  generation_mode: action_only_usage
+  precision: bf16
+  native_config:
+    use_jpeg_compression: true
+    trained_with_image_aug: true
+    randomize_seed: false
+evaluation:
+  seed: 195
+  init_state_index: 0
+  perturbation_seed: 28
+  denoising_steps: [1]
+  settle_steps: 10
+  settle_gripper_action: -1.0
+  resolution: 256
+  record_actions: true
+  record_video: false
+  video_fps: 20
+  max_steps:
+    libero_spatial: 220
+    libero_object: 280
+    libero_goal: 300
+    libero_10: 520
+runtime:
+  deterministic: true
+  randomize_seed: false
+  decode_future: false
+  pipeline_mode: sync_baseline
+  action_prefix: 16
+  warmup_requests: 10
+  resource_interval_seconds: 0.5

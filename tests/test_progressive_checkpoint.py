@@ -106,6 +106,31 @@ def test_first_checkpoint_matches_standalone_one_step() -> None:
         assert torch.allclose(first, reference, atol=1e-12), f"{num_steps}-step j=1 differs from standalone_1"
 
 
+def test_sampler_x0_transform_is_opt_in_and_stage_scoped() -> None:
+    torch.manual_seed(23)
+    noisy = torch.randn(STATE_SHAPE, dtype=torch.float64) * LIBERO_SIGMA_MAX
+    baseline = CosmosPolicySampler().forward(
+        _linear_denoiser(), noisy.clone(), num_steps=4,
+        sigma_min=LIBERO_SIGMA_MIN, sigma_max=LIBERO_SIGMA_MAX,
+    )
+    sampler = CosmosPolicySampler()
+    seen = []
+    sampler.pre_denoise_hook = lambda **kw: seen.append(kw["denoiser_forward_index"])
+
+    def transform(**kw):
+        if kw["denoiser_forward_index"] == 1:
+            return torch.zeros_like(kw["predicted_clean"])
+        return kw["predicted_clean"]
+
+    sampler.x0_transform = transform
+    repaired = sampler.forward(
+        _linear_denoiser(), noisy.clone(), num_steps=4,
+        sigma_min=LIBERO_SIGMA_MIN, sigma_max=LIBERO_SIGMA_MAX,
+    )
+    assert seen == [0, 1, 2, 3]
+    assert not torch.allclose(repaired, baseline)
+
+
 def test_extract_action_matches_official_path() -> None:
     """The hook's GPU-side extraction must equal the official extraction helper."""
     capture = CosmosCheckpointCapture(
@@ -121,6 +146,22 @@ def test_extract_action_matches_official_path() -> None:
     )
     ours = capture._extract_action(latent)
     assert torch.allclose(ours.to(torch.float64), official.squeeze(0).to(torch.float64), atol=1e-6)
+
+
+def test_compact_hidden_capture_keeps_block_slot_layout() -> None:
+    model = SimpleNamespace(
+        sampler=SimpleNamespace(),
+        last_intermediate_features=[torch.randn(1, 7, 32), torch.randn(1, 7, 32)],
+    )
+    capture = CosmosCheckpointCapture(
+        model=model,
+        cfg=SimpleNamespace(chunk_size=16, action_dim=7),
+        dataset_stats={},
+        capture_compact_hidden=True,
+    )
+    hidden = capture._extract_compact_hidden()
+    assert hidden.shape == (2, 7, 32)
+    assert hidden.dtype == torch.float16
 
 
 def test_eps_parameterization_is_consistent_with_x0() -> None:

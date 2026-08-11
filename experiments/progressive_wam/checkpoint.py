@@ -43,6 +43,7 @@ class DenoisingCheckpoint:
     predicted_clean_action: torch.Tensor
     predicted_future_latent: Optional[torch.Tensor]
     value_prediction: Optional[torch.Tensor]
+    compact_hidden: Optional[torch.Tensor]
     observation_timestamp: float
     checkpoint_timestamp: float
     denoiser_forward_count: int
@@ -66,6 +67,7 @@ class DenoisingCheckpoint:
             predicted_clean_action=move(self.predicted_clean_action),
             predicted_future_latent=move(self.predicted_future_latent),
             value_prediction=move(self.value_prediction),
+            compact_hidden=move(self.compact_hidden),
             observation_timestamp=self.observation_timestamp,
             checkpoint_timestamp=self.checkpoint_timestamp,
             denoiser_forward_count=self.denoiser_forward_count,
@@ -131,6 +133,7 @@ class CheckpointRecorder:
         noisy_state: Optional[torch.Tensor] = None,
         predicted_future_latent: Optional[torch.Tensor] = None,
         value_prediction: Optional[torch.Tensor] = None,
+        compact_hidden: Optional[torch.Tensor] = None,
         is_terminal_clean: bool = False,
         extra: Optional[dict[str, Any]] = None,
     ) -> None:
@@ -155,6 +158,7 @@ class CheckpointRecorder:
                 predicted_clean_action=predicted_clean_action,
                 predicted_future_latent=predicted_future_latent,
                 value_prediction=value_prediction,
+                compact_hidden=compact_hidden,
                 observation_timestamp=self._observation_timestamp,
                 # Host-side enqueue time. It is NOT the kernel completion time;
                 # the CUDA-event elapsed value written in finish_request() is.

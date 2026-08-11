@@ -96,6 +96,13 @@ class CosmosPolicyVideo2WorldModel(CosmosPolicyDiffusionModel):
     def __init__(self, config: CosmosPolicyVideo2WorldConfig):
         super().__init__(config)
         self.config: CosmosPolicyVideo2WorldConfig = config
+        # Opt-in only: callers may set these after model construction for
+        # offline/runtime research probes.  No additional work is done by the
+        # deployment path unless the ids are explicitly provided.
+        self.intermediate_feature_ids: Optional[list[int]] = None
+        self.intermediate_feature_reducer = None
+        self.last_intermediate_features = None
+        self.last_activation_patch_latents = None
 
     def get_data_and_condition(
         self, data_batch: dict[str, torch.Tensor]
@@ -439,7 +446,13 @@ class CosmosPolicyVideo2WorldModel(CosmosPolicyDiffusionModel):
             )
 
         # forward pass through the network
-        net_output_B_C_T_H_W = self.net(
+        net_kwargs = condition.to_dict()
+        if self.intermediate_feature_ids is not None:
+            net_kwargs["intermediate_feature_ids"] = self.intermediate_feature_ids
+            if self.intermediate_feature_reducer is not None:
+                net_kwargs["intermediate_feature_reducer"] = self.intermediate_feature_reducer
+
+        net_output = self.net(
             x_B_C_T_H_W=net_state_in_B_C_T_H_W.to(
                 **self.tensor_kwargs
             ),  # Eq. 7 of https://arxiv.org/pdf/2206.00364.pdf
@@ -449,8 +462,14 @@ class CosmosPolicyVideo2WorldModel(CosmosPolicyDiffusionModel):
                     "dtype": torch.float32 if self.config.use_wan_fp32_strategy else self.tensor_kwargs["dtype"],
                 },
             ),  # Eq. 7 of https://arxiv.org/pdf/2206.00364.pdf
-            **condition.to_dict(),
-        ).float()
+            **net_kwargs,
+        )
+        if isinstance(net_output, tuple):
+            net_output_B_C_T_H_W, intermediate_features = net_output
+        else:
+            net_output_B_C_T_H_W, intermediate_features = net_output, None
+        self.last_intermediate_features = intermediate_features
+        net_output_B_C_T_H_W = net_output_B_C_T_H_W.float()
 
         x0_pred_B_C_T_H_W = c_skip_B_1_T_1_1 * xt_B_C_T_H_W + c_out_B_1_T_1_1 * net_output_B_C_T_H_W
         if condition.is_video and self.config.denoise_replace_gt_frames:
@@ -458,6 +477,21 @@ class CosmosPolicyVideo2WorldModel(CosmosPolicyDiffusionModel):
             x0_pred_B_C_T_H_W = condition.gt_frames.type_as(
                 x0_pred_B_C_T_H_W
             ) * condition_video_mask + x0_pred_B_C_T_H_W * (1 - condition_video_mask)
+
+        raw_patch_outputs = getattr(self.net, "last_activation_patch_outputs", None)
+        if raw_patch_outputs:
+            self.last_activation_patch_latents = {}
+            for block_id, patch_group_outputs in raw_patch_outputs.items():
+                self.last_activation_patch_latents[block_id] = {}
+                for patch_name, patch_output in patch_group_outputs.items():
+                    patched_x0 = c_skip_B_1_T_1_1 * xt_B_C_T_H_W + c_out_B_1_T_1_1 * patch_output.float()
+                    if condition.is_video and self.config.denoise_replace_gt_frames:
+                        patched_x0 = condition.gt_frames.type_as(patched_x0) * condition_video_mask + patched_x0 * (
+                            1 - condition_video_mask
+                        )
+                    self.last_activation_patch_latents[block_id][patch_name] = patched_x0.detach()
+        else:
+            self.last_activation_patch_latents = None
 
         # get noise prediction based on sde
         eps_pred_B_C_T_H_W = (xt_B_C_T_H_W - x0_pred_B_C_T_H_W) / sigma_B_1_T_1_1
@@ -564,7 +598,7 @@ class CosmosPolicyVideo2WorldModel(CosmosPolicyDiffusionModel):
                     Image.fromarray(unnormalized_decoded_denoised_output[SAMPLE_INDEX, idx]).save(save_path)
                     print(f"Saved denoised latent frame at path: {save_path}")
 
-        return DenoisePrediction(x0_pred_B_C_T_H_W, eps_pred_B_C_T_H_W, None)
+        return DenoisePrediction(x0_pred_B_C_T_H_W, eps_pred_B_C_T_H_W, None, intermediate_features)
 
     def get_x0_fn_from_batch(
         self,
@@ -744,7 +778,20 @@ class CosmosPolicyVideo2WorldModel(CosmosPolicyDiffusionModel):
                 "parallel_state is not initialized, context parallel should be turned off."
             )
 
+        denoiser_forward_index = 0
+
         def x0_fn(noise_x: torch.Tensor, sigma: torch.Tensor) -> torch.Tensor:
+            nonlocal condition, denoiser_forward_index
+            current_forward_index = denoiser_forward_index
+            denoiser_forward_index += 1
+            condition_transform = getattr(self, "inference_condition_transform", None)
+            if condition_transform is not None:
+                transformed_condition = condition_transform(
+                    denoiser_forward_index=current_forward_index,
+                    condition=condition,
+                )
+                if transformed_condition is not None:
+                    condition = transformed_condition
             if self.config.use_flowunipc_scheduler:
                 cond_velocity = self.denoise_with_velocity(noise_x, sigma, condition)
                 uncond_velocity = self.denoise_with_velocity(noise_x, sigma, uncondition)

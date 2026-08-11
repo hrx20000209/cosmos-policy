@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import torch
 
@@ -38,6 +38,7 @@ class MinimalV1LVGDiT(MiniTrainDIT):
         padding_mask: Optional[torch.Tensor] = None,
         data_type: Optional[DataType] = DataType.VIDEO,
         intermediate_feature_ids: Optional[List[int]] = None,
+        intermediate_feature_reducer: Optional[Callable[[torch.Tensor, int], torch.Tensor]] = None,
         img_context_emb: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor, List[torch.Tensor]]:
@@ -58,5 +59,6 @@ class MinimalV1LVGDiT(MiniTrainDIT):
             padding_mask=padding_mask,
             data_type=data_type,
             intermediate_feature_ids=intermediate_feature_ids,
+            intermediate_feature_reducer=intermediate_feature_reducer,
             img_context_emb=img_context_emb,
         )

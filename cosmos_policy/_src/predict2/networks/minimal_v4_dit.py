@@ -19,7 +19,7 @@ from collections import namedtuple
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from cosmos_policy._src.predict2.utils.kv_cache import AttentionOpWithKVCache, KVCacheConfig
 
@@ -1687,12 +1687,8 @@ class MiniTrainDIT(WeightTrainingStat):
             # Keep the broadcast rank at five. ``repeat`` is decomposed by
             # torch.export into a temporary 10-D expand, which exceeds
             # TensorRT's shuffle rank limit for this otherwise static mask.
-            padding_mask_B_C_T_H_W = padding_mask.unsqueeze(1).expand(
-                -1, -1, x_B_C_T_H_W.shape[2], -1, -1
-            )
-            x_B_C_T_H_W = torch.cat(
-                [x_B_C_T_H_W, padding_mask_B_C_T_H_W], dim=1
-            )
+            padding_mask_B_C_T_H_W = padding_mask.unsqueeze(1).expand(-1, -1, x_B_C_T_H_W.shape[2], -1, -1)
+            x_B_C_T_H_W = torch.cat([x_B_C_T_H_W, padding_mask_B_C_T_H_W], dim=1)
         x_B_T_H_W_D = self.x_embedder(x_B_C_T_H_W)
 
         if self.extra_per_block_abs_pos_emb:
@@ -1725,6 +1721,7 @@ class MiniTrainDIT(WeightTrainingStat):
         padding_mask: Optional[torch.Tensor] = None,
         data_type: Optional[DataType] = DataType.VIDEO,
         intermediate_feature_ids: Optional[List[int]] = None,
+        intermediate_feature_reducer: Optional[Callable[[torch.Tensor, int], torch.Tensor]] = None,
         img_context_emb: Optional[torch.Tensor] = None,
     ) -> torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor, List[torch.Tensor]]:
         """
@@ -1776,6 +1773,8 @@ class MiniTrainDIT(WeightTrainingStat):
         # x_B_THW_D = rearrange(x_B_T_H_W_D, "b t h w d -> b (t h w) d")
 
         intermediate_features_outputs = []
+        activation_patch_request = getattr(self, "activation_patch_request", None)
+        self.last_activation_patch_outputs = {}
         for i, block in enumerate(self.blocks):
             x_B_T_H_W_D = block(
                 x_B_T_H_W_D,
@@ -1786,8 +1785,67 @@ class MiniTrainDIT(WeightTrainingStat):
                 extra_per_block_pos_emb=extra_pos_emb_B_T_H_W_D_or_T_H_W_B_D,
             )
             if intermediate_feature_ids and i in intermediate_feature_ids:
-                x_reshaped_for_disc = rearrange(x_B_T_H_W_D, "b tp hp wp d -> b (tp hp wp) d")
+                if intermediate_feature_reducer is None:
+                    x_reshaped_for_disc = rearrange(x_B_T_H_W_D, "b tp hp wp d -> b (tp hp wp) d")
+                else:
+                    x_reshaped_for_disc = intermediate_feature_reducer(x_B_T_H_W_D, i)
                 intermediate_features_outputs.append(x_reshaped_for_disc)
+            if activation_patch_request is not None and i in activation_patch_request["fresh_hidden_by_block"]:
+                if x_B_T_H_W_D.shape[0] != 1:
+                    raise ValueError("activation patching currently requires batch size one")
+                fresh_hidden = activation_patch_request["fresh_hidden_by_block"][i].to(
+                    device=x_B_T_H_W_D.device, dtype=x_B_T_H_W_D.dtype
+                )
+                if fresh_hidden.shape != x_B_T_H_W_D.shape:
+                    raise ValueError(
+                        f"fresh/speculative hidden mismatch at block {i}: {fresh_hidden.shape} != {x_B_T_H_W_D.shape}"
+                    )
+
+                patched_branches = []
+                patch_names = []
+                for patch_name, slot_ids in activation_patch_request["slot_groups"].items():
+                    patched = x_B_T_H_W_D.clone()
+                    patched[:, slot_ids] = fresh_hidden[:, slot_ids]
+                    patched_branches.append(patched)
+                    patch_names.append(patch_name)
+                custom_branches = activation_patch_request.get("hidden_branches_by_block", {}).get(i, {})
+                for patch_name, patched_hidden in custom_branches.items():
+                    patched = patched_hidden.to(device=x_B_T_H_W_D.device, dtype=x_B_T_H_W_D.dtype)
+                    if patched.shape != x_B_T_H_W_D.shape:
+                        raise ValueError(
+                            f"custom patched hidden mismatch at block {i}: {patched.shape} != {x_B_T_H_W_D.shape}"
+                        )
+                    patched_branches.append(patched)
+                    patch_names.append(patch_name)
+                patched_x = torch.cat(patched_branches, dim=0)
+                branch_count = len(patched_branches)
+                patched_t = t_embedding_B_T_D.expand(branch_count, *t_embedding_B_T_D.shape[1:])
+                patched_adaln = adaln_lora_B_T_3D.expand(branch_count, *adaln_lora_B_T_3D.shape[1:])
+                if isinstance(context_input, tuple):
+                    patched_context = tuple(value.expand(branch_count, *value.shape[1:]) for value in context_input)
+                else:
+                    patched_context = context_input.expand(branch_count, *context_input.shape[1:])
+                if extra_pos_emb_B_T_H_W_D_or_T_H_W_B_D is None:
+                    patched_pos = None
+                else:
+                    patched_pos = extra_pos_emb_B_T_H_W_D_or_T_H_W_B_D.expand(
+                        branch_count, *extra_pos_emb_B_T_H_W_D_or_T_H_W_B_D.shape[1:]
+                    )
+                for suffix_block in self.blocks[i + 1 :]:
+                    patched_x = suffix_block(
+                        patched_x,
+                        patched_t,
+                        patched_context,
+                        rope_emb_L_1_1_D=rope_emb_L_1_1_D,
+                        adaln_lora_B_T_3D=patched_adaln,
+                        extra_per_block_pos_emb=patched_pos,
+                    )
+                patched_output = self.unpatchify(
+                    self.final_layer(patched_x, patched_t, adaln_lora_B_T_3D=patched_adaln)
+                )
+                self.last_activation_patch_outputs[i] = {
+                    patch_name: patched_output[index : index + 1] for index, patch_name in enumerate(patch_names)
+                }
 
         # x_B_T_H_W_D = rearrange(x_B_THW_D, "b (t h w) d -> b t h w d", t=T, h=H, w=W)
         # O = out_channels * spatial_patch_size * spatial_patch_size * temporal_patch_size

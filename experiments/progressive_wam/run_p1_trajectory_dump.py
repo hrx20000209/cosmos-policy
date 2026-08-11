@@ -203,6 +203,7 @@ def run_episode(
         if args.standalone_stride > 0 and request_index % args.standalone_stride == 0:
             standalone: dict[int, np.ndarray] = {}
             standalone_latency: dict[int, float] = {}
+            diagnostic_schedules: dict[int, dict[str, Any]] = {}
             for k in args.standalone_steps:
                 probe_start = time.perf_counter()
                 with capture.request(f"{request_id}:standalone{k}", probe_start) as probe_cps:
@@ -221,8 +222,28 @@ def run_episode(
                 standalone[k] = actions_from_result(probe)
                 if len(probe_cps) != k:
                     raise RuntimeError(f"standalone_{k}_step produced {len(probe_cps)} checkpoints")
+                diagnostic_schedules[int(k)] = {
+                    "checkpoint_actions": np.stack(
+                        [capture.unnormalize_action(cp.predicted_clean_action.numpy()) for cp in probe_cps]
+                    ),
+                    "sigmas": np.asarray([cp.sigma for cp in probe_cps], dtype=np.float64),
+                    "future_latents": (
+                        np.stack([cp.predicted_future_latent.numpy() for cp in probe_cps])
+                        if args.capture_future_latent
+                        else None
+                    ),
+                    "final_agreement_max_abs": float(
+                        np.max(
+                            np.abs(
+                                capture.unnormalize_action(probe_cps[-1].predicted_clean_action.numpy())
+                                - standalone[k]
+                            )
+                        )
+                    ),
+                }
             record["standalone_actions"] = {int(k): v for k, v in standalone.items()}
             record["standalone_latency_ms"] = {int(k): v for k, v in standalone_latency.items()}
+            record["diagnostic_schedules"] = diagnostic_schedules
 
         requests.append(record)
         timing_rows.append(
@@ -311,6 +332,7 @@ def main() -> None:
         cfg,
         dataset_stats,
         capture_future_latent=args.capture_future_latent,
+        capture_value=False,
     )
     capture.install()
 
@@ -353,6 +375,13 @@ def main() -> None:
                             timing_file.write(json.dumps(row) + "\n")
                         timing_file.flush()
                         episodes.append(episode)
+                        # Recoverable per-episode checkpoint.  This file is
+                        # replaced atomically so an interruption loses at most
+                        # the active episode, not the whole overnight dataset.
+                        partial_path = out_dir / "checkpoints.partial.pt"
+                        partial_tmp = out_dir / "checkpoints.partial.tmp"
+                        torch.save(episodes, partial_tmp)
+                        partial_tmp.replace(partial_path)
                         print(
                             f"[p1]   success={episode['success']} steps={episode['control_steps']} "
                             f"requests={len(episode['requests'])}",
