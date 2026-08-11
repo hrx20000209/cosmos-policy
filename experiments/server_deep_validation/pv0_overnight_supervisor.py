@@ -253,6 +253,26 @@ class Supervisor:
                 job.pop("gpu", None)
                 self._event("requeue_recovered", f"requeued {job['id']} after supervisor restart")
         self._ensure_manifests()
+        # Job commands are persisted so an overnight run can survive a
+        # supervisor restart.  The first supervisor version serialized the
+        # resolved system Python path before the virtualenv-path correction.
+        # Migrate only our script invocations, leaving any future non-Python
+        # commands untouched.
+        for job in self.state["jobs"].values():
+            command = job.get("command")
+            if (
+                isinstance(command, list)
+                and len(command) >= 2
+                and isinstance(command[1], str)
+                and command[1].startswith("experiments/server_deep_validation/")
+                and command[0] != self.python
+            ):
+                old_python = command[0]
+                command[0] = self.python
+                self._event(
+                    "repair_worker_interpreter",
+                    f"updated {job['id']} interpreter from {old_python} to {self.python}",
+                )
         # A supervisor version prior to this guard resolved the venv Python
         # symlink, launching workers through the system interpreter.  Preserve
         # its failure artifacts but automatically requeue only that known
