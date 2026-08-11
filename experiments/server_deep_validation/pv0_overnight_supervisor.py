@@ -291,6 +291,23 @@ class Supervisor:
                     }
                 )
                 self._event("requeue_venv_fix", f"requeued {job['id']} after virtualenv-path repair")
+            elif (
+                not job.get("renderer_env_repaired")
+                and (
+                    "mujoco.osmesa" in log_tail
+                    or "glGetError" in log_tail
+                )
+            ):
+                job.update(
+                    {
+                        "status": "pending",
+                        "attempts": 0,
+                        "last_failure": "REQUEUED_AFTER_EGL_RENDERER_FIX",
+                        "renderer_env_repaired": True,
+                        "requeued_at": utc_now(),
+                    }
+                )
+                self._event("requeue_renderer_fix", f"requeued {job['id']} after EGL renderer repair")
         self._save_state()
 
     def _ensure_manifests(self) -> None:
@@ -567,6 +584,14 @@ class Supervisor:
         else:
             env["CUDA_VISIBLE_DEVICES"] = str(gpu)
             env["EVAL_PHYSICAL_GPU"] = str(gpu)
+            # OSMesa is unavailable to this account on the shared host.  Use
+            # NVIDIA's headless EGL implementation and pin its renderer to
+            # the same physical device as the Cosmos worker.  This is an
+            # execution-environment setting, not a policy input.
+            env["MUJOCO_GL"] = "egl"
+            env["PYOPENGL_PLATFORM"] = "egl"
+            env["__EGL_VENDOR_LIBRARY_FILENAMES"] = "/usr/share/glvnd/egl_vendor.d/10_nvidia.json"
+            env["MUJOCO_EGL_DEVICE_ID"] = str(gpu)
         with log_path.open("a", encoding="utf-8") as log:
             process = subprocess.Popen(
                 job["command"],
