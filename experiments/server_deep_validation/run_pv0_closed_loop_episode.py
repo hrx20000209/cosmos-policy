@@ -65,9 +65,10 @@ def route_contract(mode: str) -> dict[str, Any]:
         return {
             **common,
             "bootstrap": "fresh camera preprocessing and VAE encoding",
-            "followups": "prior generated latent + native causal fresh visual prefix",
+            "followups": "prior generated latent + native causal fresh current-visual condition slots",
             "native_interface": "get_action:persistent_visual_correction_prefix_frames",
-            "fresh_visual_prefix_frames": 13,
+            "required_fresh_condition_slots": ["current_wrist_image", "current_primary_image"],
+            "raw_prefix_frames_layout_specific": 13,
             "fresh_visual_arrival_denoiser_forward": 0,
         }
     if mode in {"pv0_r0", "pv0_r1", "pv0_r2", "pv0_r3"}:
@@ -81,9 +82,10 @@ def route_contract(mode: str) -> dict[str, Any]:
             **common,
             "bootstrap": "fresh camera preprocessing and VAE encoding",
             "followup_pattern": patterns[mode],
-            "PV0": "prior generated latent + native causal 13-frame fresh visual prefix",
+            "PV0": "prior generated latent + native causal fresh current-visual condition slots",
             "P1": "prior generated visual latent without camera preprocessing",
-            "fresh_visual_prefix_frames": 13,
+            "required_fresh_condition_slots": ["current_wrist_image", "current_primary_image"],
+            "raw_prefix_frames_layout_specific": 13,
             "fresh_visual_arrival_denoiser_forward": 0,
         }
     if mode == "stale_r2":
@@ -91,10 +93,11 @@ def route_contract(mode: str) -> dict[str, Any]:
             **common,
             "bootstrap": "fresh camera preprocessing and VAE encoding",
             "followup_pattern": ["PV0", "STALE", "STALE"],
-            "PV0": "prior generated latent + native causal 13-frame fresh visual prefix",
+            "PV0": "prior generated latent + native causal fresh current-visual condition slots",
             "STALE": "reuse the most recent PV0 physical-condition joint latent; no generated future visual slots",
             "matched_against": "pv0_r2",
-            "fresh_visual_prefix_frames": 13,
+            "required_fresh_condition_slots": ["current_wrist_image", "current_primary_image"],
+            "raw_prefix_frames_layout_specific": 13,
             "fresh_visual_arrival_denoiser_forward": 0,
         }
     raise ValueError(mode)
