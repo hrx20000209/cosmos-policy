@@ -1,0 +1,24 @@
+{
+  "branch": "research/pv0-closed-loop-feedback-20260812",
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "cuda": "12.8",
+  "cuda_available": true,
+  "denoising_steps": 1,
+  "dirty_status": "?? artifacts/\n?? experiments/semantic_risk/\n?? logs/esp/",
+  "finetuning_used": false,
+  "frozen_negative_branches": [
+    "ESP finite-difference",
+    "ESP camera selection",
+    "per-camera VAE",
+    "AGE-only final method",
+    "hidden/x0 patch",
+    "fixed reuse scheduler"
+  ],
+  "git_sha": "342878d9b2387c81c7047ae20a5d9386b464c87e",
+  "gpu": "NVIDIA GeForce RTX 4090 D",
+  "precision": "bfloat16 model weights; action inference uses frozen native path",
+  "schema_version": 1,
+  "torch": "2.7.0+cu128",
+  "value_used": false
+}

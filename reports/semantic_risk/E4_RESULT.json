@@ -1,0 +1,103 @@
+{
+  "chosen_model": "INTERNAL_PLUS_ACTION",
+  "feature_count": 89,
+  "heldout": {
+    "per_task": {
+      "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.6246334310850439,
+      "libero_goal:turn_on_the_stove": 0.9193548387096774,
+      "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.8695014662756597,
+      "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.7261730205278591,
+      "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.11656891495601172
+    },
+    "pooled_spearman": 0.7886411578577287,
+    "task_balanced_spearman": 0.6512463343108503,
+    "top20_auc": 0.817138671875,
+    "top20_pr_auc": 0.4548775074010769
+  },
+  "heldout_reporting_only_candidates": {
+    "ACTION_ONLY": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.4035923753665689,
+        "libero_goal:turn_on_the_stove": 0.8706011730205279,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.6462609970674486,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.81341642228739,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.08247800586510264
+      },
+      "pooled_spearman": 0.735655689675378,
+      "task_balanced_spearman": 0.5632697947214076,
+      "top20_auc": 0.738037109375,
+      "top20_pr_auc": 0.34695557680770556
+    },
+    "INTERNAL_ONLY": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.41165689149560114,
+        "libero_goal:turn_on_the_stove": 0.8790322580645162,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.8973607038123167,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.719941348973607,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.12023460410557184
+      },
+      "pooled_spearman": 0.752768662838392,
+      "task_balanced_spearman": 0.6056451612903225,
+      "top20_auc": 0.80078125,
+      "top20_pr_auc": 0.4714451126283011
+    },
+    "INTERNAL_PLUS_ACTION": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.6246334310850439,
+        "libero_goal:turn_on_the_stove": 0.9193548387096774,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.8695014662756597,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.7261730205278591,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.11656891495601172
+      },
+      "pooled_spearman": 0.7886411578577287,
+      "task_balanced_spearman": 0.6512463343108503,
+      "top20_auc": 0.817138671875,
+      "top20_pr_auc": 0.4548775074010769
+    }
+  },
+  "phase": "E4",
+  "runtime_feature_contract": "normal P1 only, no additional forward; attention excluded",
+  "selection_split": "validation",
+  "status": "PASS",
+  "validation_candidates": {
+    "ACTION_ONLY": {
+      "per_task": {
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.5428885630498533,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": 0.5813782991202345,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": 0.1788856304985337,
+        "libero_spatial:pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate": 0.48423753665689145,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": 0.877565982404692
+      },
+      "pooled_spearman": 0.6669635532637993,
+      "task_balanced_spearman": 0.532991202346041,
+      "top20_auc": 0.82763671875,
+      "top20_pr_auc": 0.5563847722436412
+    },
+    "INTERNAL_ONLY": {
+      "per_task": {
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.5340909090909091,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": 0.49523460410557174,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": 0.3284457478005865,
+        "libero_spatial:pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate": 0.5832111436950146,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": 0.7283724340175952
+      },
+      "pooled_spearman": 0.4177165123637642,
+      "task_balanced_spearman": 0.5338709677419354,
+      "top20_auc": 0.60009765625,
+      "top20_pr_auc": 0.23876297476837594
+    },
+    "INTERNAL_PLUS_ACTION": {
+      "per_task": {
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.5219941348973607,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": 0.49193548387096764,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": 0.3537390029325513,
+        "libero_spatial:pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate": 0.5912756598240468,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": 0.7631964809384163
+      },
+      "pooled_spearman": 0.47130844954881057,
+      "task_balanced_spearman": 0.5444281524926685,
+      "top20_auc": 0.647216796875,
+      "top20_pr_auc": 0.264722222771259
+    }
+  }
+}

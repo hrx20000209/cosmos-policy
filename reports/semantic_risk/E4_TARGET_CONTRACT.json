@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "frozen_before": "E4 smoke and formal collection",
+  "primary_action_distance": "mean_step_l2 across native 16x7 action chunk, D(A_P1,A_F1)",
+  "primary_innovation": "RMS normalized L2 between fresh F1 and P1-imagined condition tensors over current visual latent slots [2,3], all channels and spatial positions",
+  "primary_sensitivity": "D(A_P1,A_F1) / max(I_latent, 1e-6)",
+  "innovation_validity_floor": 0.000001,
+  "floor_rationale": "The deterministic repeated-route numerical floor is expected at or below this conservative tensor-RMS guard; states below it are invalid for ratio analysis.",
+  "secondary_robustness": "Within-discovery innovation-quantile residual of action error after log innovation regression; no heldout tuning.",
+  "runtime_provenance": "No F1/P1 delta or current fresh condition may enter deployable E4 features."
+}

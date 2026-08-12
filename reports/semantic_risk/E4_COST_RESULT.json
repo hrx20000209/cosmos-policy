@@ -1,0 +1,36 @@
+{
+  "additional_model_forward_for_e4": false,
+  "attention_feature_deployable": false,
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "denoising_steps": 1,
+  "finetuning_used": false,
+  "formal_decision": "E4_COST_NO_GO",
+  "gpu": {
+    "free_before_mib": 23741.125,
+    "memory_fraction_cap": 0.4,
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "physical_gpu": "6",
+    "total_mib": 24111.0625,
+    "visible_device": 0
+  },
+  "median_overhead_fraction_of_p1": 0.0713660267192094,
+  "median_overhead_ms": 5.253425598144531,
+  "p1_no_hook_cuda_ms": {
+    "mean": 75.08195175170898,
+    "median": 73.6124153137207,
+    "n": 50,
+    "p05": 70.09058074951172,
+    "p95": 86.21243438720703
+  },
+  "p1_with_e4_summaries_cuda_ms": {
+    "mean": 80.21598236083985,
+    "median": 78.86584091186523,
+    "n": 50,
+    "p05": 74.9860610961914,
+    "p95": 88.19971313476563
+  },
+  "repeats": 50,
+  "status": "PASS",
+  "value_used": false
+}

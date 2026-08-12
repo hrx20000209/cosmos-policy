@@ -1,0 +1,38 @@
+{
+  "heldout_policy": "Heldout task IDs are fixed before feature/model selection and are not used for tuning.",
+  "purpose": "Semantic-risk E4/E5/E6 fixed task-disjoint state bank",
+  "schema_version": 1,
+  "source_state_bank": "reports/pv0_overnight/manifests/foundation_v2_state_index.jsonl",
+  "splits": {
+    "discovery": [
+      "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket",
+      "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it",
+      "libero_goal:put_the_bowl_on_the_plate",
+      "libero_goal:open_the_middle_drawer_of_the_cabinet",
+      "libero_object:pick_up_the_alphabet_soup_and_place_it_in_the_basket",
+      "libero_10:KITCHEN_SCENE8_put_both_moka_pots_on_the_stove"
+    ],
+    "heldout": [
+      "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket",
+      "libero_goal:turn_on_the_stove",
+      "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet",
+      "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate",
+      "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket"
+    ],
+    "validation": [
+      "libero_goal:put_the_bowl_on_top_of_the_cabinet",
+      "libero_object:pick_up_the_milk_and_place_it_in_the_basket",
+      "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate",
+      "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket",
+      "libero_spatial:pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate"
+    ]
+  },
+  "states_per_task": 32,
+  "task_counts": {
+    "discovery": 6,
+    "heldout": 5,
+    "validation": 5
+  },
+  "total_states": 512,
+  "total_tasks": 16
+}

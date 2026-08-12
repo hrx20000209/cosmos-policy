@@ -1,0 +1,41 @@
+{
+  "age": "UNIDENTIFIABLE in this frozen fixed-16-action state bank; no superiority claim versus Age is made.",
+  "analysis_note": "One deterministic report regeneration corrected the E6 high-error threshold from train to the pre-registered discovery partition. Candidate selection, fitted model class, features, and heldout decisions were unchanged; no new simulator/model samples were collected.",
+  "checkpoint_contract": {
+    "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+    "denoising_steps": 1,
+    "finetuning_used": false,
+    "sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+    "value_used": false
+  },
+  "e4": {
+    "action_only_reporting_rho": 0.5632697947214076,
+    "feature_count": 89,
+    "fraction_of_clean_f1": 0.021311603726368315,
+    "gate": "NO_GO: passive 89-feature library costs 2.13% of F1, above strict <1% gate",
+    "incremental_ms": 5.253425598144531,
+    "offline_heldout_rho": 0.6512463343108503
+  },
+  "e5": {
+    "fraction_of_clean_f1": 0.011849251134069908,
+    "gate": "WEAK: runtime passes but heldout rho < 0.50 GO threshold",
+    "heldout_rho": 0.4532258064516128,
+    "incremental_ms": 2.9209045
+  },
+  "e6": {
+    "additive_rho": 0.7471027496491325,
+    "gate": "NO_GO: product improves on either component but loses to additive; multiplicative claim unsupported",
+    "innovation_rho": 0.5618243048559315,
+    "product_rho": 0.7341050012611087,
+    "sensitivity_rho": 0.6431053095542393
+  },
+  "next_step": "Stop this branch. Do not implement a scheduler from these results. A future paper direction requires a newly preregistered variable-horizon state bank and a separately designed low-cost internal summary, not post-hoc layer selection here.",
+  "run_scope": "E4/E5/E6 only; E7 scheduler was not implemented or evaluated",
+  "state_bank": {
+    "per_task": 32,
+    "split": "6 discovery / 5 validation / 5 heldout",
+    "states": 512,
+    "tasks": 16
+  },
+  "status": "SEMANTIC_RISK_NO_GO"
+}

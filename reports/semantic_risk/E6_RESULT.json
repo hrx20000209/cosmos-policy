@@ -1,0 +1,135 @@
+{
+  "age_baseline": "UNIDENTIFIABLE: all paired states use the fixed 16-action prediction horizon; excluded from frontier because a constant score cannot induce a ranking",
+  "formula": "rank(pred_sensitivity) * rank(pred_innovation)",
+  "frontier": {
+    "random_expected": {
+      "0.1": 0.1,
+      "0.2": 0.2,
+      "0.3": 0.3,
+      "0.4": 0.4
+    },
+    "risk_i_only": {
+      "0.1": 0.2756993006993007,
+      "0.2": 0.39388111888111893,
+      "0.3": 0.5150738150738151,
+      "0.4": 0.6439588189588189
+    },
+    "risk_s_only": {
+      "0.1": 0.2874708624708625,
+      "0.2": 0.4672105672105672,
+      "0.3": 0.6452408702408703,
+      "0.4": 0.7364996114996115
+    },
+    "risk_s_plus_i": {
+      "0.1": 0.3201631701631702,
+      "0.2": 0.5123154623154622,
+      "0.3": 0.6063714063714064,
+      "0.4": 0.742074592074592
+    },
+    "risk_s_times_i": {
+      "0.1": 0.3201631701631702,
+      "0.2": 0.5123154623154622,
+      "0.3": 0.6245532245532246,
+      "0.4": 0.7130341880341879
+    }
+  },
+  "heldout": {
+    "pred_action_only": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.45014662756598234,
+        "libero_goal:turn_on_the_stove": 0.8665689149560116,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.6425953079178884,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.786656891495601,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.05828445747800586
+      },
+      "pooled_spearman": 0.7240624633774757,
+      "task_balanced_spearman": 0.5608504398826979,
+      "top20_auc": 0.706787109375,
+      "top20_pr_auc": 0.3286499952928973
+    },
+    "pred_age": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": null,
+        "libero_goal:turn_on_the_stove": null,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": null,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": null,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": null
+      },
+      "pooled_spearman": null,
+      "task_balanced_spearman": null,
+      "top20_auc": 0.5,
+      "top20_pr_auc": 0.2288374264236701
+    },
+    "risk_i_only": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.8025316867893076,
+        "libero_goal:turn_on_the_stove": 0.880432922531281,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.1962402971928821,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.6941366583674636,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.23577995939872248
+      },
+      "pooled_spearman": 0.5260260758315706,
+      "task_balanced_spearman": 0.5618243048559315,
+      "top20_auc": 0.73779296875,
+      "top20_pr_auc": 0.369976315929463
+    },
+    "risk_s_only": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.6358053224192765,
+        "libero_goal:turn_on_the_stove": 0.9168062785577267,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.8349175386346696,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.7078493171803956,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.12014809097912828
+      },
+      "pooled_spearman": 0.7777540654236176,
+      "task_balanced_spearman": 0.6431053095542393,
+      "top20_auc": 0.773193359375,
+      "top20_pr_auc": 0.43516218839847165
+    },
+    "risk_s_plus_i": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.9241202346041054,
+        "libero_goal:turn_on_the_stove": 0.9615032242218976,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.8185483870967741,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.8068988604943679,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.22444304182851685
+      },
+      "pooled_spearman": 0.8225341924991978,
+      "task_balanced_spearman": 0.7471027496491325,
+      "top20_auc": 0.8475341796875,
+      "top20_pr_auc": 0.5207755445282458
+    },
+    "risk_s_times_i": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.94391495601173,
+        "libero_goal:turn_on_the_stove": 0.942711835308866,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.7937891605737322,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.7551168437276303,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.2349922106835846
+      },
+      "pooled_spearman": 0.8159973682362144,
+      "task_balanced_spearman": 0.7341050012611087,
+      "top20_auc": 0.841064453125,
+      "top20_pr_auc": 0.5139748348297032
+    },
+    "risk_s_times_i_age": {
+      "per_task": {
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.94391495601173,
+        "libero_goal:turn_on_the_stove": 0.942711835308866,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.7937891605737322,
+        "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket": 0.7551168437276303,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.2349922106835846
+      },
+      "pooled_spearman": 0.8159973682362144,
+      "task_balanced_spearman": 0.7341050012611087,
+      "top20_auc": 0.841064453125,
+      "top20_pr_auc": 0.5139748348297032
+    }
+  },
+  "high_risk_threshold_discovery_frozen": 0.8177743761183729,
+  "phase": "E6",
+  "product_beats_additive": false,
+  "product_beats_i_only": true,
+  "product_beats_s_only": true,
+  "status": "PASS"
+}

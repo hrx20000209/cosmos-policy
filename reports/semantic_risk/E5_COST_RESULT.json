@@ -1,0 +1,11 @@
+{
+  "formal_decision": "E5_COST_GO",
+  "median_fraction_of_clean_f1": 0.011849251134069908,
+  "median_probe_cpu_ms": 2.9209045,
+  "p05_probe_cpu_ms": 2.7870042500000003,
+  "p95_probe_cpu_ms": 3.34727315,
+  "probe": "64px grayscale MAD + gradient difference; raw CPU only; no VAE/decode/model forward",
+  "reference_clean_f1_ms": 246.50540924072266,
+  "states": 512,
+  "status": "PASS"
+}
