@@ -33,7 +33,7 @@ from experiments.libero_harness import load_yaml, run_episode
 from pv0_overnight_common import ORIGINAL_CHECKPOINT, ORIGINAL_CHECKPOINT_SHA256, checkpoint_contract
 
 
-MODES = ("fresh", "predicted_reuse", "native_persistent")
+MODES = ("fresh", "predicted_reuse", "native_persistent", "pv0_r0", "pv0_r1", "pv0_r2", "pv0_r3")
 
 
 def atomic_write(path: Path, payload: dict[str, Any]) -> None:
@@ -70,12 +70,37 @@ def route_contract(mode: str) -> dict[str, Any]:
             "fresh_visual_prefix_frames": 13,
             "fresh_visual_arrival_denoiser_forward": 0,
         }
+    if mode in {"pv0_r0", "pv0_r1", "pv0_r2", "pv0_r3"}:
+        patterns = {
+            "pv0_r0": ["PV0"],
+            "pv0_r1": ["PV0", "P1"],
+            "pv0_r2": ["PV0", "P1", "P1"],
+            "pv0_r3": ["PV0", "P1", "P1", "P1"],
+        }
+        return {
+            **common,
+            "bootstrap": "fresh camera preprocessing and VAE encoding",
+            "followup_pattern": patterns[mode],
+            "PV0": "prior generated latent + native causal 13-frame fresh visual prefix",
+            "P1": "prior generated visual latent without camera preprocessing",
+            "fresh_visual_prefix_frames": 13,
+            "fresh_visual_arrival_denoiser_forward": 0,
+        }
     raise ValueError(mode)
 
 
 def expected_visual_modes(mode: str, request_count: int) -> list[str]:
     if request_count <= 0:
         return []
+    if mode in {"pv0_r0", "pv0_r1", "pv0_r2", "pv0_r3"}:
+        patterns = {
+            "pv0_r0": ["native_persistent"],
+            "pv0_r1": ["native_persistent", "predicted"],
+            "pv0_r2": ["native_persistent", "predicted", "predicted"],
+            "pv0_r3": ["native_persistent", "predicted", "predicted", "predicted"],
+        }
+        sequence = patterns[mode]
+        return ["fresh", *[sequence[(index - 1) % len(sequence)] for index in range(1, request_count)]]
     followup = {"fresh": "fresh", "predicted_reuse": "predicted", "native_persistent": "native_persistent"}[mode]
     return ["fresh", *([followup] * (request_count - 1))]
 
@@ -100,6 +125,32 @@ def validate_trace_contract(mode: str, traces: list[dict[str, Any]]) -> dict[str
     }
 
 
+def attach_request_alignment(
+    feedback: list[dict[str, Any]], traces: list[dict[str, Any]], settle_steps: int
+) -> None:
+    """Attach only request/chunk bookkeeping to raw execution telemetry.
+
+    The association is derived from control-step indices and the committed
+    prefix length; it introduces no environment state or task information.
+    """
+    for sample in feedback:
+        control_step = int(sample["environment_step"]) - int(settle_steps)
+        sample["control_step_after_settle"] = control_step
+        sample["request_id"] = None
+        sample["request_control_step"] = None
+        sample["nominal_action_index"] = None
+        if control_step < 0:
+            continue
+        for trace in traces:
+            start = int(trace["control_step_id"])
+            length = int(trace["executed_prefix_length"])
+            if start <= control_step < start + length:
+                sample["request_id"] = str(trace["request_id"])
+                sample["request_control_step"] = start
+                sample["nominal_action_index"] = control_step - start
+                break
+
+
 class InferenceSeedAdapter(CosmosAdapter):
     """Keep the physical manifest seed fixed while optionally changing Cosmos noise."""
 
@@ -111,25 +162,49 @@ class InferenceSeedAdapter(CosmosAdapter):
         super().reset(task_description, int(seed) + self.inference_seed_offset)
 
 
-class InterruptedEnvironment:
-    """Pre-registered execution interruption; policy still receives raw cameras only."""
+class ExecutionFeedbackEnvironment:
+    """Record controller-visible execution telemetry around every environment step.
 
-    def __init__(self, base: Any, *, settle_steps: int, start_step: int, length: int):
+    The record intentionally contains only robot proprioception and the action
+    handed to the environment.  In particular, it never reads object poses,
+    contacts, rewards, task predicates, or success.  This makes the resulting
+    ``execution_feedback`` directly usable by a future runtime fast loop.
+
+    ``zero_motion_preserve_gripper`` remains an optional, pre-registered S5
+    perturbation.  It changes what is executed, never what the policy sees.
+    """
+
+    def __init__(self, base: Any, *, settle_steps: int, start_step: int | None, length: int):
         self.base = base
-        self.trigger_start = int(settle_steps) + int(start_step)
+        self.interruption_enabled = start_step is not None
+        self.trigger_start = int(settle_steps) + int(start_step or 0)
         self.trigger_end = self.trigger_start + int(length)
         self.total_steps = 0
         self.events: list[dict[str, Any]] = []
+        self.execution_feedback: list[dict[str, Any]] = []
+        self._raw: dict[str, Any] | None = None
+
+    @staticmethod
+    def _proprio(raw: dict[str, Any]) -> dict[str, list[float]]:
+        return {
+            "eef_pos": np.asarray(raw["robot0_eef_pos"], dtype=np.float32).tolist(),
+            "eef_quat": np.asarray(raw["robot0_eef_quat"], dtype=np.float32).tolist(),
+            "gripper_qpos": np.asarray(raw["robot0_gripper_qpos"], dtype=np.float32).tolist(),
+        }
 
     def reset(self) -> Any:
         self.total_steps = 0
         self.events = []
-        return self.base.reset()
+        self.execution_feedback = []
+        self._raw = self.base.reset()
+        return self._raw
 
     def step(self, action: np.ndarray) -> Any:
+        if self._raw is None:
+            raise RuntimeError("execution feedback wrapper stepped before reset")
         planned = np.asarray(action, dtype=np.float32)
         executed = planned.copy()
-        interrupted = self.trigger_start <= self.total_steps < self.trigger_end
+        interrupted = self.interruption_enabled and self.trigger_start <= self.total_steps < self.trigger_end
         if interrupted:
             # A short hold preserves the requested gripper command but removes
             # Cartesian/joint progress.  It is an outcome mismatch, not an
@@ -143,8 +218,22 @@ class InterruptedEnvironment:
                     "kind": "zero_motion_preserve_gripper",
                 }
             )
+        before = self._proprio(self._raw)
+        next_raw, reward, done, info = self.base.step(executed)
+        after = self._proprio(next_raw)
+        self.execution_feedback.append(
+            {
+                "environment_step": int(self.total_steps),
+                "planned_action": planned.tolist(),
+                "executed_action": executed.tolist(),
+                "arm_command_changed_by_interruption": bool(interrupted),
+                "before": before,
+                "after": after,
+            }
+        )
+        self._raw = next_raw
         self.total_steps += 1
-        return self.base.step(executed)
+        return next_raw, reward, done, info
 
     def close(self) -> None:
         self.base.close()
@@ -224,10 +313,10 @@ def main() -> None:
     row = select_row(args.manifest, args.episode_key)
     if int(row["denoising_steps"]) != 1:
         raise RuntimeError("manifest violates one-denoise contract")
-    os.environ.setdefault("MUJOCO_GL", "osmesa")
-    os.environ.setdefault("PYOPENGL_PLATFORM", "osmesa")
-    osmesa = "/data/rxhuang/osmesa-jammy-23.2.1/usr/lib/x86_64-linux-gnu"
-    os.environ["LD_LIBRARY_PATH"] = osmesa + os.pathsep + os.environ.get("LD_LIBRARY_PATH", "")
+    # EGL is the validated headless backend for the shared-GPU PV0 workers.
+    # OSMesa can fail before policy construction on this server's PyOpenGL build.
+    os.environ.setdefault("MUJOCO_GL", "egl")
+    os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
     device = torch.cuda.current_device()
     torch.cuda.set_per_process_memory_fraction(float(args.memory_fraction), device=device)
     torch.cuda.empty_cache()
@@ -252,15 +341,11 @@ def main() -> None:
     started = time.time_ns()
     try:
         base_environment = ManifestLiberoEnvironment(row, int(config["evaluation"]["resolution"]), None)
-        environment = (
-            InterruptedEnvironment(
-                base_environment,
-                settle_steps=int(config["evaluation"].get("settle_steps", 0)),
-                start_step=int(args.interruption_start_step),
-                length=int(args.interruption_length),
-            )
-            if args.interruption_start_step is not None
-            else base_environment
+        environment = ExecutionFeedbackEnvironment(
+            base_environment,
+            settle_steps=int(config["evaluation"].get("settle_steps", 0)),
+            start_step=(int(args.interruption_start_step) if args.interruption_start_step is not None else None),
+            length=int(args.interruption_length),
         )
         adapter = InferenceSeedAdapter(config["model"], args.inference_seed_offset)
         action_path = args.output.parent / "actions" / f"{args.mode}_{row['episode_key']}_seedoff{args.inference_seed_offset}.npy"
@@ -277,6 +362,9 @@ def main() -> None:
         )
         torch.cuda.synchronize(device)
         trace_contract = validate_trace_contract(args.mode, traces)
+        attach_request_alignment(
+            environment.execution_feedback, traces, int(config["evaluation"].get("settle_steps", 0))
+        )
         request_latency = [float(trace.get("total_policy_request_latency_ms", 0.0)) for trace in traces]
         model_latency = [
             float(((trace.get("extra") or {}).get("non_overlapping_stage_ms") or {}).get("model_generate_inclusive_ms", 0.0))
@@ -284,7 +372,7 @@ def main() -> None:
         ]
         free_after, _ = torch.cuda.mem_get_info(device)
         interruption = None
-        if isinstance(environment, InterruptedEnvironment):
+        if args.interruption_start_step is not None:
             interruption = {
                 "kind": "zero_motion_preserve_gripper",
                 "control_step_after_settle": int(args.interruption_start_step),
@@ -325,6 +413,13 @@ def main() -> None:
             "hidden_activation_patch_used": False,
             "fresh_prefix_oracle_used": False,
             "action_outcome_perturbation": interruption,
+            "execution_feedback_contract": {
+                "runtime_observables_only": True,
+                "contains": ["planned_action", "executed_action", "robot0_eef_pos", "robot0_eef_quat", "robot0_gripper_qpos"],
+                "excludes": ["object_pose", "contact", "reward", "success", "task_predicate", "ground_truth_subgoal"],
+                "action_semantics": "7D OSC_POSE relative EEF delta plus gripper command; arm-only scaling is legal, gripper is preserved",
+            },
+            "execution_feedback": environment.execution_feedback,
             "gpu": {
                 "visible_device_index": int(device),
                 "physical_gpu": os.environ.get("EVAL_PHYSICAL_GPU"),

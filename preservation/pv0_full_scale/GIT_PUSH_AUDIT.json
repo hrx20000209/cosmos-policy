@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "repository": "/home/rxhuang/Projects/cosmos-policy",
+  "branch": "research/pv0-closed-loop-feedback-20260812",
+  "preservation_commit": "4700aef55cbce277b9f6f15f29ee498d2224d6b5",
+  "remote": "git@github.com:hrx20000209/cosmos-policy.git",
+  "remote_commit": "4700aef55cbce277b9f6f15f29ee498d2224d6b5",
+  "push_success": true,
+  "excluded_large_artifacts": [
+    "checkpoints",
+    "raw datasets",
+    "raw rollout traces",
+    "MP4 replay videos",
+    "CUDA caches and dumps"
+  ],
+  "notes": "This audit covers the initial PV0 preservation push. A successor audit is added with each subsequent pushed research commit."
+}

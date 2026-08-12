@@ -44,6 +44,10 @@ class CosmosAdapter:
             "predict_correct_async",
             "predicted_reuse",
             "native_persistent",
+            "pv0_r0",
+            "pv0_r1",
+            "pv0_r2",
+            "pv0_r3",
         }:
             raise ValueError(f"unknown closed_loop_mode={self.closed_loop_mode!r}")
         self.request_index = 0
@@ -129,6 +133,20 @@ class CosmosAdapter:
         return result
 
     def _visual_input_for_request(self):
+        fixed_patterns = {
+            "pv0_r0": ("native_persistent",),
+            "pv0_r1": ("native_persistent", "predicted"),
+            "pv0_r2": ("native_persistent", "predicted", "predicted"),
+            "pv0_r3": ("native_persistent", "predicted", "predicted", "predicted"),
+        }
+        if self.closed_loop_mode in fixed_patterns:
+            if self.request_index == 0:
+                return "fresh", None
+            if self.previous_generated_latent is None:
+                raise RuntimeError("fixed PV0/P1 route has no previous generated latent")
+            pattern = fixed_patterns[self.closed_loop_mode]
+            visual_mode = pattern[(self.request_index - 1) % len(pattern)]
+            return visual_mode, self._predicted_visual_latent(self.previous_generated_latent)
         if self.closed_loop_mode == "fresh":
             return "fresh", None
         if self.closed_loop_mode in {"predict_correct", "predict_correct_async"}:
