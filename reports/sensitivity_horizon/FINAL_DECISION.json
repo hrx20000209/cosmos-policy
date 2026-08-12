@@ -1,0 +1,20 @@
+{
+  "decision_type": "protocol-validity stop, not empirical rejection of semantic state-risk evidence",
+  "e10": "NOT_AUTHORIZED",
+  "e8": {
+    "decision": "SENSITIVITY_HORIZON_NO_GO",
+    "formal_samples": 0,
+    "primary_hypothesis_tested": false,
+    "reason": "K != 16 compares the fixed t0+16 predicted visual condition to physical state t0+K. It is a temporal-alignment error, not prediction aging.",
+    "required_go_conditions_evaluable": false,
+    "smoke_status": "NOT_RUN",
+    "status": "INVALID_TEMPORAL_ALIGNMENT"
+  },
+  "e9": {
+    "reason": "E8 is stopped by the primary temporal-alignment validity blocker. The strict execution order therefore does not authorize a downstream E9 optimization/profile campaign or E10 policy work.",
+    "status": "E9_NOT_RUN"
+  },
+  "next_valid_research_prerequisite": "A new, explicitly trained or exposed multi-horizon WAM interface in which prediction targets are aligned to each tested K, plus pre-heldout serialization of the exact S score coefficients. This is a new experimental system contract, not a post-hoc alteration of P1.",
+  "reserved_new_task_split": "8/8/8 across 24 tasks unused by prior formal semantic-risk analysis",
+  "status": "SENSITIVITY_HORIZON_NO_GO"
+}

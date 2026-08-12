@@ -1,0 +1,13 @@
+{
+  "decision": "E9_NOT_RUN",
+  "formal_profile_started": false,
+  "frozen_score_reconstruction": "The E4 analysis code, discovery/validation state bank, and raw parquet preserve a deterministic reconstruction path, but the 89-feature standardization means, ridge coefficients, and intercept were not serialized as a standalone immutable artifact.",
+  "optimization_started": false,
+  "original_runtime_fact": {
+    "incremental_ms": 5.253425598144531,
+    "p1_ms": 73.6124153137207,
+    "p1_plus_89_summaries_ms": 78.86584091186523
+  },
+  "status": "NOT_RUN_AFTER_E8_TEMPORAL_BLOCKER",
+  "why_not_run": "E8 is stopped by the primary temporal-alignment validity blocker. The strict execution order therefore does not authorize a downstream E9 optimization/profile campaign or E10 policy work."
+}

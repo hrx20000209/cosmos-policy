@@ -1,0 +1,19 @@
+{
+  "allowed_k_under_existing_one-step P1 semantics": [
+    16
+  ],
+  "consequence": "One aligned K cannot identify an age slope or AGE*S interaction. E8 cannot be run validly on this implementation without a separately specified multi-horizon WAM output/interface.",
+  "failure_mode_triggered": "wrong temporal alignment",
+  "no_workaround_used": [
+    "no artificial sleep",
+    "no K!=16 formal labels",
+    "no target-time latent interpolation",
+    "no hidden patch",
+    "no task-specific threshold"
+  ],
+  "phase": "E8",
+  "primary_signal": "S_anchor only; no S_candidate leakage is proposed.",
+  "reason": "K != 16 compares the fixed t0+16 predicted visual condition to physical state t0+K. It is a temporal-alignment error, not prediction aging.",
+  "requested_design": "restore identical F1 anchor; execute legal K; paired P1/F1 at target state; model AGE, S, and AGE*S.",
+  "status": "BLOCKED_BEFORE_SMOKE"
+}

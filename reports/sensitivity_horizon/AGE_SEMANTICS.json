@@ -1,0 +1,13 @@
+{
+  "action_horizon": 16,
+  "artificial_sleep_used": false,
+  "control_dt_ms": null,
+  "control_dt_status": "UNKNOWN: video_fps=20 is rendering metadata, and dataset fps=16 is a fixed model-input field; neither proves simulator control dt.",
+  "formal_collection_started": false,
+  "invalid_requested_sweep": "K != 16 compares the fixed t0+16 predicted visual condition to physical state t0+K. It is a temporal-alignment error, not prediction aging.",
+  "legal_current_implementation_age": "Exactly 16 executed control actions between the source F1 request and the target P1/F1 request.",
+  "predicted_visual_condition": "P1 copies prior generated future visual slots 6/7 into current slots 2/3.",
+  "source_target_alignment_actions": 16,
+  "status": "INVALID_FOR_E8_AGE_SWEEP",
+  "training_alignment": "LIBERO dataset constructs next_relative_step_idx = relative_step_idx + chunk_size, with chunk_size=16; future visual and future proprio targets are taken at that index."
+}

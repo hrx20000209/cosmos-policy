@@ -1,0 +1,6 @@
+{
+  "closed_loop_run": false,
+  "policy_created": false,
+  "reason": "E8 mechanism did not reach a valid GO and E9 cannot prove equivalent deployable implementation.",
+  "status": "NOT_AUTHORIZED"
+}

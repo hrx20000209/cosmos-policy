@@ -1,0 +1,9 @@
+{
+  "decision": "SENSITIVITY_HORIZON_NO_GO",
+  "formal_samples": 0,
+  "primary_hypothesis_tested": false,
+  "reason": "K != 16 compares the fixed t0+16 predicted visual condition to physical state t0+K. It is a temporal-alignment error, not prediction aging.",
+  "required_go_conditions_evaluable": false,
+  "smoke_status": "NOT_RUN",
+  "status": "INVALID_TEMPORAL_ALIGNMENT"
+}
