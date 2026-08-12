@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "audit_scope": "Feedback-Gated R2 small task-disjoint validation",
+  "repository": "/home/rxhuang/Projects/cosmos-policy",
+  "branch": "research/pv0-closed-loop-feedback-20260812",
+  "audited_commit": "672a6ea6ff9f42ab1a7e1e1714ad1efc8375c1ea",
+  "remote": "git@github.com:hrx20000209/cosmos-policy.git",
+  "remote_commit_at_audit": "672a6ea6ff9f42ab1a7e1e1714ad1efc8375c1ea",
+  "push_success": true,
+  "included_source": [
+    "matched stale R2 implementation and analysis",
+    "offline-only F1/P1/PV0 shadow-label collection",
+    "task-disjoint execution-validity analysis",
+    "slot-aware PV0 condition contract writer",
+    "NO-GO report and Thor export writer"
+  ],
+  "excluded_large_artifacts": [
+    "raw rollouts and traces",
+    "action arrays",
+    "rendered videos",
+    "checkpoint weights",
+    "CUDA caches"
+  ],
+  "result": "WAM_REUSE_ADVANTAGE_GO (small paired evidence); FEEDBACK_ADAPTATION_NO_GO."
+}
