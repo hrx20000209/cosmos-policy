@@ -1,0 +1,129 @@
+{
+  "baselines": {
+    "ACTION_ONLY": "ridge lambda=10 on the 5 frozen action-geometry features only, log1p target, fit on E12 discovery only",
+    "CONSTANT": "global mean risk",
+    "FROZEN_S_P1": "the 89-feature frozen scorer, unmodified",
+    "S_PLUS_ACTION": "reporting-only diagnostic; not a candidate policy"
+  },
+  "causal_contract": {
+    "estimator_route": "P1",
+    "f1_role": "offline reference label only; never an anchor for the score",
+    "judged_object": "the action produced by that same P1 forward",
+    "route_transfer_claimed": false
+  },
+  "discovery_freeze_outputs": [
+    "score direction confirmation",
+    "S quantile cut points at 20/30/40% correction budget",
+    "reports/p1_semantic_verify/E12B_POLICY_CANDIDATES.json"
+  ],
+  "experiment": "E12-A P1-Native Semantic Risk Confirmation",
+  "frozen_scorer": {
+    "artifact": "reports/semantic_commitment/FROZEN_SENSITIVITY_MODEL.json",
+    "blocks": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      27
+    ],
+    "checksum_sha256": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+    "features": 89,
+    "modifications_allowed": "none: no refit, no feature selection, no lambda/normalization/layer change"
+  },
+  "invariants_across_routes": [
+    "task",
+    "sim_state",
+    "observation",
+    "proprio",
+    "instruction",
+    "seed",
+    "checkpoint",
+    "denoise=1"
+  ],
+  "metrics": {
+    "primary": "task-balanced Spearman(S_P1, R_P1)",
+    "secondary": [
+      "per-task rho",
+      "AUROC for top-20% R_P1",
+      "PR-AUC",
+      "Spearman(S_P1, G_PV0)",
+      "high-S vs low-S mean R_P1",
+      "high-S vs low-S mean G_PV0"
+    ],
+    "uncertainty": "hierarchical bootstrap task -> episode -> state, 10000 resamples; 128 states are never treated as IID"
+  },
+  "prior_context_recorded_before_collection": {
+    "e11a_discovery_s_p1_rho_at_4_states_per_task": 0.35,
+    "e4_historical_heldout_action_only_rho": 0.563,
+    "e4_historical_heldout_rho_vs_raw_target": 0.642,
+    "e4_historical_margin": 0.079,
+    "note": "E11-A was 4 states/task; per-task Spearman at n=4 is extremely high variance. If 16 states/task reproduces ~0.35, that is evidence of genuine transfer loss and the gate fails honestly."
+  },
+  "question": "At a temporally aligned P1 decision point, does the frozen semantic score read out of that same speculative P1 forward predict how far its own action is from Fresh?",
+  "route_definition_finding": {
+    "consequence": "E12-A is a frozen-estimator generalization test across BOTH a new task family and a route variant. The estimator is still applied completely unmodified.",
+    "decision": "E12 uses the DEPLOYED P1 route for both the speculative action and the score, because the round requires the score to come from the same forward that produced the judged action.",
+    "diagnostic_column": "s_p1_e4variant recorded on DISCOVERY ONLY; it attributes a possible NO-GO between task transfer and route-variant change; it is NOT a candidate policy in this round and cannot become one here.",
+    "discovered": "during SMOKE-B, before any E12-A correlation was computed",
+    "finding": "run_semantic_shard.collect and run_e11a_route_transfer condition on the RAW prior generated latent; they never move predicted future slots 6/7 into current slots 2/3. That is not the deployed P1 (predicted_reuse) route.",
+    "measured_divergence_one_state": {
+      "action_max_abs_diff": 0.5982413589954376,
+      "feature_max_abs_diff": 0.9859066009521484,
+      "score_deployed_p1": 1.8439947465057074,
+      "score_e4_variant": 1.2483107919740704
+    }
+  },
+  "routes_per_state": [
+    "P1 (with frozen 89-feature capture)",
+    "F1 (reference)",
+    "PV0 (correction candidate)"
+  ],
+  "sampling": {
+    "discovery": {
+      "states_per_task": 16,
+      "target_states": 128,
+      "tasks": 8
+    },
+    "near_duplicate_policy": "no stacking of adjacent requests from one episode while other episodes/steps remain available",
+    "selection": "deterministic: round-robin over the 5 stored episodes per task, maximal within-episode control-step spacing, tie-broken by sha256(state_key); independent of any route outcome",
+    "validation": {
+      "states_per_task": 16,
+      "target_states": 128,
+      "tasks": 8
+    }
+  },
+  "schema_version": 1,
+  "state_legality": {
+    "enforced_by": [
+      "pv0_overnight_common.build_state_index",
+      "run_e2_e3_pilot_shard.load_request"
+    ],
+    "k_not_16_admitted": false,
+    "temporal_gap_actions": 16
+  },
+  "status": "PREREGISTERED_AMENDED_BEFORE_COLLECTION",
+  "targets": {
+    "correction_utility": "R_PV0 = mean_step_l2(A_PV0, A_F1); G_PV0 = R_P1 - R_PV0 (measured separately, never assumed equal to R_P1)",
+    "primary": "R_P1 = pair_metrics(A_P1, A_F1).mean_step_l2  (full-chunk mean-step L2, project-standard metric, not re-selected)",
+    "secondary_recorded": [
+      "first_action_l2",
+      "first4_mean_step_l2",
+      "per_joint_mean_abs",
+      "gripper_sign_disagreement"
+    ]
+  },
+  "validation_gate": {
+    "conditions_all_required": [
+      "1. validation task-balanced Spearman(S_P1, R_P1) >= 0.50",
+      "2. improvement over ACTION_ONLY: absolute rho gain >= 0.08, OR hierarchical bootstrap 95% CI on the paired rho difference excludes 0",
+      "3. high-S group mean R_P1 significantly above low-S group (paired hierarchical bootstrap CI on the difference excludes 0)",
+      "4. sign of the effect matches historical E4 direction (positive)",
+      "5. not driven by one task: at least 6 of 8 validation tasks have positive per-task rho"
+    ],
+    "name_if_pass": "P1_SEMANTIC_VERIFY_SIGNAL_GO",
+    "no_go_if": "validation task-balanced rho < 0.30 -> P1_NATIVE_SEMANTIC_VERIFY_NO_GO; stop the semantic-sensitivity line, do not attempt a rescue scorer",
+    "weak_if": "0.30 <= rho < 0.50 -> WEAK; no heldout closed loop"
+  }
+}

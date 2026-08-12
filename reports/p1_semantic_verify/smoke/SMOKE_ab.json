@@ -1,0 +1,43 @@
+{
+  "SMOKE_A_paired_determinism": {
+    "f1_repeat_action_max_abs_diff": 0.0,
+    "p1_hook_off_action_max_abs_diff": 0.0,
+    "p1_repeat_action_max_abs_diff": 0.0,
+    "p1_repeat_feature_max_abs_diff": 0.0,
+    "pass": true,
+    "pv0_repeat_action_max_abs_diff": 0.0,
+    "routes_differ": {
+      "p1_vs_f1": 0.06090199947357178,
+      "pv0_vs_f1": 0.003457486629486084
+    },
+    "state_id": "25a2de095983fd4d4f1c5ca3b6b2a7327eb89ca20266cfdea1124a02d2994ec4:req1"
+  },
+  "SMOKE_B_frozen_score_reconstruction": {
+    "e4_collection_route_variant": {
+      "action_max_abs_diff_vs_deployed_p1": 0.5982413589954376,
+      "feature_max_abs_diff_vs_deployed_p1": 0.9859066009521484,
+      "note": "raw prior generated latent, no slot 6/7 -> 2/3 move; the variant E4 and E11-A actually collected",
+      "score_on_deployed_p1": 1.8439947465057074,
+      "score_on_e4_variant": 1.2483107919740704
+    },
+    "extractor_equivalence": {
+      "action_max_abs_diff": 0.0,
+      "feature_count": 84,
+      "feature_max_abs_diff": 0.0,
+      "note": "historical E4 reducer fed the identical predicted condition"
+    },
+    "frozen_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+    "pass": true,
+    "score": 1.8439947465057074,
+    "score_max_abs_diff": 0.0,
+    "score_reference": 1.8439947465057074
+  },
+  "gpu": {
+    "free_before_mib": 23741.125,
+    "memory_fraction_cap": 0.8,
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "physical_gpu": "1",
+    "total_mib": 24111.0625,
+    "visible_device": 0
+  }
+}

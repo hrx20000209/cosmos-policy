@@ -1,0 +1,173 @@
+{
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "decision_cost_ms": {
+    "F1": 198.69879913330078,
+    "P1": 70.67654418945312,
+    "P1_plus_frozen_score": 77.3303215,
+    "PV0": 130.1041717529297,
+    "semantic_score_overhead_fraction_of_f1": 0.03279842418991143,
+    "semantic_score_overhead_fraction_of_p1": 0.09220891562737898,
+    "semantic_score_overhead_ms": 6.517007500000005
+  },
+  "denoising_steps": 1,
+  "experiment": "E12B_cost_model",
+  "finetuning_used": false,
+  "gpu": {
+    "free_before_mib": 23741.0,
+    "memory_fraction_cap": 0.8,
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "physical_gpu": "5",
+    "total_mib": 24111.0625,
+    "visible_device": 0
+  },
+  "gpu_clean": {
+    "free_before_mib": 23741.0,
+    "total_mib": 24111.0625
+  },
+  "historical_values_reused": false,
+  "order_rotation": true,
+  "policy_cost_formula": {
+    "ACTION_ONLY": "C_P1 + p_correct * C_PV0   (action geometry is CPU-only on a 16x7 array)",
+    "F1_ALWAYS": "C_F1",
+    "P1_ALWAYS": "C_P1",
+    "PV0_ALWAYS": "C_PV0",
+    "SEMANTIC": "C_P1_plus_score + p_correct * C_PV0",
+    "note": "the discarded speculative P1 of a corrected decision is already inside the per-decision P1 term"
+  },
+  "repeats": 100,
+  "schema_version": 1,
+  "state_id": "25a2de095983fd4d4f1c5ca3b6b2a7327eb89ca20266cfdea1124a02d2994ec4:req1",
+  "status": "PASS",
+  "timings_ms": {
+    "F1": {
+      "cuda_ms": {
+        "max": 275.5457458496094,
+        "mean": 200.16641830444337,
+        "median": 198.69879913330078,
+        "min": 195.79190063476562,
+        "n": 100,
+        "p05": 197.34170989990236,
+        "p95": 204.4192657470703,
+        "std": 7.943063083829494
+      },
+      "score_ms": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 100,
+        "p05": 0.0,
+        "p95": 0.0,
+        "std": 0.0
+      },
+      "wall_ms": {
+        "max": 275.679404,
+        "mean": 200.3011205,
+        "median": 198.831782,
+        "min": 195.922635,
+        "n": 100,
+        "p05": 197.4770432,
+        "p95": 204.55204554999997,
+        "std": 7.943200016385595
+      }
+    },
+    "P1": {
+      "cuda_ms": {
+        "max": 79.65875244140625,
+        "mean": 71.1205704498291,
+        "median": 70.67654418945312,
+        "min": 68.9735336303711,
+        "n": 100,
+        "p05": 69.4134090423584,
+        "p95": 74.15928421020507,
+        "std": 1.517056333291054
+      },
+      "score_ms": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 100,
+        "p05": 0.0,
+        "p95": 0.0,
+        "std": 0.0
+      },
+      "wall_ms": {
+        "max": 79.800142,
+        "mean": 71.25447922999999,
+        "median": 70.81331399999999,
+        "min": 69.112344,
+        "n": 100,
+        "p05": 69.54641835000001,
+        "p95": 74.29822725000001,
+        "std": 1.5182250174188134
+      }
+    },
+    "P1_PLUS_SCORE": {
+      "cuda_ms": {
+        "max": 83.56902313232422,
+        "mean": 77.22972259521484,
+        "median": 76.80126571655273,
+        "min": 75.25373077392578,
+        "n": 100,
+        "p05": 76.20311279296875,
+        "p95": 80.05570220947266,
+        "std": 1.252665791887341
+      },
+      "score_ms": {
+        "max": 0.257043,
+        "mean": 0.20534477000000004,
+        "median": 0.201113,
+        "min": 0.192492,
+        "n": 100,
+        "p05": 0.19558550000000002,
+        "p95": 0.23224509999999998,
+        "std": 0.01182952484916871
+      },
+      "wall_ms": {
+        "max": 84.118957,
+        "mean": 77.76605907,
+        "median": 77.3303215,
+        "min": 75.78646099999999,
+        "n": 100,
+        "p05": 76.73630895,
+        "p95": 80.58348915,
+        "std": 1.2594947782236279
+      }
+    },
+    "PV0": {
+      "cuda_ms": {
+        "max": 187.68202209472656,
+        "mean": 131.71456787109375,
+        "median": 130.1041717529297,
+        "min": 127.69686126708984,
+        "n": 100,
+        "p05": 129.26381607055663,
+        "p95": 140.18176498413087,
+        "std": 6.49952618788368
+      },
+      "score_ms": {
+        "max": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "n": 100,
+        "p05": 0.0,
+        "p95": 0.0,
+        "std": 0.0
+      },
+      "wall_ms": {
+        "max": 187.827543,
+        "mean": 131.86344735,
+        "median": 130.253478,
+        "min": 127.838516,
+        "n": 100,
+        "p05": 129.40559535,
+        "p95": 140.3238364,
+        "std": 6.4990879908089285
+      }
+    }
+  },
+  "warmup": 25
+}

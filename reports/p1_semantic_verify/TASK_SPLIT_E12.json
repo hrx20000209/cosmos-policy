@@ -1,0 +1,55 @@
+{
+  "frozen_scorer_training_task_overlap": {
+    "e12_tasks": 24,
+    "e4_training_tasks": 16,
+    "intersection": [],
+    "status": "DISJOINT"
+  },
+  "inherited_from": "reports/semantic_commitment/TASK_SPLIT_E11.json",
+  "purpose": "E12 P1-native semantic verify-and-correct reuses the E11 clean 24-task split unchanged.",
+  "schema_version": 1,
+  "splits": {
+    "discovery": [
+      "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it",
+      "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it",
+      "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket",
+      "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket",
+      "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate",
+      "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate",
+      "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy",
+      "libero_goal:open_the_top_drawer_and_put_the_bowl_inside"
+    ],
+    "heldout": [
+      "libero_object:pick_up_the_salad_dressing_and_place_it_in_the_basket",
+      "libero_spatial:pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate",
+      "libero_spatial:pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate",
+      "libero_spatial:pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate",
+      "libero_spatial:pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate",
+      "libero_spatial:pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate",
+      "libero_spatial:pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate",
+      "libero_spatial:pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate"
+    ],
+    "validation": [
+      "libero_goal:push_the_plate_to_the_front_of_the_stove",
+      "libero_goal:put_the_bowl_on_the_stove",
+      "libero_goal:put_the_cream_cheese_in_the_bowl",
+      "libero_goal:put_the_wine_bottle_on_the_rack",
+      "libero_object:pick_up_the_bbq_sauce_and_place_it_in_the_basket",
+      "libero_object:pick_up_the_butter_and_place_it_in_the_basket",
+      "libero_object:pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+      "libero_object:pick_up_the_ketchup_and_place_it_in_the_basket"
+    ]
+  },
+  "state_source": "reports/pv0_overnight/manifests/foundation_v2_state_index.jsonl",
+  "status": "FROZEN",
+  "task_counts": {
+    "discovery": 8,
+    "heldout": 8,
+    "validation": 8
+  },
+  "usage_contract": {
+    "discovery": "E12-A signal confirmation, quantile/threshold definition, all operating-point freezing. Already touched by E11-A (32 rows).",
+    "heldout": "UNTOUCHED. Executed only if E12-A GO and E12-B GO, with every policy parameter already frozen. No shadow probe first.",
+    "validation": "UNTOUCHED before this round. Read only after E12A_POLICY_CANDIDATES is frozen from discovery. Evaluation only, never fitting."
+  }
+}

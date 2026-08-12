@@ -1,0 +1,167 @@
+{
+  "bank": "reports/p1_semantic_verify/E12_STATE_BANK_discovery.jsonl",
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "denoising_steps": 1,
+  "experiment": "E12_smoke",
+  "finetuning_used": false,
+  "gpu": {
+    "ab": {
+      "free_before_mib": 23741.125,
+      "memory_fraction_cap": 0.8,
+      "name": "NVIDIA GeForce RTX 4090 D",
+      "physical_gpu": "1",
+      "total_mib": 24111.0625,
+      "visible_device": 0
+    },
+    "cd": {
+      "free_before_mib": 23741.125,
+      "memory_fraction_cap": 0.8,
+      "name": "NVIDIA GeForce RTX 4090 D",
+      "physical_gpu": "1",
+      "total_mib": 24111.0625,
+      "visible_device": 0
+    },
+    "chain": {
+      "free_before_mib": 23741.125,
+      "memory_fraction_cap": 0.8,
+      "name": "NVIDIA GeForce RTX 4090 D",
+      "physical_gpu": "1",
+      "total_mib": 24111.0625,
+      "visible_device": 0
+    },
+    "chain_repeat": {
+      "free_before_mib": 23741.125,
+      "memory_fraction_cap": 0.8,
+      "name": "NVIDIA GeForce RTX 4090 D",
+      "physical_gpu": "1",
+      "total_mib": 24111.0625,
+      "visible_device": 0
+    },
+    "e": {}
+  },
+  "phase_isolation": "one Cosmos model per OS process",
+  "results": {
+    "SMOKE_A_paired_determinism": {
+      "f1_repeat_action_max_abs_diff": 0.0,
+      "p1_hook_off_action_max_abs_diff": 0.0,
+      "p1_repeat_action_max_abs_diff": 0.0,
+      "p1_repeat_feature_max_abs_diff": 0.0,
+      "pass": true,
+      "pv0_repeat_action_max_abs_diff": 0.0,
+      "routes_differ": {
+        "p1_vs_f1": 0.06090199947357178,
+        "pv0_vs_f1": 0.003457486629486084
+      },
+      "state_id": "25a2de095983fd4d4f1c5ca3b6b2a7327eb89ca20266cfdea1124a02d2994ec4:req1"
+    },
+    "SMOKE_B_frozen_score_reconstruction": {
+      "e4_collection_route_variant": {
+        "action_max_abs_diff_vs_deployed_p1": 0.5982413589954376,
+        "feature_max_abs_diff_vs_deployed_p1": 0.9859066009521484,
+        "note": "raw prior generated latent, no slot 6/7 -> 2/3 move; the variant E4 and E11-A actually collected",
+        "score_on_deployed_p1": 1.8439947465057074,
+        "score_on_e4_variant": 1.2483107919740704
+      },
+      "extractor_equivalence": {
+        "action_max_abs_diff": 0.0,
+        "feature_count": 84,
+        "feature_max_abs_diff": 0.0,
+        "note": "historical E4 reducer fed the identical predicted condition"
+      },
+      "frozen_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+      "pass": true,
+      "score": 1.8439947465057074,
+      "score_max_abs_diff": 0.0,
+      "score_reference": 1.8439947465057074
+    },
+    "SMOKE_C_accept_path": {
+      "action_max_abs_diff": 0.0,
+      "adapter_state_identical": true,
+      "adapter_state_reference": {
+        "last_physical_condition_latent": null,
+        "previous_generated_latent": "cd7e9f4e50e159c104977b8d79e93851eb253124fcc391181c5e4f16f29e97a3",
+        "previous_real_latent": "4e8d8a7db338c7914cfb419078786fe0e03211170aef04a2d622a23f0ef32a23",
+        "request_index": 3
+      },
+      "adapter_state_transactional": {
+        "last_physical_condition_latent": null,
+        "previous_generated_latent": "cd7e9f4e50e159c104977b8d79e93851eb253124fcc391181c5e4f16f29e97a3",
+        "previous_real_latent": "4e8d8a7db338c7914cfb419078786fe0e03211170aef04a2d622a23f0ef32a23",
+        "request_index": 3
+      },
+      "bitexact": true,
+      "decisions": [
+        "bootstrap",
+        "accept",
+        "accept"
+      ],
+      "pass": true,
+      "per_step_action_max_abs_diff": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reference_route": "CosmosAdapter closed_loop_mode=predicted_reuse, same process and same model object",
+      "steps": 3
+    },
+    "SMOKE_D_reject_path": {
+      "action_max_abs_diff": 0.0,
+      "adapter_state_identical": true,
+      "adapter_state_reference": {
+        "last_physical_condition_latent": "a9fb374d3aa2a18c2d7a8a7cef7b0c4364638869262c1a5e959317060d26cb5c",
+        "previous_generated_latent": "1942e215c3e59b13f7f5c0531bcbcebd2ed8780d055d45542e0cab970329246e",
+        "previous_real_latent": "4e8d8a7db338c7914cfb419078786fe0e03211170aef04a2d622a23f0ef32a23",
+        "request_index": 3
+      },
+      "adapter_state_transactional": {
+        "last_physical_condition_latent": "a9fb374d3aa2a18c2d7a8a7cef7b0c4364638869262c1a5e959317060d26cb5c",
+        "previous_generated_latent": "1942e215c3e59b13f7f5c0531bcbcebd2ed8780d055d45542e0cab970329246e",
+        "previous_real_latent": "4e8d8a7db338c7914cfb419078786fe0e03211170aef04a2d622a23f0ef32a23",
+        "request_index": 3
+      },
+      "bitexact": true,
+      "decisions": [
+        "bootstrap",
+        "correct",
+        "correct"
+      ],
+      "discarded_speculative_calls": 2,
+      "pass": true,
+      "per_step_action_max_abs_diff": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reference_route": "CosmosAdapter closed_loop_mode=native_persistent, same process and same model object; the reference never ran a speculative forward",
+      "steps": 3
+    },
+    "SMOKE_E_h16_alignment": {
+      "action_horizon": 16,
+      "bank_rows": 128,
+      "chain_gaps": [
+        256,
+        240
+      ],
+      "chain_gaps_multiple_of_16": true,
+      "closed_loop_execution_prefix": 16,
+      "pass": true,
+      "prefix_mode": "fixed",
+      "unique_temporal_gaps": [
+        16
+      ]
+    },
+    "SMOKE_F_render_reproducibility": {
+      "frozen_chain_used_by_c_and_d": true,
+      "note": "diagnostic: same requests rendered in two separate processes",
+      "observation_hashes_identical": true,
+      "pass": true,
+      "steps": 3,
+      "steps_matching": 3
+    }
+  },
+  "schema_version": 1,
+  "sequence_length": 3,
+  "status": "PASS",
+  "value_used": false
+}

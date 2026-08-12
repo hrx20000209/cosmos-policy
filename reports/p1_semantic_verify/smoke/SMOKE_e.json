@@ -1,0 +1,18 @@
+{
+  "SMOKE_E_h16_alignment": {
+    "action_horizon": 16,
+    "bank_rows": 128,
+    "chain_gaps": [
+      256,
+      240
+    ],
+    "chain_gaps_multiple_of_16": true,
+    "closed_loop_execution_prefix": 16,
+    "pass": true,
+    "prefix_mode": "fixed",
+    "unique_temporal_gaps": [
+      16
+    ]
+  },
+  "gpu": {}
+}

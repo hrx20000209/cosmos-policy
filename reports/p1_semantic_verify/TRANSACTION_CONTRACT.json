@@ -1,0 +1,34 @@
+{
+  "accept_path": "commit speculative generated latent as previous_generated_latent; advance request_index; identical to a normal predicted_reuse infer()",
+  "adapter_state_under_transaction": [
+    "previous_generated_latent",
+    "previous_real_latent",
+    "last_physical_condition_latent",
+    "request_index",
+    "_shadow_prior_generated_latent"
+  ],
+  "design": "speculate-without-mutating, commit-on-accept",
+  "name": "Speculative P1 Transaction",
+  "no_durable_side_effects_evidence": {
+    "condition_transform": "get_action saves/restores model.inference_condition_transform and model.sampler.x0_transform",
+    "feature_hooks": "intermediate_feature_ids / intermediate_feature_reducer cleared in caller finally",
+    "noise_rng": "imaginaire/utils/misc.py::arch_invariant_rand builds np.random.RandomState(seed) per call; global RNG unused",
+    "seed_explicit": "cosmos_utils.get_action(seed=..., randomize_seed=False)",
+    "variance_scale": "run_p1_trajectory_dump.build_cfg sets use_variance_scale=False, so generate_samples_from_batch never calls torch.manual_seed"
+  },
+  "rationale": "Source audit shows the Cosmos inference path has no durable side effects at fixed seed, so the speculative forward can be made non-mutating instead of snapshot/rollback. An exact-by-construction reject path cannot drift.",
+  "reject_path": "discard speculative result entirely (nothing was written); run PV0 at the same physical observation from the same untouched prior latent; commit PV0 generated latent and persistent_condition_latent",
+  "required_smoke": [
+    "SMOKE-A paired determinism",
+    "SMOKE-B frozen score reconstruction",
+    "SMOKE-C accept path == normal P1",
+    "SMOKE-D reject path == direct PV0",
+    "SMOKE-E H=16 alignment after execution"
+  ],
+  "schema_version": 1,
+  "tolerance": {
+    "action_max_abs_diff": 0.0,
+    "generated_latent_max_abs_diff": 0.0,
+    "note": "bit-exact required; historical E4 repeat audit already measured exactly 0.0 over 24 states"
+  }
+}

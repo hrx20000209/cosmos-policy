@@ -1,0 +1,35 @@
+{
+  "action_only_model": "reports/p1_semantic_verify/E12_ACTION_ONLY_MODEL.json",
+  "discovery_states": 128,
+  "note": "Thresholds are global and frozen here. Validation and heldout only evaluate them.",
+  "operating_points": {
+    "20": {
+      "correction_budget": 0.2,
+      "global_action_only_threshold": 0.3035239508814777,
+      "global_s_threshold": 1.9054882856192994,
+      "rule": "correct when score > threshold; a single global cut, never per task"
+    },
+    "30": {
+      "correction_budget": 0.3,
+      "global_action_only_threshold": 0.25143672422231494,
+      "global_s_threshold": 1.5737079555125566,
+      "rule": "correct when score > threshold; a single global cut, never per task"
+    },
+    "40": {
+      "correction_budget": 0.4,
+      "global_action_only_threshold": 0.1857132410735572,
+      "global_s_threshold": 1.3804119616105193,
+      "rule": "correct when score > threshold; a single global cut, never per task"
+    }
+  },
+  "periodic_baseline_period": {
+    "20": 5,
+    "30": 3,
+    "40": 2
+  },
+  "schema_version": 1,
+  "score": "frozen E4 INTERNAL_PLUS_ACTION read from the deployed P1 forward",
+  "score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+  "source": "artifacts/p1_semantic_verify/e12_shadow_discovery.parquet",
+  "status": "FROZEN_FROM_DISCOVERY"
+}

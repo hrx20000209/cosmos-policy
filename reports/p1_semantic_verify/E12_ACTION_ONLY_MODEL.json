@@ -1,0 +1,36 @@
+{
+  "coefficients": [
+    -0.003638945470889307,
+    0.055707651873532146,
+    0.028709569600347894,
+    0.04033076447992961,
+    0.09866690274810795
+  ],
+  "feature_mean": [
+    0.4717384875465195,
+    0.49264404495557,
+    0.043421616305069986,
+    0.07533373426607609,
+    0.0125
+  ],
+  "feature_names": [
+    "action_norm",
+    "endpoint_displacement",
+    "action_curvature",
+    "action_jerk",
+    "gripper_transition"
+  ],
+  "feature_scale": [
+    0.23892502088855544,
+    0.3249299249798094,
+    0.022657378919247656,
+    0.04482114571040516,
+    0.03307189138830738
+  ],
+  "intercept": 0.18143321067227333,
+  "output_transform": "expm1(linear_score)",
+  "ridge_lambda": 10.0,
+  "target": "log1p(risk_p1_full)",
+  "training_rows": 128,
+  "training_split": "discovery"
+}

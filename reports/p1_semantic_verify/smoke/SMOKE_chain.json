@@ -1,0 +1,24 @@
+{
+  "chain": {
+    "control_steps": [
+      16,
+      272,
+      512
+    ],
+    "observation_hashes": [
+      "897bdd405333c91f259a1004c88ceb119ce5c5e39661187549eacb8ccd2e1d84",
+      "57602306ba0779068975d95c62bbf439e8b0d262f53a0392cb1c04c393ac9829",
+      "11649cc407442c8ce1941ba44beb77a492298034b528922b5f15d195517ae120"
+    ],
+    "path": "reports/p1_semantic_verify/smoke/chain.npz",
+    "steps": 3
+  },
+  "gpu": {
+    "free_before_mib": 23741.125,
+    "memory_fraction_cap": 0.8,
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "physical_gpu": "1",
+    "total_mib": 24111.0625,
+    "visible_device": 0
+  }
+}

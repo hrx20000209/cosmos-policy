@@ -1,0 +1,70 @@
+{
+  "bank": "reports/p1_semantic_verify/E12_STATE_BANK_discovery.jsonl",
+  "per_task": {
+    "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it": {
+      "adjacent_request_pairs": 0,
+      "available": 160,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 160,
+      "selected": 16
+    },
+    "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it": {
+      "adjacent_request_pairs": 0,
+      "available": 160,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 160,
+      "selected": 16
+    },
+    "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket": {
+      "adjacent_request_pairs": 0,
+      "available": 160,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 160,
+      "selected": 16
+    },
+    "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket": {
+      "adjacent_request_pairs": 0,
+      "available": 160,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 160,
+      "selected": 16
+    },
+    "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate": {
+      "adjacent_request_pairs": 0,
+      "available": 160,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 160,
+      "selected": 16
+    },
+    "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate": {
+      "adjacent_request_pairs": 0,
+      "available": 84,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 64,
+      "selected": 16
+    },
+    "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy": {
+      "adjacent_request_pairs": 0,
+      "available": 115,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 32,
+      "selected": 16
+    },
+    "libero_goal:open_the_top_drawer_and_put_the_bowl_inside": {
+      "adjacent_request_pairs": 0,
+      "available": 90,
+      "episodes_used": 5,
+      "min_within_episode_step_gap": 80,
+      "selected": 16
+    }
+  },
+  "per_task_target": 16,
+  "schema_version": 1,
+  "selection_rule": "round-robin over sha256-ordered episodes; maximal control-step spread within episode",
+  "split": "discovery",
+  "state_index": "reports/pv0_overnight/manifests/foundation_v2_state_index.jsonl",
+  "states": 128,
+  "status": "PASS",
+  "tasks": 8,
+  "temporal_gap_actions": 16
+}

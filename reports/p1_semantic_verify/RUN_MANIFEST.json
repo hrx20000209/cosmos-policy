@@ -1,0 +1,215 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/p1_semantic_verify/e12_shadow_discovery.parquet",
+      "sha256": "a656769eddb3422b351a91059df1f70d8c4294229097cbcd679ad678f789ef90"
+    },
+    {
+      "path": "reports/p1_semantic_verify/AUDIT.md",
+      "sha256": "b0a3fdbc26a91f981e39f2b327b7d716c63c4f777f63e4c6525d237e8cb30311"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12A_DISCOVERY_RESULT.json",
+      "sha256": "b69d2d79637bbd81947363b8b756d0a69026d2bf23ecb8f90970cbda916d3ddd"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12A_GO_NO_GO.json",
+      "sha256": "0fae5f0003eb57ddc562c840b7d1bf89e16fffb30e9506021d47fd777481546c"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12A_PROTOCOL.json",
+      "sha256": "9389ff34f7cb198ded49e00569556233fa3f8e3b5445952c834d2eef78637aba"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12B_COST_MODEL.json",
+      "sha256": "acd006f5134ce5dbbd7fd5687b291e94d2716792358485c7445c3b2baebc8a00"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12B_POLICY_CANDIDATES.json",
+      "sha256": "7f384456e43fb1332d88c052ac7c24be304acf16862462bba7978a41eae727e1"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12_ACTION_ONLY_MODEL.json",
+      "sha256": "77e5ce9657116e6dba3a79fcfede2fdc9ebc23e8ea06cc1811e42efc6b6f62a6"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12_STATE_BANK_discovery.jsonl",
+      "sha256": "d58773885fa3cb1013c92044383cebec2e66e59e0fd315005fa8be23137eb7dd"
+    },
+    {
+      "path": "reports/p1_semantic_verify/E12_STATE_BANK_discovery_audit.json",
+      "sha256": "7fed214603b1003c23ef087b3efd210d2402e7b5fcb6b67fae7cba3a3c758435"
+    },
+    {
+      "path": "reports/p1_semantic_verify/P1_SEMANTIC_VERIFY_FINAL_DECISION.json",
+      "sha256": "d65cc6c2ab3a792ba05eb5dea6e9bc1625ebd084fbdcea0aa3bfa675d1f5cd36"
+    },
+    {
+      "path": "reports/p1_semantic_verify/P1_SEMANTIC_VERIFY_SERVER_REPORT_ZH.md",
+      "sha256": "ca0786cfc5628af065cffb357fa8e51b20aba828399c6fc757bf9a799804c0f9"
+    },
+    {
+      "path": "reports/p1_semantic_verify/RUN_MANIFEST.json",
+      "sha256": "59d68912d0f782aa5f8a020112cea12a01ae772986ad405e37316b3b54897928"
+    },
+    {
+      "path": "reports/p1_semantic_verify/SMOKE_RESULT.json",
+      "sha256": "a5c1ab1681896a8205cb0f07954dc99e814f1f4ae9a98e4a7cc61c3550cab003"
+    },
+    {
+      "path": "reports/p1_semantic_verify/TASK_SPLIT_E12.json",
+      "sha256": "e78d8ee8c2fcb3858f6380befa6930c8031521ee5eb8010473a4589005360c3d"
+    },
+    {
+      "path": "reports/p1_semantic_verify/TRANSACTION_CONTRACT.json",
+      "sha256": "48c5cb921ae68608e49874a161d509c8447a9b1b98e4553c26d92010d79dc1a3"
+    },
+    {
+      "path": "reports/p1_semantic_verify/plots/figure1_score_vs_p1_risk.png",
+      "sha256": "f2ad73b75ae243b24749669835ad4f219679fc9fbefa02f72a1a37d72154a2c5"
+    },
+    {
+      "path": "reports/p1_semantic_verify/plots/figure2_risk_by_score_tercile.png",
+      "sha256": "d4541d1575c0a376bc0d77020bbd74b76b56460ec42f6684fca1f3cf4d969402"
+    },
+    {
+      "path": "reports/p1_semantic_verify/plots/figure3_pv0_correction_utility.png",
+      "sha256": "9c000f0a4a7f20a9c70c8642364abf7dbb14ba785e1a5ad3f91b795a85c73cae"
+    },
+    {
+      "path": "reports/p1_semantic_verify/plots/figureD_route_variant_diagnostic.png",
+      "sha256": "91dd9b5653d76c64ab01a8d9f4f51c1b714dc761d580d1e628d0d68bf922f8c1"
+    },
+    {
+      "path": "reports/p1_semantic_verify/shards/e12a_discovery_shard0.json",
+      "sha256": "a3e96abf2b4b3ab125f2b1f8734b833659633f22949eed2bf6aef930169443e1"
+    },
+    {
+      "path": "reports/p1_semantic_verify/shards/e12a_discovery_shard1.json",
+      "sha256": "f8622441a031de3a0ade16fa2494a0fedd3b2358df5c850876c6b1bbae3de23c"
+    },
+    {
+      "path": "reports/p1_semantic_verify/shards/e12a_discovery_shard2.json",
+      "sha256": "92b6cf6f05cb7d94161be6dd9011530385f549512d8e4539dacec3871575d52b"
+    },
+    {
+      "path": "reports/p1_semantic_verify/smoke/SMOKE_ab.json",
+      "sha256": "39eed1926455342462eb1b5e07a01b3625d3852a1c6694f122140bd5edaae3b5"
+    },
+    {
+      "path": "reports/p1_semantic_verify/smoke/SMOKE_cd.json",
+      "sha256": "2e0858cb478dbda93b474eca1b8b5e971ba480c5367b65db01b333a3b5a12c02"
+    },
+    {
+      "path": "reports/p1_semantic_verify/smoke/SMOKE_chain.json",
+      "sha256": "ab39979f5f00e9b033af563c1834d023f3804306e1cfb5ec4ed759a7f40f8689"
+    },
+    {
+      "path": "reports/p1_semantic_verify/smoke/SMOKE_chain_repeat.json",
+      "sha256": "8af68d0754598cdd6600f7d1cc014dbe7e60435d4faa0f2c83a4498219e8014e"
+    },
+    {
+      "path": "reports/p1_semantic_verify/smoke/SMOKE_e.json",
+      "sha256": "ae0662e39fbffca646c02a893d398737a880e5c5b0e67090b339947699bc4bd0"
+    }
+  ],
+  "base_handoff_commit": "95f1c265354921bc22435158f469f81ffc0d490a",
+  "branch": "research/pv0-closed-loop-feedback-20260812",
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "contract": {
+    "action_scaling_used": false,
+    "denoising_steps": 1,
+    "deployed_p1_route": "predicted_reuse (slots 6/7 -> 2/3)",
+    "finetuning_used": false,
+    "hidden_activation_patch_used": false,
+    "privileged_runtime_state_used": false,
+    "temporal_gap_actions": 16,
+    "value_used": false
+  },
+  "environment": {
+    "cuda": "12.8",
+    "gpus_used": {
+      "cost_profile": 5,
+      "e12a_discovery_shards": [
+        1,
+        5,
+        6
+      ],
+      "smoke": 1
+    },
+    "mujoco_gl": "egl (explicit)",
+    "other_users_processes_killed": 0,
+    "python": "3.10.12",
+    "torch": "2.7.0+cu128"
+  },
+  "experiment": "E12 P1-Native Semantic Verify-and-Correct",
+  "frozen_score": "reports/semantic_commitment/FROZEN_SENSITIVITY_MODEL.json",
+  "frozen_score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+  "frozen_score_modified": false,
+  "git_commit": "5204d10",
+  "git_sha_at_start": "009af7278b4b7dad93172dea346c914afe0674cc",
+  "note_on_smoke_partials": "SMOKE_c_ref/c_test/d_ref/d_test were superseded by the single-process SMOKE_cd artifact and removed; chain*.npz are frozen observation blobs kept out of git.",
+  "schema_version": 1,
+  "splits_read": {
+    "discovery": true,
+    "heldout": false,
+    "validation": false
+  },
+  "stages_not_run": [
+    {
+      "reason": "researcher decision after discovery evidence; clean split preserved",
+      "stage": "E12-A validation"
+    },
+    {
+      "reason": "gated on E12-A GO",
+      "stage": "E12-B frontier"
+    },
+    {
+      "reason": "gated on E12-A and E12-B GO",
+      "stage": "E12-C closed loop"
+    }
+  ],
+  "stages_run": [
+    {
+      "artifact": "reports/p1_semantic_verify/AUDIT.md",
+      "gpu": false,
+      "stage": "audit"
+    },
+    {
+      "gpu": false,
+      "stage": "state bank build (discovery)",
+      "states": 128,
+      "tasks": 8
+    },
+    {
+      "artifact": "reports/p1_semantic_verify/SMOKE_RESULT.json",
+      "gpu": true,
+      "stage": "SMOKE A-F",
+      "status": "PASS"
+    },
+    {
+      "gpu": true,
+      "shards": 3,
+      "stage": "E12-A discovery collection",
+      "states": 128,
+      "valid": 128
+    },
+    {
+      "bootstrap_draws": 10000,
+      "gpu": false,
+      "stage": "E12-A discovery analysis"
+    },
+    {
+      "gpu": true,
+      "repeats": 100,
+      "stage": "clean-GPU cost model",
+      "warmup": 25
+    },
+    {
+      "count": 4,
+      "gpu": false,
+      "stage": "figures"
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "bootstrap_draws": 10000,
+  "bootstrap_scheme": "hierarchical task -> episode -> state",
+  "experiment": "E12A",
+  "frozen_score_modified": false,
+  "invalid_reasons": [],
+  "invalid_rows": 0,
+  "parquet": "artifacts/p1_semantic_verify/e12_shadow_discovery.parquet",
+  "result": {
+    "absolute_rho_improvement_over_action_only": -0.3327205882352941,
+    "action_only_protocol": "leave-one-task-out within discovery",
+    "auroc_top20_percent_risk": 0.5305989583333334,
+    "bootstrap_rho_delta_vs_action_only": {
+      "ci95": [
+        -0.7919764815106194,
+        -0.1924362179318945
+      ],
+      "fraction_positive": 0.0013,
+      "mean": -0.4938132619804903,
+      "n_draws": 10000
+    },
+    "bootstrap_rho_s": {
+      "ci95": [
+        -0.334091550330821,
+        0.14594236005030356
+      ],
+      "fraction_positive": 0.2197,
+      "mean": -0.09359820833622293,
+      "n_draws": 10000
+    },
+    "bootstrap_risk_contrast": {
+      "ci95": [
+        -0.567692385889766,
+        -0.018249409816828516
+      ],
+      "fraction_positive": 0.0156,
+      "mean": -0.2634761835932366,
+      "n_draws": 10000
+    },
+    "diagnostic_e4_collection_variant": {
+      "note": "DISCOVERY-ONLY DIAGNOSTIC. Not a candidate policy in this round.",
+      "per_task": {
+        "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it": 0.6029411764705882,
+        "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it": 0.05294117647058824,
+        "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket": 0.5235294117647059,
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket": 0.7000000000000001,
+        "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate": 0.8117647058823528,
+        "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate": 0.6411764705882352,
+        "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy": -0.1647058823529412,
+        "libero_goal:open_the_top_drawer_and_put_the_bowl_inside": 0.4382352941176471
+      },
+      "risk_rank_agreement_deployed_vs_variant": -0.22674418604651161,
+      "score_rank_agreement_deployed_vs_variant": 0.8126602270646401,
+      "task_balanced_spearman_variant_score_vs_deployed_p1_risk": 0.0886029411764706,
+      "task_balanced_spearman_variant_score_vs_variant_risk": 0.450735294117647
+    },
+    "frozen_operating_points": {
+      "20": {
+        "correction_budget": 0.2,
+        "global_action_only_threshold": 0.3035239508814777,
+        "global_s_threshold": 1.9054882856192994,
+        "rule": "correct when score > threshold; a single global cut, never per task"
+      },
+      "30": {
+        "correction_budget": 0.3,
+        "global_action_only_threshold": 0.25143672422231494,
+        "global_s_threshold": 1.5737079555125566,
+        "rule": "correct when score > threshold; a single global cut, never per task"
+      },
+      "40": {
+        "correction_budget": 0.4,
+        "global_action_only_threshold": 0.1857132410735572,
+        "global_s_threshold": 1.3804119616105193,
+        "rule": "correct when score > threshold; a single global cut, never per task"
+      }
+    },
+    "per_task_spearman_action_only": {
+      "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it": 0.12941176470588234,
+      "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it": 0.5205882352941177,
+      "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket": 0.5735294117647058,
+      "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket": 0.9176470588235294,
+      "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate": 0.2764705882352941,
+      "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate": 0.4147058823529412,
+      "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy": 0.7794117647058825,
+      "libero_goal:open_the_top_drawer_and_put_the_bowl_inside": 0.7382352941176471
+    },
+    "per_task_spearman_s_vs_pv0_gain": {
+      "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it": 0.1764705882352941,
+      "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it": 0.4970588235294117,
+      "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket": 0.0029411764705882353,
+      "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket": 0.17058823529411765,
+      "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate": 0.044117647058823525,
+      "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate": 0.2764705882352941,
+      "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy": 0.2735294117647059,
+      "libero_goal:open_the_top_drawer_and_put_the_bowl_inside": 0.2441176470588235
+    },
+    "per_task_spearman_s_vs_risk_p1": {
+      "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it": 0.18235294117647058,
+      "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it": 0.4970588235294117,
+      "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket": 0.0029411764705882353,
+      "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket": 0.17058823529411765,
+      "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate": 0.0411764705882353,
+      "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate": 0.2764705882352941,
+      "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy": 0.2735294117647059,
+      "libero_goal:open_the_top_drawer_and_put_the_bowl_inside": 0.2441176470588235
+    },
+    "pr_auc_top20_percent_risk": 0.30274801449015293,
+    "pv0_correction_quality": {
+      "pv0_gain_positive_fraction": 1.0,
+      "pv0_relative_recovery_median": 0.9777454639224658,
+      "pv0_worse_than_p1_states": 0,
+      "risk_p1_full": {
+        "25%": 0.03981210821181429,
+        "50%": 0.09235399234199464,
+        "75%": 0.21265168958486555,
+        "count": 128.0,
+        "max": 2.259514400548852,
+        "mean": 0.241146742028771,
+        "min": 0.011424518806193436,
+        "std": 0.40108700777847245
+      },
+      "risk_pv0_full": {
+        "25%": 0.0015471601501651814,
+        "50%": 0.0018839494611973136,
+        "75%": 0.0022657313074742696,
+        "count": 128.0,
+        "max": 0.016397774488859047,
+        "mean": 0.002249954979153752,
+        "min": 0.0008708250867865146,
+        "std": 0.0017525411274385927
+      }
+    },
+    "pv0_gain_contrast_high_vs_low_s": {
+      "difference": 0.03822948801451154,
+      "high_s_mean": 0.27030707183983327,
+      "low_s_mean": 0.23207758382532173,
+      "per_task_high_minus_low": [
+        0.02333747015249967,
+        0.08526776314816331,
+        0.31177375212976977,
+        -0.4003438026260365,
+        0.02483849145835531,
+        0.04509370258175234,
+        0.12198855780989229,
+        0.0938799694616958
+      ],
+      "quantile": 0.2,
+      "tasks_with_positive_contrast": 7
+    },
+    "risk_contrast_high_vs_low_s": {
+      "difference": 0.038301387338730675,
+      "high_s_mean": 0.27236671507864674,
+      "low_s_mean": 0.23406532773991606,
+      "per_task_high_minus_low": [
+        0.024011739897467667,
+        0.08568813947095708,
+        0.31171284498844865,
+        -0.39959487816417905,
+        0.02507555702658492,
+        0.04533355676281098,
+        0.1217978774788048,
+        0.09238626124895022
+      ],
+      "quantile": 0.2,
+      "tasks_with_positive_contrast": 7
+    },
+    "states": 128,
+    "task_balanced_spearman_action_only_vs_risk_p1": 0.54375,
+    "task_balanced_spearman_s_vs_pv0_gain": 0.21066176470588233,
+    "task_balanced_spearman_s_vs_risk_p1": 0.21102941176470585,
+    "task_balanced_spearman_s_vs_risk_pv0": 0.1735294117647059,
+    "tasks": 8,
+    "tasks_with_positive_rho": 8
+  },
+  "schema_version": 1,
+  "split": "discovery",
+  "status": "PASS"
+}

@@ -1,0 +1,56 @@
+{
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "clean_resources_preserved": {
+    "e11_heldout_tasks": "UNTOUCHED — no outcome ever computed",
+    "e11_validation_tasks": "UNTOUCHED — no outcome ever computed",
+    "frozen_sensitivity_model": "unmodified; checksum verified before and after"
+  },
+  "cost_model_ms": {
+    "F1": 198.69879913330078,
+    "P1": 70.67654418945312,
+    "P1_plus_frozen_score": 77.3303215,
+    "PV0": 130.1041717529297,
+    "semantic_score_overhead_fraction_of_f1": 0.03279842418991143,
+    "semantic_score_overhead_fraction_of_p1": 0.09220891562737898,
+    "semantic_score_overhead_ms": 6.517007500000005
+  },
+  "decision_basis": "On 128 H=16-aligned states across 8 tasks that are task-disjoint from the frozen scorer training set, the frozen E4 semantic score read out of the deployed speculative P1 forward does not predict that same forward action risk (task-balanced rho 0.211, hierarchical bootstrap CI95 [-0.33, +0.15], AUROC 0.53), and is reliably worse than the 5-feature action-geometry baseline (rho 0.544; difference CI95 [-0.79, -0.19], 99.87% of draws against the semantic score).",
+  "denoising_steps": 1,
+  "experiment": "E12 P1-Native Semantic Verify-and-Correct",
+  "final_decision": "P1_NATIVE_SEMANTIC_VERIFY_NO_GO",
+  "finetuning_used": false,
+  "frozen_score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+  "git_sha": "009af7278b4b7dad93172dea346c914afe0674cc",
+  "mechanism_explanation_established": {
+    "evidence": {
+      "risk_rank_agreement_between_routes": -0.22674418604651161,
+      "score_predicts_deployed_p1_risk_rho": 0.21102941176470585,
+      "score_predicts_its_own_variant_risk_rho": 0.450735294117647,
+      "score_rank_agreement_between_routes": 0.8126602270646401
+    },
+    "finding": "The frozen E4 score was collected on a route variant that conditions on the RAW prior generated latent and never moves predicted future slots 6/7 into current slots 2/3. That is stale-condition reuse, not the deployed predicted-reuse P1.",
+    "implication_for_prior_results": "Historical E4/E5/E6 offline evidence and the E11-A route-transfer numbers describe the raw-latent reuse variant. They should not be read as statements about the deployed P1 route. This is a source-level audit finding, not a re-analysis of those experiments.",
+    "reading": "The two routes produce almost the same SCORE ordering (0.81) but nearly unrelated RISK orderings (-0.23). The estimator is not broken; it predicts the risk of a different route than the one this project deploys."
+  },
+  "not_run": {
+    "E12A_validation": "researcher decision after discovery",
+    "E12B": "gated",
+    "E12C": "gated"
+  },
+  "positive_results_of_this_round": [
+    "PV0_CORRECTION_TRANSFER_GO: PV0 beats P1 on 100.0% of 128 new-task states, median relative recovery 97.8%, median R_PV0 0.0019 vs median R_P1 0.0924.",
+    "A transaction-safe speculative-P1 primitive exists and is verified bit-exact on both paths (SMOKE-C/D).",
+    "A formal clean-GPU cost model for the deployed routes, independently reproducing the PV0 round timings."
+  ],
+  "schema_version": 1,
+  "scope_of_the_negative": "The semantic-sensitivity main line is stopped. This does NOT reopen or revise any earlier frozen NO-GO, and does NOT claim the P1-native verification IDEA is impossible with a different, separately developed estimator; it establishes that the frozen E4 estimator cannot serve that role.",
+  "smoke": {
+    "SMOKE_A_paired_determinism": true,
+    "SMOKE_B_frozen_score_reconstruction": true,
+    "SMOKE_C_accept_path": true,
+    "SMOKE_D_reject_path": true,
+    "SMOKE_E_h16_alignment": true,
+    "SMOKE_F_render_reproducibility": true
+  },
+  "value_used": false
+}
