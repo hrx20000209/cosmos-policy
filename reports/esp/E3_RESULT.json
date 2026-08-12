@@ -1,0 +1,144 @@
+{
+  "all_scope_checks_pass": true,
+  "canonical_result": true,
+  "decision": "E3_PILOT_SIGNAL_ONLY; no heldout selection or GO/NO-GO claim from 48 states",
+  "depth": {
+    "12": {
+      "mean_delta": 0.2026082875129731,
+      "pair_spearman": 0.06233043950081389,
+      "per_task": {
+        "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": 0.2380952380952381,
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": -0.04761904761904763,
+        "libero_goal:open_the_middle_drawer_of_the_cabinet": -0.4761904761904762,
+        "libero_goal:put_the_bowl_on_the_plate": 0.023809523809523815,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": -0.14285714285714288,
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": -0.11904761904761905,
+        "libero_goal:turn_on_the_stove": 0.1666666666666667,
+        "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": 0.4047619047619048,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": -0.3571428571428572,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.7857142857142858,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": 0.2380952380952381,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": -0.07142857142857144
+      },
+      "task_balanced_spearman": 0.05357142857142858
+    },
+    "2": {
+      "mean_delta": 0.055040695769640734,
+      "pair_spearman": -0.044289202387411825,
+      "per_task": {
+        "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": 0.3333333333333334,
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.4285714285714286,
+        "libero_goal:open_the_middle_drawer_of_the_cabinet": -0.04761904761904763,
+        "libero_goal:put_the_bowl_on_the_plate": 0.023809523809523815,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": -0.4285714285714286,
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": -0.4523809523809524,
+        "libero_goal:turn_on_the_stove": -0.04761904761904763,
+        "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": 0.07142857142857144,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": 0.023809523809523815,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.7380952380952381,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": -0.1666666666666667,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.2380952380952381
+      },
+      "task_balanced_spearman": 0.05952380952380954
+    },
+    "4": {
+      "mean_delta": 0.07124756858955994,
+      "pair_spearman": -0.07335865436787846,
+      "per_task": {
+        "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": 0.2380952380952381,
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.3571428571428572,
+        "libero_goal:open_the_middle_drawer_of_the_cabinet": 0.0,
+        "libero_goal:put_the_bowl_on_the_plate": 0.11904761904761905,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": -0.4285714285714286,
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": -0.3571428571428572,
+        "libero_goal:turn_on_the_stove": 0.04761904761904763,
+        "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": 0.261904761904762,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": -0.19047619047619052,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.7380952380952381,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": -0.2142857142857143,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.14285714285714288
+      },
+      "task_balanced_spearman": 0.059523809523809534
+    },
+    "6": {
+      "mean_delta": 0.08320118485393489,
+      "pair_spearman": -0.048724905046120454,
+      "per_task": {
+        "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": 0.28571428571428575,
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.14285714285714288,
+        "libero_goal:open_the_middle_drawer_of_the_cabinet": -0.19047619047619052,
+        "libero_goal:put_the_bowl_on_the_plate": 0.023809523809523815,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": -0.3571428571428572,
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": -0.3333333333333334,
+        "libero_goal:turn_on_the_stove": -0.07142857142857144,
+        "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": 0.09523809523809526,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": 0.07142857142857144,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.7380952380952381,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": -0.2142857142857143,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.14285714285714288
+      },
+      "task_balanced_spearman": 0.027777777777777762
+    },
+    "8": {
+      "mean_delta": 0.11043435512010309,
+      "pair_spearman": 0.05482908301682041,
+      "per_task": {
+        "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": 0.4761904761904762,
+        "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.28571428571428575,
+        "libero_goal:open_the_middle_drawer_of_the_cabinet": 0.023809523809523815,
+        "libero_goal:put_the_bowl_on_the_plate": -0.11904761904761905,
+        "libero_goal:put_the_bowl_on_top_of_the_cabinet": -0.261904761904762,
+        "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": -0.3333333333333334,
+        "libero_goal:turn_on_the_stove": 0.0,
+        "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": 0.14285714285714288,
+        "libero_object:pick_up_the_milk_and_place_it_in_the_basket": -0.09523809523809526,
+        "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.8333333333333335,
+        "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": 0.09523809523809526,
+        "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.1666666666666667
+      },
+      "task_balanced_spearman": 0.10119047619047622
+    }
+  },
+  "final_status": "E3_RUNTIME_NO_GO_FROM_BOUNDED_PILOT",
+  "max_early_equivalence_rms": 0.0,
+  "reason": "all k have total two-camera overhead above 5%; validation correlation is not directionally consistent with discovery.",
+  "rows": 480,
+  "selected_k": null,
+  "split_task_balanced_spearman": {
+    "12": {
+      "discovery": 0.04761904761904763,
+      "heldout": 0.19047619047619052,
+      "validation": -0.07738095238095238
+    },
+    "2": {
+      "discovery": 0.09523809523809527,
+      "heldout": 0.11904761904761907,
+      "validation": -0.035714285714285726
+    },
+    "4": {
+      "discovery": 0.15476190476190477,
+      "heldout": 0.14285714285714285,
+      "validation": -0.11904761904761905
+    },
+    "6": {
+      "discovery": 0.053571428571428575,
+      "heldout": 0.11904761904761904,
+      "validation": -0.0892857142857143
+    },
+    "8": {
+      "discovery": 0.13095238095238096,
+      "heldout": 0.16666666666666669,
+      "validation": 0.005952380952380945
+    }
+  },
+  "states": 48,
+  "status": "PILOT_ONLY_NOT_FORMAL_GATE",
+  "tasks": 12,
+  "total_two_camera_overhead_ratio": {
+    "12": 0.5839708983875189,
+    "2": 0.29547760972333265,
+    "4": 0.32807718327621715,
+    "6": 0.4044446574431606,
+    "8": 0.48258749901038805
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "all_scope_checks_pass": true,
+  "canonical_result": true,
+  "decision": "E2_PILOT_SIGNAL_ONLY; protocol requires >=300 states for formal E2 gate",
+  "final_status": "E2_BOUNDED_PILOT_NO_FORMAL_GATE",
+  "formal_300_state_run_started": false,
+  "mean_within_task_switching_fraction": 0.2708333333333333,
+  "per_camera_intervention_mean_step_l2": {
+    "primary:imagined": 0.4476136514922458,
+    "primary:shuffle_task_disjoint": 0.6614087719009484,
+    "primary:stale_previous_real": 0.5476828597744746,
+    "wrist:imagined": 0.4693043736331528,
+    "wrist:shuffle_task_disjoint": 0.9163920303022656,
+    "wrist:stale_previous_real": 0.5860078386874961
+  },
+  "reason": "E3 independently fails the runtime overhead gate; scaling the pilot only to seek a positive mechanism result is not protocol-justified.",
+  "rows": 288,
+  "states": 48,
+  "status": "PILOT_ONLY_NOT_FORMAL_GATE",
+  "task_modal_camera": {
+    "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": "wrist",
+    "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": "wrist",
+    "libero_goal:open_the_middle_drawer_of_the_cabinet": "primary",
+    "libero_goal:put_the_bowl_on_the_plate": "primary",
+    "libero_goal:put_the_bowl_on_top_of_the_cabinet": "primary",
+    "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": "primary",
+    "libero_goal:turn_on_the_stove": "wrist",
+    "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": "wrist",
+    "libero_object:pick_up_the_milk_and_place_it_in_the_basket": "primary",
+    "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": "wrist",
+    "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": "wrist",
+    "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": "wrist"
+  },
+  "tasks": 12,
+  "within_task_switching_fraction": {
+    "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it": 0.25,
+    "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket": 0.25,
+    "libero_goal:open_the_middle_drawer_of_the_cabinet": 0.25,
+    "libero_goal:put_the_bowl_on_the_plate": 0.25,
+    "libero_goal:put_the_bowl_on_top_of_the_cabinet": 0.25,
+    "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet": 0.0,
+    "libero_goal:turn_on_the_stove": 0.5,
+    "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket": 0.25,
+    "libero_object:pick_up_the_milk_and_place_it_in_the_basket": 0.5,
+    "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket": 0.0,
+    "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate": 0.25,
+    "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate": 0.5
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "layout": "LIBERO original pre-finetune checkpoint",
+  "latent_temporal_slots": {
+    "0": "structural blank",
+    "1": "current proprio",
+    "2": "current wrist image / wrist camera",
+    "3": "current primary image / third-person camera",
+    "4": "action chunk",
+    "5": "future proprio",
+    "6": "future wrist image",
+    "7": "future primary image",
+    "8": "value slot (never read in ESP)"
+  },
+  "condition_slots": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "current_visual_camera_slots": {
+    "2": "wrist",
+    "3": "primary"
+  },
+  "action_latent_slot": 4,
+  "future_visual_slots": [
+    6,
+    7
+  ],
+  "tokenization": {
+    "patch_spatial": 2,
+    "patch_temporal": 1,
+    "pre_patch_latent_shape": "[B,C=16,T=9,H=28,W=28]",
+    "hidden_grid_shape": "[B,T=9,H=14,W=14,D=2048]",
+    "action_token_range_flat": [
+      784,
+      979
+    ],
+    "action_token_count": 196,
+    "action_hidden_pooling": "all 14x14 patch tokens at temporal slot 4; normalized RMS L2"
+  },
+  "sources": {
+    "layout_and_assembly": "cosmos_policy/experiments/robot/cosmos_utils.py:960-1198",
+    "LIBERO_config": "cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py:75-145",
+    "DiT_patch_embedding": "cosmos_policy/_src/predict2/networks/minimal_v4_dit.py:1688-1703"
+  }
+}

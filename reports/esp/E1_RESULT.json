@@ -1,0 +1,56 @@
+{
+  "architecture_decision": "E1_SELECTIVE_SENSING_ARCH_NO_GO",
+  "camera_compute_separable": false,
+  "camera_separability_decision": "NO_GO",
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "denoising_steps": 1,
+  "end_to_end_visual_refresh_delta_cuda_ms_median": 172.55459213256836,
+  "end_to_end_visual_refresh_delta_fraction_of_f1": 0.7000032683423255,
+  "f1_cuda_ms": {
+    "mean": 245.68541870117187,
+    "median": 246.50540924072266,
+    "n": 50,
+    "p05": 198.46341781616212,
+    "p95": 308.00441589355466
+  },
+  "f1_wall_ms": {
+    "mean": 245.79904399999998,
+    "median": 246.61871200000002,
+    "n": 50,
+    "p05": 198.57299455,
+    "p95": 308.1401472
+  },
+  "finetuning_used": false,
+  "gpu": {
+    "free_before_mib": 23741.125,
+    "memory_fraction_cap": 0.4,
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "physical_gpu": "1",
+    "total_mib": 24111.0625,
+    "visible_device": 0
+  },
+  "interpretation": "This difference is a conservative end-to-end F1-vs-P1 route delta, not a claimed isolated VAE kernel time.",
+  "p1_cuda_ms": {
+    "mean": 77.84021438598633,
+    "median": 73.9508171081543,
+    "n": 50,
+    "p05": 70.2938735961914,
+    "p95": 93.24351692199707
+  },
+  "p1_wall_ms": {
+    "mean": 77.95099754,
+    "median": 74.06410299999999,
+    "n": 50,
+    "p05": 70.39610325,
+    "p95": 93.37299259999999
+  },
+  "reason": "both camera streams are concatenated into a joint temporally causal VAE input; no independent camera encode path avoids the other stream's VAE work",
+  "repeats": 50,
+  "schema_version": 1,
+  "server_only": true,
+  "state_id": "9f535f7df63f9ab01464446ce09afa6dbf5146f9b9460bb08ccc73f9c85a45d8:req1",
+  "status": "PASS",
+  "value_used": false,
+  "warmup": 10
+}

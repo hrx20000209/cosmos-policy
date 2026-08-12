@@ -1,0 +1,21 @@
+{
+  "definition": "mean over 16 action-chunk steps of the L2 distance across the native 7 action dimensions",
+  "frozen_before": "ESP_PILOT",
+  "interventions": [
+    "imagined",
+    "stale_previous_real",
+    "shuffle_task_disjoint"
+  ],
+  "primary_scalar": "mean_step_l2",
+  "reference": "S_c^{causal,imag}=D(A_{-c:imag}, A_F1)",
+  "schema_version": 1,
+  "secondary": [
+    "full_rmse",
+    "first_action_l2",
+    "first4_mean_step_l2",
+    "per_joint_mean_abs",
+    "gripper_sign_disagreement"
+  ],
+  "selection_rule": "no post-hoc target or pooling change based on heldout results",
+  "statistical_unit": "task (hierarchical task -> state bootstrap for formal analysis)"
+}

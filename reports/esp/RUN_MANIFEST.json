@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "phase": "ESP Phase 0 / audit",
+  "git_sha": "7b72c9657c577fef9d93e98fc3d0ec6815ff1425",
+  "git_status": "?? experiments/esp/",
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "finetuning_used": false,
+  "denoise_steps": 1,
+  "value_used": false,
+  "precision": "bf16",
+  "runtime": {
+    "python": "3.13.9",
+    "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.35",
+    "gpus": [
+      "0, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "1, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "2, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "3, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "4, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "5, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "6, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB",
+      "7, NVIDIA GeForce RTX 4090 D, 560.35.03, 24564 MiB"
+    ]
+  },
+  "source_sha256": {
+    "cosmos_policy/models/policy_video2world_model.py": "0d7a81f6dfb6b886ae29fd94201847f741cc3c5b3ed68a4c82d71c65669262f7",
+    "cosmos_policy/experiments/robot/cosmos_utils.py": "1a0b9a6d912485c0749305f0fd7c4765786510e990f8c05a50b2752487efa003",
+    "cosmos_policy/_src/predict2/networks/minimal_v4_dit.py": "fe5dfb361f5ced4e2649eca1ca6ca2cb40886d1e551bb9f754c4cc00770ada30",
+    "cosmos_policy/_src/predict2/networks/minimal_v1_lvg_dit.py": "2db9754b828cc1315abea25128993be64868a93965ee92449de21afb3ff7aad9",
+    "cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py": "bc899ae32960e2805cd6707242fbb5423e8ffe9d9a35623b8c3d99b6466714a5"
+  }
+}

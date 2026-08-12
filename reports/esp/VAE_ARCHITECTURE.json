@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "suite": "LIBERO",
+  "camera_count": 2,
+  "camera_preprocessing": "per-image list preprocessing before temporal assembly",
+  "vae_encode_call": "model.encode(data_batch['video'])",
+  "vae_input": "one joint video tensor, temporal sequence [blank, 4x proprio blank, 4x wrist, 4x primary, ...]",
+  "temporal_compression_factor": 4,
+  "current_camera_raw_frame_ranges": {
+    "wrist": [
+      5,
+      8
+    ],
+    "primary": [
+      9,
+      12
+    ]
+  },
+  "camera_condition_slot_replace": "legal independently via index_copy into slots 2/3 after the joint VAE prefix is encoded",
+  "camera_compute_separability": "NO_GO",
+  "reason": "The model exposes a single joint temporal VAE call. Primary-only evidence still requires the earlier structural/proprio/wrist temporal prefix; no validated per-camera encoder API avoids that work. Wrist-only could truncate after its own slot but neither route proves independent camera VAE work across all cameras.",
+  "sources": {
+    "assembly": "cosmos_policy/experiments/robot/cosmos_utils.py:1010-1127",
+    "prefix_encode": "cosmos_policy/experiments/robot/cosmos_utils.py:1218-1384"
+  }
+}

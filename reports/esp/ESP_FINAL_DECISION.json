@@ -1,0 +1,71 @@
+{
+  "allowed_next_step": "Do not build an ESP-guided runtime scheduler. Preserve the negative result; separately study a new mechanism only after a new hypothesis and protocol.",
+  "e1": {
+    "decision": "E1_SELECTIVE_SENSING_ARCH_NO_GO",
+    "f1_cuda_ms_median": 246.50540924072266,
+    "p1_cuda_ms_median": 73.9508171081543,
+    "refresh_delta_fraction": 0.7000032683423255
+  },
+  "e2_pilot": {
+    "all_scope_checks_pass": true,
+    "mean_within_task_switching_fraction": 0.2708333333333333,
+    "states": 48,
+    "tasks": 12
+  },
+  "e3_pilot": {
+    "all_scope_checks_pass": true,
+    "max_early_equivalence_rms": 0.0,
+    "split_task_balanced_spearman": {
+      "12": {
+        "discovery": 0.04761904761904763,
+        "heldout": 0.19047619047619052,
+        "validation": -0.07738095238095238
+      },
+      "2": {
+        "discovery": 0.09523809523809527,
+        "heldout": 0.11904761904761907,
+        "validation": -0.035714285714285726
+      },
+      "4": {
+        "discovery": 0.15476190476190477,
+        "heldout": 0.14285714285714285,
+        "validation": -0.11904761904761905
+      },
+      "6": {
+        "discovery": 0.053571428571428575,
+        "heldout": 0.11904761904761904,
+        "validation": -0.0892857142857143
+      },
+      "8": {
+        "discovery": 0.13095238095238096,
+        "heldout": 0.16666666666666669,
+        "validation": 0.005952380952380945
+      }
+    },
+    "states": 48,
+    "tasks": 12,
+    "total_two_camera_overhead_ratio": {
+      "12": 0.5839708983875189,
+      "2": 0.29547760972333265,
+      "4": 0.32807718327621715,
+      "6": 0.4044446574431606,
+      "8": 0.48258749901038805
+    }
+  },
+  "final_decision": "ESP_NO_GO",
+  "frozen_contract": {
+    "denoising_steps": 1,
+    "deployable_esp_uses_current_fresh": false,
+    "finetuning_used": false,
+    "hidden_activation_patch_used": false,
+    "original_prefinetune_checkpoint": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+    "value_used": false
+  },
+  "schema_version": 1,
+  "scope": "server-side ESP mechanism validation; bounded 48-state pilot after semantic and cost gates",
+  "why_not_formal_300_state": [
+    "E1 establishes camera-refresh architecture is not compute-separable.",
+    "E3 total two-camera exact-prefix overhead is 29.5% of F1 even at k=2, failing the <5% runtime gate independently of correlation.",
+    "Pilot task-balanced correlations are weak and validation direction is inconsistent; expanding solely to seek a positive result would violate the frozen protocol."
+  ]
+}
