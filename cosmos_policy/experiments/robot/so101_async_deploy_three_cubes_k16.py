@@ -46,6 +46,8 @@ from lerobot.transport import services_pb2, services_pb2_grpc  # type: ignore
 from lerobot.transport.utils import receive_bytes_in_chunks
 
 from cosmos_policy.experiments.robot import stage_profiler, truncated_encode
+from cosmos_policy.experiments.robot.latent_feedback import LatentFeedback
+from cosmos_policy.experiments.robot.adaptive_sensing import AdaptiveSensing
 from cosmos_policy.experiments.robot.cosmos_utils import (
     get_action,
     get_model,
@@ -321,6 +323,41 @@ class SO101CosmosAsyncServerConfig:
     generate_future_state: bool = False
     future_state_dir: str = ""
 
+    # Feed the model's own predicted future latents (slots 7-9) back in as the
+    # next conditioning (slots 2-4) instead of encoding the cameras. The future
+    # slots are denoised by every inference already, so this costs nothing to
+    # produce and removes the entire VAE encode: 525 -> 238 ms measured.
+    #
+    # Accuracy is the constraint, not speed. Offline against a real-encode
+    # reference (verify_latent_feedback.py):
+    #   k=1 fed-back step   mean 1.21 deg   max  4.46 deg
+    #   k=2                 mean 9.90 deg   max 41.05 deg
+    # so more than one imagined step in a row is not usable. For scale, the
+    # view-splicing ablation deviated less than k=1 (0.72-0.87 deg mean) and
+    # still scored zero task successes on hardware.
+    latent_feedback: bool = False
+    # Imagined inferences allowed between two real ones.
+    latent_feedback_max_consecutive: int = 1
+    # Only use feedback during the first N seconds of the run -- the phase where
+    # motion is gross and free-space, and prediction should be easiest. 0 = the
+    # whole run.
+    latent_feedback_until_s: float = 0.0
+
+    # Let the residual between predicted and real latents choose k online
+    # instead of fixing it. Free to compute: both tensors already exist on every
+    # real encode. See adaptive_sensing.py.
+    # Diagnostic: encode the real cameras on fed-back steps too, only to
+    # score the prediction. Destroys the speed-up on purpose.
+    latent_feedback_measure_all: bool = False
+
+    adaptive_sensing: bool = False
+    adaptive_k_max: int = 4
+    adaptive_k_min: int = 0
+    adaptive_calibrate_n: int = 6
+    # Seconds of no improvement in the model's own value head before the
+    # scheduler stops imagining and spends observations instead.
+    adaptive_value_flat_secs: float = 15.0
+
     # Per-request stage breakdown (VAE encode / DiT denoise / decode / ...).
     # Stage boundaries are CUDA-synchronised, which perturbs the end-to-end
     # number slightly, so it is opt-in.
@@ -386,6 +423,12 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         self.logger.info("Loaded Cosmos SO101 checkpoint: %s", config.ckpt_path)
 
         self._future_dir = None
+        self._latent_fb = None
+        self._sched = None
+        self._last_intent: float | None = None
+        self._lf_consecutive = 0
+        self._lf_t0: float | None = None
+        self._n_lf = 0
         self._last_infer: dict | None = None
         self._consecutive_skips = 0
         self._n_skipped = 0
@@ -417,6 +460,37 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                 )
             else:
                 self.logger.warning("Truncated VAE encode NOT applied: %s", info.get("reason"))
+
+        # After truncation on purpose. Both patch tokenizer.encode, but they
+        # compose rather than conflict: when feedback is not armed its wrapper
+        # falls through to whatever encode it wrapped, so wrapping the truncated
+        # one keeps real steps cheap too. Installing feedback first (or forcing
+        # truncation off, as this did originally) makes every real step pay the
+        # full 41-frame encode -- measured at 858 ms against 525 ms truncated,
+        # which cancelled out everything the imagined steps saved.
+        if config.latent_feedback:
+            self._latent_fb = LatentFeedback(
+                self.model, measure_all=config.latent_feedback_measure_all
+            )
+            self.logger.warning("Latent feedback: %s", self._latent_fb.install())
+            self.logger.warning(
+                "  schedule: <=%d imagined between real inferences%s | truncated encode on real steps: %s",
+                config.latent_feedback_max_consecutive,
+                f", only for the first {config.latent_feedback_until_s:.0f}s" if config.latent_feedback_until_s > 0 else "",
+                config.truncate_vae_encode,
+            )
+            if config.adaptive_sensing:
+                self._sched = AdaptiveSensing(
+                    k_min=config.adaptive_k_min,
+                    k_max=config.adaptive_k_max,
+                    k_init=config.latent_feedback_max_consecutive,
+                    calibrate_n=config.adaptive_calibrate_n,
+                    intent_flat_secs=config.adaptive_value_flat_secs,
+                )
+                self.logger.warning(
+                    "  adaptive sensing ON: k in [%d, %d], calibrating on the first %d residuals",
+                    config.adaptive_k_min, config.adaptive_k_max, config.adaptive_calibrate_n,
+                )
 
         self._trace_lock = threading.Lock()
         self._trace_file = None
@@ -526,6 +600,20 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                     "source_observation_timestamp": timing.get("source_observation_timestamp"),
                     "obs_to_reply_ms": (time.time() - obs.get_timestamp()) * 1000,
                     "total_server_ms": total_ms,
+                    # The adaptive scheduler's inputs, recorded per inference so
+                    # the signals can be characterised offline. Without these the
+                    # run shows only what k did, never why.
+                    "lf_residual": (self._latent_fb.last_residual_logged
+                                    if self._latent_fb is not None else None),
+                    # Diagnostic only -- Cosmos-specific, drives nothing.
+                    "lf_value": (self._latent_fb.last_value
+                                 if self._latent_fb is not None else None),
+                    "lf_intent": getattr(self, "_last_intent", None),
+                    "lf_consecutive": (self._latent_fb.consecutive
+                                       if self._latent_fb is not None else 0),
+                    "lf_k": (self._sched.k if self._sched is not None
+                             else self.config.latent_feedback_max_consecutive),
+                    "lf_fed_back": (self._latent_fb.n_served if self._latent_fb is not None else 0),
                     "unaccounted_ms": total_ms - accounted,
                     "n_actions": len(actions),
                     "payload_bytes": len(payload),
@@ -699,6 +787,30 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         info["reason"] = "static" if static else "changed"
         return static, info
 
+    def _arm_latent_feedback(self) -> bool:
+        """Decide whether this inference imagines its cameras instead of reading them."""
+        lf = self._latent_fb
+        if lf is None:
+            return False
+        now = time.time()
+        if self._lf_t0 is None:
+            self._lf_t0 = now
+        window = self.config.latent_feedback_until_s
+        if window > 0 and now - self._lf_t0 > window:
+            lf.disarm()
+            return False
+        budget = self._sched.k if self._sched is not None else self.config.latent_feedback_max_consecutive
+        if self._lf_consecutive >= budget:
+            # Spend a real observation to re-ground before drift compounds.
+            self._lf_consecutive = 0
+            lf.disarm()
+            return False
+        if lf.arm():
+            self._lf_consecutive += 1
+            return True
+        self._lf_consecutive = 0
+        return False
+
     def _predict_action_chunk(self, observation_t: TimedObservation) -> tuple[list[TimedAction], dict[str, float]]:
         raw = observation_t.get_observation()
         task = str(raw.get("task") or (self.policy_specs.task if self.policy_specs else "") or "")
@@ -735,6 +847,7 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
         else:
             self._consecutive_skips = 0
             self._n_inferred += 1
+            fed_back = self._arm_latent_feedback()
             result = get_action(
                 self.cosmos_cfg,
                 self.model,
@@ -747,6 +860,22 @@ class SO101CosmosAsyncPolicyServer(services_pb2_grpc.AsyncInferenceServicer):
                 num_denoising_steps_action=self.config.num_denoising_steps_action,
                 generate_future_state_and_value_in_parallel=self.config.generate_future_state,
             )
+            if self._latent_fb is not None:
+                self._latent_fb.disarm()
+                if fed_back:
+                    self._n_lf += 1
+                if self._sched is not None:
+                    # Requested displacement, not the value head: portable to any
+                    # world-action model, since it needs only an action chunk and
+                    # a proprio reading.
+                    intent = float(
+                        np.abs(np.asarray(result["actions"], dtype=np.float32)
+                               - cosmos_obs["proprio"][None, :]).mean()
+                    )
+                    self._last_intent = intent
+                    self._sched.observe(self._latent_fb.last_residual, intent, time.time())
+                    self._latent_fb.last_residual_logged = self._latent_fb.last_residual
+                    self._latent_fb.last_residual = None
             if self._future_dir is not None:
                 self._save_future_frames(result, observation_t)
             model_action_array = np.asarray(result["actions"], dtype=np.float32)
