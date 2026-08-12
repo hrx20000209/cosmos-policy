@@ -302,6 +302,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--inference-seed-offset", type=int, default=0)
     parser.add_argument("--interruption-start-step", type=int, default=None)
     parser.add_argument("--interruption-length", type=int, default=4)
+    parser.add_argument("--shadow-validity-labels", action="store_true")
     return parser.parse_args()
 
 
@@ -345,6 +346,7 @@ def main() -> None:
     if int(config["denoising"]["steps"]) != 1 or config["denoising"]["scheduler"] != "fixed":
         raise RuntimeError("closed-loop worker must use fixed denoise=1")
     traces: list[dict[str, Any]] = []
+    shadow_labels: list[dict[str, Any]] = []
 
     class Writer:
         def write(self, value: dict[str, Any]) -> None:
@@ -364,6 +366,13 @@ def main() -> None:
         adapter = InferenceSeedAdapter(config["model"], args.inference_seed_offset)
         action_path = args.output.parent / "actions" / f"{args.mode}_{row['episode_key']}_seedoff{args.inference_seed_offset}.npy"
         action_path.parent.mkdir(parents=True, exist_ok=True)
+        def shadow_callback(**kwargs: Any) -> None:
+            if not args.shadow_validity_labels:
+                return
+            label = adapter.infer_shadow_validity_labels(kwargs["observation"])
+            if label is not None:
+                shadow_labels.append({"control_step": int(kwargs["request"].control_step_id), "request_id": str(kwargs["request"].request_id), **label})
+
         record, _ = run_episode(
             adapter,
             environment,
@@ -373,6 +382,7 @@ def main() -> None:
             int(row["seed"]),
             Writer(),
             action_trace_path=action_path,
+            inference_capture_callback=shadow_callback if args.shadow_validity_labels else None,
         )
         torch.cuda.synchronize(device)
         trace_contract = validate_trace_contract(args.mode, traces)
@@ -426,6 +436,8 @@ def main() -> None:
             "threshold_used": False,
             "hidden_activation_patch_used": False,
             "fresh_prefix_oracle_used": False,
+            "shadow_validity_labels": shadow_labels,
+            "shadow_labels_runtime_policy_input": False,
             "action_outcome_perturbation": interruption,
             "execution_feedback_contract": {
                 "runtime_observables_only": True,

@@ -55,6 +55,7 @@ class CosmosAdapter:
         self.previous_real_latent = None
         self.previous_generated_latent = None
         self.last_physical_condition_latent = None
+        self._shadow_prior_generated_latent = None
 
     @staticmethod
     def validate_history(history: list[Observation] | None) -> None:
@@ -115,6 +116,7 @@ class CosmosAdapter:
         self.previous_real_latent = None
         self.previous_generated_latent = None
         self.last_physical_condition_latent = None
+        self._shadow_prior_generated_latent = None
 
     @staticmethod
     def _predicted_visual_latent(latent):
@@ -319,6 +321,13 @@ class CosmosAdapter:
         actions = np.asarray(result["actions"], dtype=np.float32).reshape(self.action_horizon, -1)
         canonical_actions = np.ascontiguousarray(actions, dtype=np.float32)
         cosmos_request_index = self.request_index
+        # Preserve the speculative prior for an optional *post-control* shadow
+        # label.  Do this before the main request advances its generated state.
+        self._shadow_prior_generated_latent = (
+            self.previous_generated_latent.detach().clone()
+            if self.previous_generated_latent is not None
+            else None
+        )
         if visual_input_mode == "fresh":
             self.previous_real_latent = result["orig_clean_latent_frames"].detach().clone()
         if visual_input_mode == "native_persistent":
@@ -367,6 +376,91 @@ class CosmosAdapter:
                 ),
             },
         )
+
+    def infer_shadow_validity_labels(self, observation: Observation) -> dict[str, Any] | None:
+        """Compute retrospective F1/P1/PV0 labels without affecting control.
+
+        This is deliberately callable only *after* the main route selected and
+        installed its action chunk.  Its outputs are offline labels used for
+        task-disjoint feature discovery; they are never returned to
+        ``_visual_input_for_request`` or used to select a route.
+        """
+        if self.previous_generated_latent is None:
+            return None
+        import torch
+
+        from cosmos_policy.experiments.robot.cosmos_utils import get_action
+
+        # ``previous_generated_latent`` was replaced by the just-completed
+        # main request.  The relevant speculative prior for this observation
+        # is saved before that replacement in ``infer`` below.
+        prior = getattr(self, "_shadow_prior_generated_latent", None)
+        if prior is None:
+            return None
+        obs = {
+            "primary_image": observation.primary_image,
+            "wrist_image": observation.wrist_image,
+            "proprio": observation.proprio,
+        }
+
+        def action_for(mode: str) -> np.ndarray:
+            if mode == "F1":
+                kwargs = {
+                    "skip_vae_encoding": False,
+                    "previous_generated_latent": None,
+                    "skip_camera_preprocessing": False,
+                    "persistent_visual_correction_prefix_frames": None,
+                }
+            elif mode == "P1":
+                kwargs = {
+                    "skip_vae_encoding": True,
+                    "previous_generated_latent": self._predicted_visual_latent(prior),
+                    "skip_camera_preprocessing": True,
+                    "persistent_visual_correction_prefix_frames": None,
+                }
+            elif mode == "PV0":
+                kwargs = {
+                    "skip_vae_encoding": True,
+                    "previous_generated_latent": self._predicted_visual_latent(prior),
+                    "skip_camera_preprocessing": False,
+                    "persistent_visual_correction_prefix_frames": 13,
+                }
+            else:
+                raise ValueError(mode)
+            result = get_action(
+                self.cfg,
+                self.model,
+                self.dataset_stats,
+                obs,
+                self.task_description,
+                seed=self.seed,
+                randomize_seed=False,
+                num_denoising_steps_action=1,
+                generate_future_state_and_value_in_parallel=False,
+                decode_future_state=False,
+                persistent_visual_correction_arrival=0 if mode == "PV0" else 1,
+                async_predict_correct=False,
+                async_visual_arrival_delay_ms=0.0,
+                **kwargs,
+            )
+            return np.asarray(result["actions"], dtype=np.float32).reshape(self.action_horizon, -1)
+
+        with torch.inference_mode():
+            actions = {name: action_for(name) for name in ("F1", "P1", "PV0")}
+
+        def rmse(left: np.ndarray, right: np.ndarray) -> float:
+            return float(np.linalg.norm(left - right) / np.sqrt(left.size))
+        p1_risk = rmse(actions["P1"], actions["F1"])
+        pv0_residual = rmse(actions["PV0"], actions["F1"])
+        return {
+            "shadow_only": True,
+            "denoising_steps_per_shadow_route": 1,
+            "value_used": False,
+            "actions": {name: value.tolist() for name, value in actions.items()},
+            "p1_to_f1_rmse": p1_risk,
+            "pv0_to_f1_rmse": pv0_residual,
+            "pv0_correction_gain": (p1_risk - pv0_residual) / p1_risk if p1_risk > 1e-12 else 0.0,
+        }
 
     def update_context(self, observations: list[Observation], predicted_actions: np.ndarray) -> dict[str, Any]:
         return {}
