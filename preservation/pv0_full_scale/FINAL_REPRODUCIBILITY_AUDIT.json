@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "generated_at_utc": "2026-08-12T02:10:11.400105+00:00",
+  "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "checkpoint_name_guard": {
+    "contains_so101": false,
+    "contains_finetune": false,
+    "finetuning_used": false
+  },
+  "protocol": {
+    "denoising_steps": 1,
+    "value_used": false,
+    "privileged_runtime_state_used": false,
+    "scheduler_or_threshold_used": false,
+    "hidden_activation_patch_used": false,
+    "training_used": false
+  },
+  "completeness": {
+    "phase_a": {
+      "S1": "GO",
+      "S2": "GO",
+      "S3": "GO",
+      "S4": "GO"
+    },
+    "phase_b_route_artifacts": 600,
+    "phase_b_paired_scenarios": 200,
+    "phase_b_tasks": 40,
+    "clean_latency_status": "PASS_EXECUTED",
+    "saved_action_replays": 6
+  },
+  "artifact_sha256": {
+    "Phase-A decision": "e34c9193323e13e30976815d91b2cf50778c12a5df72c012f9d6c2800ac55c88",
+    "S1 fidelity": "c9493faae1057635c5d5f8130cb9d0c3802574192e4bbe1735b4d303c8c2261b",
+    "S2 decomposition": "2d193a46f922771a525fd50784b6cc6b321e6020e45eb6ee8e5fa9ffed619370",
+    "S3 execution-prefix": "bb5a9f92a47e984868fdc7533cce5707b34be75549e8c54f9fa2b0f161af90f8",
+    "S4 condition control": "70c103ca9de4cbfe9759229de8923dadc7d5b39247cd743a830d87e3af2bd690",
+    "paired closed-loop": "4e99651f6b257b51bd710fcecd250a618600cc18a7fad51bd60616c274c34851",
+    "clean latency": "9ce80589a075a597f92bc3982d2e2251787040479d374b89bb74a3c48a010268",
+    "saved-action replays": "bc03bdb80752b2cd9404d44bab1184a6c0c13917d51c8101f90a2f5d8cdc5725"
+  },
+  "source_sha256": {
+    "cosmos_policy/experiments/robot/cosmos_utils.py": {
+      "sha256": "a5a7f63d3d442b07b06552cdec3798ff827342d3b9da0cc6e784875bdb350d70"
+    },
+    "cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py": {
+      "sha256": "bc899ae32960e2805cd6707242fbb5423e8ffe9d9a35623b8c3d99b6466714a5"
+    },
+    "cosmos_policy/models/policy_video2world_model.py": {
+      "sha256": "0d7a81f6dfb6b886ae29fd94201847f741cc3c5b3ed68a4c82d71c65669262f7"
+    },
+    "adapters/cosmos_adapter.py": {
+      "sha256": "bf19b5e4dc5406a8219f3e5f86c266bcc6f434fcb3fb53cd1ede46d5386fcf02"
+    }
+  },
+  "runtime": {
+    "python": "3.10.12 (main, Jun 22 2026, 18:55:27) [GCC 11.4.0]",
+    "platform": "Linux-6.8.0-110-generic-x86_64-with-glibc2.35",
+    "git_head": "d06b8fdeb9a3ae43649e89025678acfb6deecc3f"
+  }
+}

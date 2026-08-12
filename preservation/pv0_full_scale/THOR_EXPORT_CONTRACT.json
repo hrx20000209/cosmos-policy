@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "status": "READY_FOR_TARGET_MEASUREMENT_NOT_MEASURED_ON_THOR",
+  "purpose": "portable target-hardware route-cost measurement; not an extrapolated Thor performance claim",
+  "frozen_policy": {
+    "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+    "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+    "finetuning_used": false,
+    "denoising_steps": 1,
+    "value_used": false,
+    "privileged_runtime_state_used": false,
+    "scheduler_or_threshold_used": false,
+    "hidden_activation_patch_used": false
+  },
+  "routes": {
+    "F1": "full current camera preprocessing and VAE encoding",
+    "P1": "previous generated latent with camera preprocessing bypass",
+    "PV0": "P1 plus native 13-frame current visual prefix, condition arrival before forward 0"
+  },
+  "portable_inputs": {
+    "state_key": "9f535f7df63f9ab01464446ce09afa6dbf5146f9b9460bb08ccc73f9c85a45d8:req1",
+    "collection_root": "/data/rxhuang/wam_full_scale_server/queue_a/f1_collection",
+    "manifest": "reports/server_deep_validation/manifests/full_scale_40_task.jsonl",
+    "runner": "experiments/server_deep_validation/run_native_persistent_condition_preflight.py",
+    "repeats": 100,
+    "warmup": 10,
+    "order": "runner rotates F1/P1/PV0 each repeat"
+  },
+  "must_record": [
+    "wall latency per route",
+    "camera preprocessing latency",
+    "VAE/prefix encode latency where instrumented",
+    "model_generate_inclusive latency",
+    "peak allocated/reserved GPU memory",
+    "P1-to-F1 and PV0-to-F1 action recovery",
+    "software/device/clock/power provenance"
+  ],
+  "desktop_reference_only": {
+    "device": "NVIDIA GeForce RTX 4090 D",
+    "p50_wall_ms": {
+      "F1": 199.3064023554325,
+      "P1": 70.88933326303959,
+      "PV0": 131.39414601027966
+    },
+    "action_recovery_median": 0.9980933176507921,
+    "warning": "These are 4090 measurements and must not be reported as Thor results."
+  },
+  "prefix_vae_audit": {
+    "artifact": "PREFIX_VAE_ARCHITECTURE_AUDIT.json",
+    "source_audit_status": "PASS"
+  }
+}

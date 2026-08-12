@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "experiment": "PV0_prefix_VAE_architecture_audit",
+  "status": "PASS_STATIC_INTERFACE_AUDIT",
+  "scope": "source/interface audit only; no new model run or architecture search",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "denoising_steps": 1,
+  "value_used": false,
+  "training_used": false,
+  "hidden_activation_patch_used": false,
+  "native_interface": "get_action:persistent_visual_correction_prefix_frames",
+  "temporal_vae": {
+    "compression_factor": 4,
+    "raw_prefix_frames": 13,
+    "why_13": "1 structural blank frame + 4 duplicated proprio frames + 4 duplicated wrist-camera frames + 4 duplicated primary-camera frames.",
+    "encoded_prefix_latent_slots": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "current_visual_latent_slots_replaced": [
+      2,
+      3
+    ],
+    "unchanged_from_previous_generated_latent": [
+      1,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "slot_layout": [
+      "0: structural blank",
+      "1: current proprio",
+      "2: current wrist image",
+      "3: current primary image",
+      "4: action chunk",
+      "5: future proprio",
+      "6: future wrist image",
+      "7: future primary image",
+      "8: value slot (never read by this experiment)"
+    ]
+  },
+  "runtime_semantics": {
+    "bootstrap": "F1 encodes current cameras normally.",
+    "followup_start": "P1/PV0 clone the previous generated joint latent as the sampling/condition basis.",
+    "pv0_correction": "PV0 preprocesses current cameras, VAE-encodes only the 13-frame causal prefix, selects visual slots 2/3, and copies them into the persistent condition before denoiser forward 0.",
+    "denoiser_forwards": 1,
+    "not_used": [
+      "Cosmos value output",
+      "simulator state as a runtime policy input",
+      "hidden activation patch",
+      "learned correction head",
+      "scheduler/threshold",
+      "dynamic denoising"
+    ]
+  },
+  "source_audit": {
+    "status": "PASS",
+    "source_files": {
+      "cosmos_policy/experiments/robot/cosmos_utils.py": {
+        "sha256": "a5a7f63d3d442b07b06552cdec3798ff827342d3b9da0cc6e784875bdb350d70"
+      },
+      "cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py": {
+        "sha256": "bc899ae32960e2805cd6707242fbb5423e8ffe9d9a35623b8c3d99b6466714a5"
+      },
+      "cosmos_policy/models/policy_video2world_model.py": {
+        "sha256": "0d7a81f6dfb6b886ae29fd94201847f741cc3c5b3ed68a4c82d71c65669262f7"
+      },
+      "adapters/cosmos_adapter.py": {
+        "sha256": "bf19b5e4dc5406a8219f3e5f86c266bcc6f434fcb3fb53cd1ede46d5386fcf02"
+      }
+    },
+    "source_locations": {
+      "temporal_compression_factor": {
+        "path": "cosmos_policy/experiments/robot/cosmos_utils.py",
+        "line": 52
+      },
+      "prefix_slice_encode": {
+        "path": "cosmos_policy/experiments/robot/cosmos_utils.py",
+        "line": 1364
+      },
+      "condition_slot_replace": {
+        "path": "cosmos_policy/experiments/robot/cosmos_utils.py",
+        "line": 1317
+      },
+      "one_forward_arrival": {
+        "path": "adapters/cosmos_adapter.py",
+        "line": 233
+      },
+      "condition_transform_hook": {
+        "path": "cosmos_policy/models/policy_video2world_model.py",
+        "line": 787
+      },
+      "state_layout": {
+        "path": "cosmos_policy/config/experiment/cosmos_policy_experiment_configs.py",
+        "line": 129
+      }
+    }
+  }
+}
