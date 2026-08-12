@@ -1,0 +1,6 @@
+{
+  "no_e11b_simulator_steps_or_labels": true,
+  "primary_target": "R_commit=max_K D_M(K), K={H/4,H/2,3H/4}; remaining original action A_orig[K:K+M] versus fresh action from identical state s(t+K).",
+  "status": "NOT_RUN_AFTER_E11A_ROUTE_TRANSFER_FAILURE",
+  "temporal_alignment": "LEGAL BY DESIGN, but E11-B is not authorized because its primary anchor S would be an unvalidated F1-route transfer."
+}

@@ -1,0 +1,4 @@
+{
+  "basis": "Cannot make a causal F1-anchor commitment decision with a P1-only score; E11-B was not run.",
+  "status": "SEMANTIC_COMMITMENT_NO_GO"
+}

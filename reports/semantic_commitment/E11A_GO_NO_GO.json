@@ -1,0 +1,9 @@
+{
+  "artifact_reconstruction": "PASS",
+  "frozen_score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+  "native_runtime": "WEAK_PRELIMINARY",
+  "no_reselection_or_refit": true,
+  "no_validation_or_heldout_e11_results_read": true,
+  "route_transfer": "FAIL",
+  "status": "E11A_NO_GO_FOR_COMMITMENT"
+}

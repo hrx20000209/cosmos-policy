@@ -1,0 +1,43 @@
+{
+  "decision_type": "E11-A route-transfer gate failure; not a negative result on the legally defined remaining-plan oracle.",
+  "e11b": "NOT_RUN",
+  "e11c": "NOT_RUN",
+  "frozen_artifact": "PASS: 89 features, 352 discovery+validation E4 rows, max reconstruction error 3.15e-14.",
+  "heldout_e11_touched": false,
+  "next_step": "Do not implement E12. A future study would need a separately validated F1-route semantic estimator, frozen before touching the still-clean E11 validation/heldout tasks.",
+  "route_transfer": {
+    "decision": "P1_ONLY_SENSITIVITY",
+    "s_f1_vs_s_p1_spearman": 0.9552785923753665,
+    "s_f1_vs_target_task_balanced_spearman": 0.175,
+    "s_p1_vs_target_task_balanced_spearman": 0.35
+  },
+  "runtime": {
+    "action_max_error": 0.0,
+    "checkpoint": {
+      "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+      "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+      "finetuning_used": false
+    },
+    "gpu": {
+      "free_before_mib": 21020.4375,
+      "memory_fraction_cap": 0.4,
+      "name": "NVIDIA GeForce RTX 4090 D",
+      "physical_gpu": "6",
+      "total_mib": 24111.0625,
+      "visible_device": 0
+    },
+    "incremental_ms_vs_baseline": 7.4427642822265625,
+    "interpretation": "Action invariance passed. Native GPU score uses a different floating summation order and exceeded the preflight 1e-5 absolute tolerance by 7.54e-7; it did not reduce median latency in this 20-repeat preflight. No formal 100-repeat runtime claim is made.",
+    "repeats": 20,
+    "score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+    "score_max_abs_error": 1.075368010994282e-05,
+    "states": 12,
+    "status": "E11A_RUNTIME_WEAK_PRELIMINARY",
+    "timing_median_ms": {
+      "native_e11a_cuda_ms": 85.05132675170898,
+      "original_e4_cuda_ms": 84.4410400390625,
+      "p1_baseline_cuda_ms": 77.60856246948242
+    }
+  },
+  "status": "SEMANTIC_COMMITMENT_NO_GO"
+}

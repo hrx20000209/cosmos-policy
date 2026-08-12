@@ -1,0 +1,15 @@
+{
+  "H_actions": 16,
+  "branch": "research/pv0-closed-loop-feedback-20260812",
+  "checkpoint": "semantic_risk E4 INTERNAL_PLUS_ACTION",
+  "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+  "control_frequency_hz": 20.0,
+  "denoising_steps": 1,
+  "dirty_status": "?? artifacts/\n?? experiments/semantic_commitment/\n?? logs/esp/\n?? logs/semantic_commitment_e11a_native_gpu6.log\n?? logs/semantic_commitment_e11a_native_gpu6_egl.log\n?? logs/semantic_commitment_e11a_native_gpu6_egl2.log\n?? logs/semantic_commitment_e11a_route_transfer.log\n?? logs/semantic_commitment_e11a_route_transfer_gpu2.log\n?? logs/semantic_commitment_e11a_route_transfer_gpu5.log\n?? logs/semantic_commitment_e11a_route_transfer_gpu5_egl.log\n?? logs/semantic_risk/",
+  "finetuning_used": false,
+  "git_sha": "ef8728718f417cc0046dc062a0974bf362f90580",
+  "schema_version": 1,
+  "seeds": "existing manifest seed 195; E11-A discovery-only preflight",
+  "simulator": "LIBERO-PRO OffScreenRenderEnv via EGL",
+  "value_used": false
+}

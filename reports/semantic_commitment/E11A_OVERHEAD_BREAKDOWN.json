@@ -1,0 +1,14 @@
+{
+  "instrumentation_facts": [
+    "Original route extracts 84 summaries through Python loop + .detach().cpu().tolist() after timing; action geometry/ridge are host-side.",
+    "Native preflight fuses each block's 12 weighted terms into one scalar reducer output but retains all 89 features and exact expm1 score transform."
+  ],
+  "native_preflight": {
+    "native_e11a_cuda_ms": 85.05132675170898,
+    "original_e4_cuda_ms": 84.4410400390625,
+    "p1_baseline_cuda_ms": 77.60856246948242
+  },
+  "not_completed": "Per-component CUDA kernel/D2H decomposition and 100-repeat clean-GPU profile were not run because the required F1 route-transfer gate failed before E11-B.",
+  "original_e4_incremental_ms": 5.253425598144531,
+  "status": "PRELIMINARY_ONLY"
+}

@@ -1,0 +1,43 @@
+{
+  "artifact": "artifacts/semantic_commitment/e11a_route_transfer.parquet",
+  "checkpoint": {
+    "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+    "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+    "finetuning_used": false
+  },
+  "consequence": "The frozen E4 score may not be applied to an F1-generated action chunk as S_anchor for semantic commitment.",
+  "distribution": {
+    "s_f1": {
+      "mean": 2.0677916534021206,
+      "p05": 0.4038656251163315,
+      "p95": 5.401789110811262,
+      "std": 1.5565520162976922
+    },
+    "s_p1": {
+      "mean": 1.8494680433470119,
+      "p05": 0.4104735266898,
+      "p95": 4.6171146874692806,
+      "std": 1.343303862511188
+    }
+  },
+  "gate": "FAIL: S_F1 task-balanced rho=0.175 < preregistered 0.50 route-transfer gate. P1 score correlation with the retrospective target is 0.350 in this small discovery preflight.",
+  "gpu": {
+    "free_before_mib": 13591.6875,
+    "memory_fraction_cap": 0.4,
+    "name": "NVIDIA GeForce RTX 4090 D",
+    "physical_gpu": "5",
+    "total_mib": 24111.0625,
+    "visible_device": 0
+  },
+  "per_task": 4,
+  "phase": "E11A_ROUTE_TRANSFER_PREFLIGHT",
+  "route_transfer_status": "PENDING_PREDEFINED_GATE: requires >=0.5 F1 target rho and non-negative F1/P1 score consistency before E11B expansion",
+  "route_validity": "P1_ONLY_SENSITIVITY",
+  "s_f1_vs_s_p1_spearman": 0.9552785923753665,
+  "s_f1_vs_target_task_balanced_spearman": 0.175,
+  "s_p1_vs_target_task_balanced_spearman": 0.35,
+  "score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+  "states": 32,
+  "status": "PASS",
+  "tasks": 8
+}
