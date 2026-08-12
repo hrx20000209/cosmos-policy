@@ -1,0 +1,409 @@
+{
+  "checkpoint": {
+    "contract": "original pre-finetune LIBERO checkpoint only; deny SO101/finetuned paths; denoise=1; value unused; no training.",
+    "dataset_stats": "/data/rxhuang/models/cosmos-policy-libero-2b/libero_dataset_statistics.json",
+    "path": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+    "sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+    "t5_embeddings": "/data/rxhuang/wam_libero_outputs/cosmos_denoising_full_sweep/assets/cosmos_libero_pro_t5_embeddings.pkl"
+  },
+  "do_not_touch": [
+    "E11 validation tasks and heldout tasks in TASK_SPLIT_E11.json: untouched clean confirmation resource.",
+    "FROZEN_SENSITIVITY_MODEL.json and prior formal result tables: do not modify/refit/reselect in place.",
+    "Original checkpoint and original state banks: never overwrite or replace with SO101/finetuned checkpoint.",
+    "Existing NO-GO branches: ESP/camera scheduler, E5 main estimator, S×I, illegal K!=16 age labels, P1 E4 score at F1 anchor, action/hidden/x0 patch, fixed R3+ final method, denoise scheduler/value/deep scheduler.",
+    "Untracked artifacts/ and logs/: user/run artifacts; preserve, do not add/delete blindly. Logs include failed E11-A OSMesa/OOM attempts and successful EGL records."
+  ],
+  "e11": {
+    "e11b_e11c": "NOT RUN; zero E11 validation/heldout outcome reads.",
+    "final_decision": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/SEMANTIC_COMMITMENT_FINAL_DECISION.json",
+    "raw_preflight": "/home/rxhuang/Projects/cosmos-policy/artifacts/semantic_commitment/e11a_route_transfer.parquet",
+    "report": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/SEMANTIC_COMMITMENT_SERVER_REPORT_ZH.md",
+    "result": {
+      "decision_type": "E11-A route-transfer gate failure; not a negative result on the legally defined remaining-plan oracle.",
+      "e11b": "NOT_RUN",
+      "e11c": "NOT_RUN",
+      "frozen_artifact": "PASS: 89 features, 352 discovery+validation E4 rows, max reconstruction error 3.15e-14.",
+      "heldout_e11_touched": false,
+      "next_step": "Do not implement E12. A future study would need a separately validated F1-route semantic estimator, frozen before touching the still-clean E11 validation/heldout tasks.",
+      "route_transfer": {
+        "decision": "P1_ONLY_SENSITIVITY",
+        "s_f1_vs_s_p1_spearman": 0.9552785923753665,
+        "s_f1_vs_target_task_balanced_spearman": 0.175,
+        "s_p1_vs_target_task_balanced_spearman": 0.35
+      },
+      "runtime": {
+        "action_max_error": 0.0,
+        "checkpoint": {
+          "checkpoint": "/data/rxhuang/models/cosmos-policy-libero-2b/Cosmos-Policy-LIBERO-Predict2-2B.pt",
+          "checkpoint_sha256": "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2",
+          "finetuning_used": false
+        },
+        "gpu": {
+          "free_before_mib": 21020.4375,
+          "memory_fraction_cap": 0.4,
+          "name": "NVIDIA GeForce RTX 4090 D",
+          "physical_gpu": "6",
+          "total_mib": 24111.0625,
+          "visible_device": 0
+        },
+        "incremental_ms_vs_baseline": 7.4427642822265625,
+        "interpretation": "Action invariance passed. Native GPU score uses a different floating summation order and exceeded the preflight 1e-5 absolute tolerance by 7.54e-7; it did not reduce median latency in this 20-repeat preflight. No formal 100-repeat runtime claim is made.",
+        "repeats": 20,
+        "score_checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+        "score_max_abs_error": 1.075368010994282e-05,
+        "states": 12,
+        "status": "E11A_RUNTIME_WEAK_PRELIMINARY",
+        "timing_median_ms": {
+          "native_e11a_cuda_ms": 85.05132675170898,
+          "original_e4_cuda_ms": 84.4410400390625,
+          "p1_baseline_cuda_ms": 77.60856246948242
+        }
+      },
+      "status": "SEMANTIC_COMMITMENT_NO_GO"
+    },
+    "route_transfer": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/E11A_ROUTE_TRANSFER.json",
+    "runtime": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/E11A_RUNTIME_RESULT.json"
+  },
+  "environment": {
+    "cuda": "12.8",
+    "driver": "560.35.03",
+    "gpus": "8 x NVIDIA GeForce RTX 4090 D, 24564 MiB each",
+    "os": "Ubuntu 22.04 kernel 6.8.0-110-generic (host user-ESC8000A-E11)",
+    "python": "/home/rxhuang/Projects/cosmos-policy/.venv/bin/python",
+    "python_version": "3.10.12",
+    "requirements": [
+      "/home/rxhuang/Projects/cosmos-policy/pyproject.toml",
+      "/home/rxhuang/Projects/cosmos-policy/cosmos_policy/requirements.txt",
+      "/home/rxhuang/Projects/cosmos-policy/cosmos_policy/pyproject.toml"
+    ],
+    "runtime_note": "GPU availability is dynamic. Query nvidia-smi immediately before jobs; a model worker needs about 6 GB allocated but sharing can still OOM because of per-process 40% memory caps and fragmentation.",
+    "startup": [
+      "cd /home/rxhuang/Projects/cosmos-policy",
+      "source .venv/bin/activate",
+      "export PYTHONPATH=.",
+      "export HF_HOME=/data/hf_cache",
+      "export HF_HUB_OFFLINE=1",
+      "# For headless simulator workers on this server, explicit EGL succeeded whereas the helper default OSMesa failed in E11-A:",
+      "export MUJOCO_GL=egl PYOPENGL_PLATFORM=egl __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json",
+      "# Set CUDA_VISIBLE_DEVICES and EVAL_PHYSICAL_GPU to the same chosen physical GPU; do not kill other users' processes."
+    ],
+    "torch": "2.7.0+cu128",
+    "venv": "/home/rxhuang/Projects/cosmos-policy/.venv"
+  },
+  "generated_for": "Claude Code execution handoff; read/inspect/document context only",
+  "generated_from_commit": "95f1c265354921bc22435158f469f81ffc0d490a",
+  "model_contract": {
+    "action_shape": [
+      16,
+      7
+    ],
+    "blocks": 28,
+    "hidden_dimension": 2048,
+    "inference": [
+      "/home/rxhuang/Projects/cosmos-policy/cosmos_policy/experiments/robot/cosmos_utils.py::get_action",
+      "/home/rxhuang/Projects/cosmos-policy/cosmos_policy/models/policy_video2world_model.py::CosmosPolicyVideo2WorldModel",
+      "/home/rxhuang/Projects/cosmos-policy/cosmos_policy/_src/predict2/networks/minimal_v4_dit.py::MiniTrainDIT.forward"
+    ],
+    "model_load": [
+      "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/pv0_overnight_common.py::build_model",
+      "/home/rxhuang/Projects/cosmos-policy/experiments/progressive_wam/run_p1_trajectory_dump.py::load_model",
+      "/home/rxhuang/Projects/cosmos-policy/cosmos_policy/experiments/robot/cosmos_utils.py::get_model"
+    ],
+    "precision": "BF16 weights (runtime audit); action output float32 numpy after extraction/unnormalization",
+    "slots": {
+      "0": "temporal VAE leading placeholder",
+      "1": "current proprio",
+      "2": "current wrist image",
+      "3": "current primary image",
+      "4": "action chunk",
+      "5": "future proprio",
+      "6": "future wrist image",
+      "7": "future primary image",
+      "8": "value (structurally present; never read)"
+    },
+    "temporal_contract": "H=16. Dataset builds future target via next_relative_step_idx = relative_step_idx + chunk_size; chunk_size=16. z_hat future slots and A[0:16] both target t+16."
+  },
+  "reports": [
+    {
+      "decision": "mechanism GO; universal Fresh replacement NO-GO",
+      "experiment": "PV0 full-scale / 600 route episodes",
+      "raw": "/data/rxhuang/wam_server_deep_validation and /data/rxhuang/wam_full_scale_server",
+      "report": "/home/rxhuang/Projects/cosmos-policy/reports/pv0_overnight/FINAL_PV0_REPORT_ZH.md",
+      "split": "/home/rxhuang/Projects/cosmos-policy/reports/pv0_overnight/manifests/foundation_v2_state_index.jsonl"
+    },
+    {
+      "decision": "fixed R2 candidate only; adaptive feedback NO-GO",
+      "experiment": "fixed R1/R2/R3 + matched stale/execution feedback",
+      "raw": "/home/rxhuang/Projects/cosmos-policy/reports/pv0_execution_feedback",
+      "report": "/home/rxhuang/Projects/cosmos-policy/reports/pv0_execution_feedback/fixed_reuse_pilot/FIXED_REUSE_PILOT_REPORT_ZH.md",
+      "split": "experiment-local manifests/reports"
+    },
+    {
+      "decision": "ESP_NO_GO",
+      "experiment": "ESP E1/E2/E3",
+      "raw": "/home/rxhuang/Projects/cosmos-policy/reports/esp/shards",
+      "report": "/home/rxhuang/Projects/cosmos-policy/reports/esp/ESP_SERVER_REPORT_ZH.md",
+      "split": "/home/rxhuang/Projects/cosmos-policy/reports/esp/TASK_SPLIT.json"
+    },
+    {
+      "decision": "SEMANTIC_RISK_NO_GO",
+      "experiment": "Semantic risk E4/E5/E6",
+      "raw": "/home/rxhuang/Projects/cosmos-policy/artifacts/semantic_risk/e4_e5_e6_raw.parquet",
+      "report": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_risk/SEMANTIC_RISK_SERVER_REPORT_ZH.md",
+      "split": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_risk/TASK_SPLIT.json"
+    },
+    {
+      "decision": "SENSITIVITY_HORIZON_NO_GO: invalid age sweep",
+      "experiment": "Sensitivity horizon E8/E9/E10",
+      "raw": "none; formal samples=0",
+      "report": "/home/rxhuang/Projects/cosmos-policy/reports/sensitivity_horizon/SENSITIVITY_HORIZON_SERVER_REPORT_ZH.md",
+      "split": "/home/rxhuang/Projects/cosmos-policy/reports/sensitivity_horizon/TASK_SPLIT_E8.json"
+    },
+    {
+      "decision": "SEMANTIC_COMMITMENT_NO_GO at F1 route-transfer gate",
+      "experiment": "Semantic commitment E11",
+      "raw": "/home/rxhuang/Projects/cosmos-policy/artifacts/semantic_commitment/e11a_route_transfer.parquet",
+      "report": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/SEMANTIC_COMMITMENT_SERVER_REPORT_ZH.md",
+      "split": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/TASK_SPLIT_E11.json"
+    }
+  ],
+  "repos": [
+    {
+      "branch": "research/pv0-closed-loop-feedback-20260812",
+      "dirty_status": "?? artifacts/\n?? experiments/handoff/\n?? logs/esp/\n?? logs/semantic_commitment_e11a_native_gpu6.log\n?? logs/semantic_commitment_e11a_native_gpu6_egl.log\n?? logs/semantic_commitment_e11a_native_gpu6_egl2.log\n?? logs/semantic_commitment_e11a_route_transfer.log\n?? logs/semantic_commitment_e11a_route_transfer_gpu2.log\n?? logs/semantic_commitment_e11a_route_transfer_gpu5.log\n?? logs/semantic_commitment_e11a_route_transfer_gpu5_egl.log\n?? logs/semantic_risk/",
+      "path": "/home/rxhuang/Projects/cosmos-policy",
+      "remote": "git@github.com:hrx20000209/cosmos-policy.git",
+      "role": "main Cosmos WAM repo",
+      "sha": "95f1c265354921bc22435158f469f81ffc0d490a"
+    },
+    {
+      "branch": "master",
+      "path": "/data/rxhuang/repos/LIBERO-PRO",
+      "remote": "https://github.com/Zxy-MLlab/LIBERO-PRO.git",
+      "role": "active LIBERO-PRO checkout selected by state-bank rows",
+      "sha": "eafdb809426b13153aa1e4c42d6601844217dfec"
+    },
+    {
+      "branch": "master",
+      "path": "/home/rxhuang/Projects/LIBERO",
+      "remote": "https://github.com/Lifelong-Robot-Learning/LIBERO.git",
+      "role": "additional LIBERO checkout",
+      "sha": "8f1084e3132a39270c3a13ebe37270a43ece2a01"
+    }
+  ],
+  "routes": {
+    "F1": "fresh current RGB/proprio; skip_vae_encoding=False; previous_generated_latent=None; after infer sets previous_real_latent and always replaces previous_generated_latent with new generated latent.",
+    "P1": "closed_loop_mode=predicted_reuse; previous_generated_latent is cloned and slots 6/7 copied to current slots 2/3 by _predicted_visual_latent; skip VAE/camera preprocessing; after infer replaces previous_generated_latent.",
+    "PV0": "closed_loop_mode=native_persistent (or pv0_r*); prior generated latent base plus persistent_visual_correction_prefix_frames=13; fresh current visual slots arrive before sole denoiser forward; last_physical_condition_latent set from result persistent_condition_latent; generated cache replaced afterwards.",
+    "STALE": "closed_loop_mode=stale_r2; uses last_physical_condition_latent on stale phases rather than future slots; state set by prior native_persistent route.",
+    "entry": "/home/rxhuang/Projects/cosmos-policy/adapters/cosmos_adapter.py::CosmosAdapter._visual_input_for_request / infer",
+    "shadow": "CosmosAdapter.infer_shadow_validity_labels invokes get_action directly for F1/P1/PV0 using fixed adapter seed and does not update adapter cache fields; it is retrospective/offline only."
+  },
+  "safe_commands": [
+    "cd /home/rxhuang/Projects/cosmos-policy && source .venv/bin/activate && export PYTHONPATH=.",
+    "git status --short && git log -12 --oneline && git branch --show-current",
+    "nvidia-smi --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader",
+    "sed -n \"1,240p\" reports/handoff/CLAUDE_CODE_HANDOFF.md",
+    "python -m py_compile experiments/semantic_commitment/*.py  # syntax only; no inference",
+    "PYTHONPATH=. .venv/bin/python experiments/semantic_commitment/freeze_sensitivity.py  # deterministic E4 artifact reconstruction; rewrites frozen JSON with same contents; NOT needed during handoff",
+    "# Do not run model/simulator smoke or formal runners until a new research protocol explicitly authorizes it."
+  ],
+  "schema_version": 1,
+  "scripts": [
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/progressive_wam/run_p2_oracle.py::restore",
+      "purpose": "restore MuJoCo/controller state safely"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/esp/run_e2_e3_pilot_shard.py::load_request/render",
+      "purpose": "replay a recorded request and render observation"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/run_server_f1_collection.py::collect_episode",
+      "purpose": "state capture"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/pv0_overnight_common.py::route_contract/run_route",
+      "purpose": "route primitive/contracts"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/run_pv0_closed_loop_episode.py",
+      "purpose": "closed-loop runner and trace contract"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/pv0_overnight_supervisor.py",
+      "purpose": "multi-GPU PV0 supervisor"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/pv0_fixed_reuse_pilot_supervisor.py",
+      "purpose": "fixed reuse supervisor"
+    },
+    {
+      "path": "/home/rxhuang/Projects/cosmos-policy/experiments/esp/run_esp_smoke.py",
+      "purpose": "existing ESP smoke (NOT RUN during handoff)"
+    }
+  ],
+  "semantic_sensitivity": {
+    "checksum": "3299a5ec2308f990ff68e6f80f2d28ca922b4aef8c72c2f708da139bd6745d4b",
+    "extractor": "/home/rxhuang/Projects/cosmos-policy/experiments/semantic_risk/run_semantic_shard.py::run_route/reducer/action_geometry",
+    "feature_order_source": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/FROZEN_SENSITIVITY_MODEL.json::feature_names",
+    "features": 89,
+    "fit": "/home/rxhuang/Projects/cosmos-policy/experiments/semantic_risk/analyze_semantic_risk.py::fit_predict",
+    "frozen_model": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/FROZEN_SENSITIVITY_MODEL.json",
+    "reconstruction": "/home/rxhuang/Projects/cosmos-policy/experiments/semantic_commitment/freeze_sensitivity.py",
+    "route_validity": "P1_ONLY_SENSITIVITY for commitment. Do not apply it at F1 anchor without a new discovery protocol.",
+    "target": "log1p(causal_sensitivity_target), ridge lambda=10, original post-selection refit on E4 discovery+validation (352 rows), output expm1(linear)."
+  },
+  "state_banks": [
+    {
+      "name": "Foundation V2 registry",
+      "path": "/home/rxhuang/Projects/cosmos-policy/reports/pv0_overnight/manifests/foundation_v2_state_index.jsonl",
+      "rows": 3801,
+      "schema": "state_key, episode_key, source/target request indices, sim-state-bearing collection episode, init path/index, instruction, seed, task_uid; source/target aligned 16 actions.",
+      "tasks": 40
+    },
+    {
+      "name": "Semantic-risk bank",
+      "path": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_risk/SEMANTIC_RISK_STATE_BANK.jsonl",
+      "rows": 512,
+      "status": "prior formal E4/E5/E6 resource; do not reuse as pristine confirmation",
+      "tasks": 16
+    },
+    {
+      "name": "E11 A discovery rows",
+      "path": "/home/rxhuang/Projects/cosmos-policy/artifacts/semantic_commitment/e11a_route_transfer.parquet",
+      "rows": 32,
+      "status": "new E11 discovery only; contains F1/P1 preflight scores and retrospective t+16 target.",
+      "tasks": 8
+    },
+    {
+      "name": "F1 collection episode bundles",
+      "path": "/data/rxhuang/wam_full_scale_server/queue_a/f1_collection",
+      "schema": "*.pt has requests entries including sim_state, fresh_action, generated_latent, control_step, state_key; raw simulator state is replay-only, never policy input."
+    }
+  ],
+  "task_splits": {
+    "e11_clean": {
+      "discovery_status": "E11-A preflight used 32 states from these 8 tasks. May be used for future discovery only under a new protocol.",
+      "heldout_status": "UNTOUCHED by E8/E11; do not read outcomes or use design.",
+      "path": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/TASK_SPLIT_E11.json",
+      "splits": {
+        "discovery": [
+          "libero_10:KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it",
+          "libero_10:KITCHEN_SCENE4_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it",
+          "libero_10:LIVING_ROOM_SCENE1_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket",
+          "libero_10:LIVING_ROOM_SCENE2_put_both_the_cream_cheese_box_and_the_butter_in_the_basket",
+          "libero_10:LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate",
+          "libero_10:LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate",
+          "libero_10:STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy",
+          "libero_goal:open_the_top_drawer_and_put_the_bowl_inside"
+        ],
+        "heldout": [
+          "libero_object:pick_up_the_salad_dressing_and_place_it_in_the_basket",
+          "libero_spatial:pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate",
+          "libero_spatial:pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate",
+          "libero_spatial:pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_the_plate",
+          "libero_spatial:pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate",
+          "libero_spatial:pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate",
+          "libero_spatial:pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate",
+          "libero_spatial:pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate"
+        ],
+        "validation": [
+          "libero_goal:push_the_plate_to_the_front_of_the_stove",
+          "libero_goal:put_the_bowl_on_the_stove",
+          "libero_goal:put_the_cream_cheese_in_the_bowl",
+          "libero_goal:put_the_wine_bottle_on_the_rack",
+          "libero_object:pick_up_the_bbq_sauce_and_place_it_in_the_basket",
+          "libero_object:pick_up_the_butter_and_place_it_in_the_basket",
+          "libero_object:pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+          "libero_object:pick_up_the_ketchup_and_place_it_in_the_basket"
+        ]
+      },
+      "validation_status": "UNTOUCHED by E8/E11; do not read outcomes or use design."
+    },
+    "esp": {
+      "path": "/home/rxhuang/Projects/cosmos-policy/reports/esp/TASK_SPLIT.json",
+      "splits": {
+        "discovery": [
+          "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket",
+          "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it",
+          "libero_goal:put_the_bowl_on_the_plate",
+          "libero_goal:open_the_middle_drawer_of_the_cabinet"
+        ],
+        "heldout": [
+          "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket",
+          "libero_goal:turn_on_the_stove",
+          "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet",
+          "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate"
+        ],
+        "validation": [
+          "libero_goal:put_the_bowl_on_top_of_the_cabinet",
+          "libero_object:pick_up_the_milk_and_place_it_in_the_basket",
+          "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate",
+          "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket"
+        ]
+      }
+    },
+    "semantic_risk": {
+      "path": "/home/rxhuang/Projects/cosmos-policy/reports/semantic_risk/TASK_SPLIT.json",
+      "splits": {
+        "discovery": [
+          "libero_object:pick_up_the_cream_cheese_and_place_it_in_the_basket",
+          "libero_10:KITCHEN_SCENE6_put_the_yellow_and_white_mug_in_the_microwave_and_close_it",
+          "libero_goal:put_the_bowl_on_the_plate",
+          "libero_goal:open_the_middle_drawer_of_the_cabinet",
+          "libero_object:pick_up_the_alphabet_soup_and_place_it_in_the_basket",
+          "libero_10:KITCHEN_SCENE8_put_both_moka_pots_on_the_stove"
+        ],
+        "heldout": [
+          "libero_object:pick_up_the_orange_juice_and_place_it_in_the_basket",
+          "libero_goal:turn_on_the_stove",
+          "libero_goal:put_the_wine_bottle_on_top_of_the_cabinet",
+          "libero_spatial:pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate",
+          "libero_object:pick_up_the_tomato_sauce_and_place_it_in_the_basket"
+        ],
+        "validation": [
+          "libero_goal:put_the_bowl_on_top_of_the_cabinet",
+          "libero_object:pick_up_the_milk_and_place_it_in_the_basket",
+          "libero_spatial:pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate",
+          "libero_10:LIVING_ROOM_SCENE2_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket",
+          "libero_spatial:pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate"
+        ]
+      }
+    }
+  },
+  "unknowns": [
+    {
+      "evidence_paths": [
+        "/home/rxhuang/Projects/cosmos-policy/experiments/libero_harness.py",
+        "/home/rxhuang/Projects/cosmos-policy/experiments/server_deep_validation/server_sweep.yaml"
+      ],
+      "question": "Exact physical simulator control dt, distinct from logical control_frequency_hz=20 and video fps metadata.",
+      "status": "[REQUIRES_RUNTIME_VERIFICATION or source-level simulator audit]"
+    },
+    {
+      "evidence_paths": [
+        "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/E11A_ROUTE_TRANSFER.json",
+        "/home/rxhuang/Projects/cosmos-policy/artifacts/semantic_commitment/e11a_route_transfer.parquet"
+      ],
+      "question": "Whether an independently designed F1-route internal signal can be made valid for a future commitment protocol.",
+      "status": "not answered; must remain discovery-only before touching E11 validation/heldout"
+    },
+    {
+      "evidence_paths": [
+        "/home/rxhuang/Projects/cosmos-policy/reports/semantic_commitment/E11A_ROUTE_TRANSFER.json",
+        "/home/rxhuang/Projects/cosmos-policy/experiments/semantic_commitment/run_e11a_route_transfer.py"
+      ],
+      "question": "Where/why F1 and P1 score-target calibration differs despite S_F1/S_P1 rank rho 0.955.",
+      "status": "observed only; no causal explanation established"
+    },
+    {
+      "evidence_paths": [
+        "/home/rxhuang/Projects/cosmos-policy/reports/semantic_risk/E4_COST_RESULT.json",
+        "/home/rxhuang/Projects/cosmos-policy/experiments/semantic_risk/profile_e4_hook.py"
+      ],
+      "question": "Exact component-level kernel/D2H attribution of the original 5.25 ms E4 overhead.",
+      "status": "not completed; do not infer from 20-repeat native preflight"
+    }
+  ]
+}
