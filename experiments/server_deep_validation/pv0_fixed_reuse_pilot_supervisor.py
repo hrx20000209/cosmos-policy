@@ -22,7 +22,11 @@ REPO = Path(__file__).resolve().parents[2]
 # ``native_persistent`` is R0 (PV0 always); do not run its identical alias
 # ``pv0_r0`` as a redundant episode.
 ROUTES = ("fresh", "native_persistent", "pv0_r1", "pv0_r2", "pv0_r3")
-REQUIRED_FREE_MIB, RESERVE_MIB = 13_500, 3_000
+# Empirical telemetry preflight for this exact frozen 2B/denoise=1 worker
+# reached about 14.0 GiB peak.  On a shared card, 14.5 GiB free leaves a
+# measured 0.5 GiB model margin plus ~0.4 GiB scheduler margin.  This admits
+# correctness shards on partially occupied GPUs without relying on utilization.
+REQUIRED_FREE_MIB, RESERVE_MIB = 14_000, 500
 
 
 def atomic_json(path: Path, data: dict) -> None:
