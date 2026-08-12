@@ -32,6 +32,9 @@ FEATURES = (
     "planned_action_norm",
     "planned_action_jerk",
 )
+PHYSICAL_SCORE_FEATURES = tuple(
+    feature for feature in FEATURES if feature not in {"prediction_age_actions", "reuse_depth"}
+)
 CHECKPOINT_SHA256 = "8818528d8c9150cda0ddf8c711b0f221b21dac8ac379bd26d5690235954d33e2"
 
 
@@ -196,29 +199,34 @@ def load_rows(episodes: Path, window: int) -> list[dict[str, Any]]:
 
 
 def learn_linear_score(discovery: list[dict[str, Any]]) -> tuple[dict[str, float], dict[str, float]]:
-    x = np.asarray([[row[name] for name in FEATURES] for row in discovery], dtype=np.float64)
+    """Fit only physical execution features; age/depth remain explicit baselines."""
+    x = np.asarray([[row[name] for name in PHYSICAL_SCORE_FEATURES] for row in discovery], dtype=np.float64)
     y = np.asarray([row["p1_risk"] for row in discovery], dtype=np.float64)
     medians = np.nanmedian(x, axis=0)
+    # Some short-window signals, notably a chunk boundary, can be unavailable
+    # at every decision in a fixed 16-action prefix.  A frozen neutral fill
+    # retains the feature schema without manufacturing a risk signal.
+    medians = np.where(np.isfinite(medians), medians, 0.0)
     x = np.where(np.isfinite(x), x, medians)
     means, scales = x.mean(axis=0), x.std(axis=0)
     scales = np.where(scales > EPS, scales, 1.0)
     z = (x - means) / scales
     weights = np.linalg.solve(z.T @ z + 1e-3 * np.eye(z.shape[1]), z.T @ y)
     return (
-        {name: float(weight) for name, weight in zip(FEATURES, weights)},
-        {name: float(value) for name, value in zip(FEATURES, medians)},
+        {name: float(weight) for name, weight in zip(PHYSICAL_SCORE_FEATURES, weights)},
+        {name: float(value) for name, value in zip(PHYSICAL_SCORE_FEATURES, medians)},
     )
 
 
 def assign_score(rows: list[dict[str, Any]], weights: dict[str, float], medians: dict[str, float], discovery: list[dict[str, Any]]) -> None:
-    d = np.asarray([[row[name] for name in FEATURES] for row in discovery], dtype=np.float64)
-    d = np.where(np.isfinite(d), d, np.asarray([medians[name] for name in FEATURES]))
+    d = np.asarray([[row[name] for name in PHYSICAL_SCORE_FEATURES] for row in discovery], dtype=np.float64)
+    d = np.where(np.isfinite(d), d, np.asarray([medians[name] for name in PHYSICAL_SCORE_FEATURES]))
     means, scales = d.mean(axis=0), d.std(axis=0)
     scales = np.where(scales > EPS, scales, 1.0)
-    vector = np.asarray([weights[name] for name in FEATURES])
+    vector = np.asarray([weights[name] for name in PHYSICAL_SCORE_FEATURES])
     for row in rows:
-        values = np.asarray([row[name] for name in FEATURES], dtype=np.float64)
-        values = np.where(np.isfinite(values), values, np.asarray([medians[name] for name in FEATURES]))
+        values = np.asarray([row[name] for name in PHYSICAL_SCORE_FEATURES], dtype=np.float64)
+        values = np.where(np.isfinite(values), values, np.asarray([medians[name] for name in PHYSICAL_SCORE_FEATURES]))
         row["feedback_linear_score"] = float(((values - means) / scales) @ vector)
 
 
@@ -300,6 +308,7 @@ def main() -> None:
         "tasks": {name: len({row["task_uid"] for row in values}) for name, values in split.items()},
         "feature_window_actions": args.window_actions,
         "controller_visible_features": list(FEATURES),
+        "physical_score_features_excluding_age_and_depth": list(PHYSICAL_SCORE_FEATURES),
         "label_definition": {"p1_risk": "D(A_P1,A_F1)", "pv0_residual_risk": "D(A_PV0,A_F1)"},
         "runtime_oracle_inputs": False,
         "linear_score_frozen_on": "discovery",
