@@ -48,11 +48,13 @@ class CosmosAdapter:
             "pv0_r1",
             "pv0_r2",
             "pv0_r3",
+            "stale_r2",
         }:
             raise ValueError(f"unknown closed_loop_mode={self.closed_loop_mode!r}")
         self.request_index = 0
         self.previous_real_latent = None
         self.previous_generated_latent = None
+        self.last_physical_condition_latent = None
 
     @staticmethod
     def validate_history(history: list[Observation] | None) -> None:
@@ -112,6 +114,7 @@ class CosmosAdapter:
         self.request_index = 0
         self.previous_real_latent = None
         self.previous_generated_latent = None
+        self.last_physical_condition_latent = None
 
     @staticmethod
     def _predicted_visual_latent(latent):
@@ -147,6 +150,21 @@ class CosmosAdapter:
             pattern = fixed_patterns[self.closed_loop_mode]
             visual_mode = pattern[(self.request_index - 1) % len(pattern)]
             return visual_mode, self._predicted_visual_latent(self.previous_generated_latent)
+        if self.closed_loop_mode == "stale_r2":
+            if self.request_index == 0:
+                return "fresh", None
+            if self.previous_generated_latent is None:
+                raise RuntimeError("stale R2 route has no prior generated latent")
+            # R2 cadence is PV0, STALE, STALE.  The stale route deliberately
+            # retains the most recent *physical* PV0-conditioned joint state;
+            # unlike P1, it never moves generated future slots into current
+            # slots.  Thus sensing and request cadence match R2 exactly.
+            phase = (self.request_index - 1) % 3
+            if phase == 0:
+                return "native_persistent", self._predicted_visual_latent(self.previous_generated_latent)
+            if self.last_physical_condition_latent is None:
+                raise RuntimeError("stale R2 requested before a physical PV0 condition was captured")
+            return "stale_physical", self.last_physical_condition_latent.detach().clone()
         if self.closed_loop_mode == "fresh":
             return "fresh", None
         if self.closed_loop_mode in {"predict_correct", "predict_correct_async"}:
@@ -303,6 +321,11 @@ class CosmosAdapter:
         cosmos_request_index = self.request_index
         if visual_input_mode == "fresh":
             self.previous_real_latent = result["orig_clean_latent_frames"].detach().clone()
+        if visual_input_mode == "native_persistent":
+            physical_condition = result.get("persistent_condition_latent")
+            if physical_condition is None:
+                raise RuntimeError("native PV0 request did not return its physical condition latent")
+            self.last_physical_condition_latent = physical_condition.detach().clone()
         self.previous_generated_latent = result["generated_latent"].detach().clone()
         self.request_index += 1
         return PolicyOutput(
@@ -337,6 +360,7 @@ class CosmosAdapter:
                 "predicted_visual_request_count": int(visual_input_mode == "predicted"),
                 "predict_correct_request_count": int(visual_input_mode == "predict_correct"),
                 "native_persistent_request_count": int(visual_input_mode == "native_persistent"),
+                "stale_physical_request_count": int(visual_input_mode == "stale_physical"),
                 "cached_visual_request_count": int(visual_input_mode == "cache"),
                 "rgb_preprocessing_count": int(
                     visual_input_mode in {"fresh", "predict_correct", "native_persistent"}

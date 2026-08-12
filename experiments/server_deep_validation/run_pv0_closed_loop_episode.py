@@ -33,7 +33,7 @@ from experiments.libero_harness import load_yaml, run_episode
 from pv0_overnight_common import ORIGINAL_CHECKPOINT, ORIGINAL_CHECKPOINT_SHA256, checkpoint_contract
 
 
-MODES = ("fresh", "predicted_reuse", "native_persistent", "pv0_r0", "pv0_r1", "pv0_r2", "pv0_r3")
+MODES = ("fresh", "predicted_reuse", "native_persistent", "pv0_r0", "pv0_r1", "pv0_r2", "pv0_r3", "stale_r2")
 
 
 def atomic_write(path: Path, payload: dict[str, Any]) -> None:
@@ -86,6 +86,17 @@ def route_contract(mode: str) -> dict[str, Any]:
             "fresh_visual_prefix_frames": 13,
             "fresh_visual_arrival_denoiser_forward": 0,
         }
+    if mode == "stale_r2":
+        return {
+            **common,
+            "bootstrap": "fresh camera preprocessing and VAE encoding",
+            "followup_pattern": ["PV0", "STALE", "STALE"],
+            "PV0": "prior generated latent + native causal 13-frame fresh visual prefix",
+            "STALE": "reuse the most recent PV0 physical-condition joint latent; no generated future visual slots",
+            "matched_against": "pv0_r2",
+            "fresh_visual_prefix_frames": 13,
+            "fresh_visual_arrival_denoiser_forward": 0,
+        }
     raise ValueError(mode)
 
 
@@ -100,6 +111,9 @@ def expected_visual_modes(mode: str, request_count: int) -> list[str]:
             "pv0_r3": ["native_persistent", "predicted", "predicted", "predicted"],
         }
         sequence = patterns[mode]
+        return ["fresh", *[sequence[(index - 1) % len(sequence)] for index in range(1, request_count)]]
+    if mode == "stale_r2":
+        sequence = ["native_persistent", "stale_physical", "stale_physical"]
         return ["fresh", *[sequence[(index - 1) % len(sequence)] for index in range(1, request_count)]]
     followup = {"fresh": "fresh", "predicted_reuse": "predicted", "native_persistent": "native_persistent"}[mode]
     return ["fresh", *([followup] * (request_count - 1))]

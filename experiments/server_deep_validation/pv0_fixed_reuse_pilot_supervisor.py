@@ -62,16 +62,24 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument(
+        "--routes",
+        default=",".join(ROUTES),
+        help="comma-separated fixed routes; stale_r2 is used for the matched-stale collection",
+    )
     parser.add_argument("--poll-seconds", type=float, default=5.0)
     args = parser.parse_args()
     run_dir = args.run_dir.resolve()
     episodes, logs = run_dir / "episodes", run_dir / "logs"
     episodes.mkdir(parents=True, exist_ok=True)
     logs.mkdir(parents=True, exist_ok=True)
+    selected_routes = tuple(item.strip() for item in args.routes.split(",") if item.strip())
+    if not selected_routes:
+        raise RuntimeError("at least one route is required")
     jobs = [
         {"id": f"{route}:{row['episode_key']}", "route": route, "row": row, "attempts": 0, "status": "pending"}
         for row in load_rows(args.manifest)
-        for route in ROUTES
+        for route in selected_routes
     ]
     running: dict[int, tuple[subprocess.Popen, dict, object]] = {}
     state_path = run_dir / "PILOT_STATE.json"
@@ -109,7 +117,7 @@ def main() -> None:
             environment.update({"CUDA_VISIBLE_DEVICES": str(gpu), "EVAL_PHYSICAL_GPU": str(gpu), "MUJOCO_GL": "egl", "PYOPENGL_PLATFORM": "egl", "__EGL_VENDOR_LIBRARY_FILENAMES": "/usr/share/glvnd/egl_vendor.d/10_nvidia.json", "MUJOCO_EGL_DEVICE_ID": str(gpu), "PYTHONUNBUFFERED": "1"})
             log = (logs / f"{route}_{row['episode_key']}.attempt{pending['attempts']}.log").open("w", encoding="utf-8")
             running[gpu] = (subprocess.Popen(command, cwd=REPO, env=environment, stdout=log, stderr=subprocess.STDOUT), pending, log)
-        atomic_json(state_path, {"schema_version": 1, "pilot": "fixed_pv0_p1_reuse_depth", "routes": ROUTES, "selected_tasks": sorted({job['row']['task_uid'] for job in jobs}), "jobs": [{key: value for key, value in job.items() if key != "row"} for job in jobs], "running_gpus": sorted(running), "counts": {status: sum(job['status'] == status for job in jobs) for status in ("pending", "running", "completed", "failed")}, "runtime_only_feedback": True, "denoising_steps": 1, "value_used": False})
+        atomic_json(state_path, {"schema_version": 1, "pilot": "fixed_pv0_p1_reuse_depth", "routes": selected_routes, "selected_tasks": sorted({job['row']['task_uid'] for job in jobs}), "jobs": [{key: value for key, value in job.items() if key != "row"} for job in jobs], "running_gpus": sorted(running), "counts": {status: sum(job['status'] == status for job in jobs) for status in ("pending", "running", "completed", "failed")}, "runtime_only_feedback": True, "denoising_steps": 1, "value_used": False})
         if not running and not any(job["status"] == "pending" for job in jobs):
             break
         time.sleep(args.poll_seconds)

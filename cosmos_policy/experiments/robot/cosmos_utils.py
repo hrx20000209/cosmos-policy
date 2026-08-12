@@ -1204,6 +1204,12 @@ def get_action(
             ) / 1e6
 
         condition_transform_installed = False
+        # Export the exact joint condition assembled by native persistent
+        # correction.  A matched-stale baseline may reuse this *physical*
+        # condition later, but must never substitute a generated future for it.
+        # This is metadata for the caller, not a value prediction or policy
+        # decision input.
+        persistent_condition_latent = None
         async_trace = None
         async_arrival_gate = None
         async_arrival_thread = None
@@ -1344,6 +1350,7 @@ def get_action(
                 model.sampler.x0_transform = async_x0_transform
 
             def persistent_condition_transform_sync(*, denoiser_forward_index, condition):
+                nonlocal persistent_condition_latent
                 if denoiser_forward_index >= persistent_visual_correction_arrival:
                     # Sync path deliberately retains the original behavior.
                     fresh_selected = fresh_prefix.index_select(
@@ -1354,6 +1361,8 @@ def get_action(
                         torch.tensor(visual_indices, device=condition.gt_frames.device, dtype=torch.int64),
                         fresh_selected.to(device=condition.gt_frames.device, dtype=condition.gt_frames.dtype),
                     )
+                    if persistent_condition_latent is None:
+                        persistent_condition_latent = condition.gt_frames.detach().clone()
                 return condition
 
             if async_predict_correct:
@@ -1637,6 +1646,7 @@ def get_action(
             all_camera_images=all_camera_images,
             proprio=proprio,
             text_embedding=text_embedding,
+            persistent_condition_latent=persistent_condition_latent,
         )
         if async_trace is not None:
             return_dict["async_trace"] = return_dict_async_trace
