@@ -156,6 +156,8 @@ def feedback_features(feedback: list[dict[str, Any]], control_step: int, window:
 def load_rows(episodes: Path, window: int) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for path in sorted(episodes.glob("pv0_r2_*.json")):
+        if path.name.endswith("_traces.json") or ".prior_failure_" in path.name:
+            continue
         raw = json.loads(path.read_text(encoding="utf-8"))
         if raw.get("status") != "PASS" or raw.get("mode") != "pv0_r2":
             raise RuntimeError(f"invalid episode: {path}")
@@ -163,7 +165,13 @@ def load_rows(episodes: Path, window: int) -> list[dict[str, Any]]:
             raise RuntimeError(f"frozen checkpoint/value contract violation: {path}")
         if raw.get("shadow_labels_runtime_policy_input") is not False:
             raise RuntimeError(f"shadow label leaked into runtime: {path}")
-        traces, feedback = raw["traces"], raw["execution_feedback"]
+        trace_path = path.with_name(f"{path.stem}_traces.json")
+        try:
+            trace_payload = json.loads(trace_path.read_text(encoding="utf-8"))
+            traces = trace_payload["traces"]
+        except (OSError, json.JSONDecodeError, KeyError) as error:
+            raise RuntimeError(f"missing/invalid trace payload for {path}: {error}") from error
+        feedback = raw["execution_feedback"]
         manifest = raw["manifest_row"]
         for label in raw.get("shadow_validity_labels", []):
             if label.get("shadow_only") is not True or label.get("value_used") is not False:
